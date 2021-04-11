@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <script>
+            function onConnectClick()
+            {
+                console.log('Clicked')
+                $.ajax({
+                url: "/onconnect",
+                type: "get",
+                data: {message: JSON.stringify({"host":"rsa","port":"5500"})},
+                success: function(response) {
+                    try {
+                        console.log(response);
+        /*
+        **
+                        var reply;
+                        if (typeof(response) != 'string')
+                            reply = JSON.parse(response);
+                        else
+                            reply = response;
+                        console.log(JSON.stringify(reply));
+                        handle_reply(reply);
+                    **
+        */
+    }
+                    catch (err) {
+                        console.log(err);
+                    }
+                },
+                error: function(xhr) {
+                    alert('error');
+                    console.log(xhr.toString());
+                }
+            });
+            }
+        </script>
+              <title>Red Pitaya PSD and MCA Interface</title>
+    </head>
+    <body>
+<div>
+		<h3 style="text-align:center">Red Pitaya PSD &amp; MCA Interface</h3>
+        <hr>
+		<h3 style="text-align:center">Red Pitaya PSD &amp; MCA</h3>
+		<h4>Server Details</h4>
+		<table style="border:1" width="50%">
+			<tr>
+				<td>Server Name</td><td><input type="text" id="server_name" value="rsa"></td>
+				<td>Status</td><td><input type="text" id="connect_status" readonly></td>
+			</tr>
+			<tr>
+				<td>Server Port</td><td><input type="text" id="server_port" value="5500"></td>
+			</tr>
+		</table>
+		<!-- <input id="btnSendFitJob" type="button" value="Submit Job" onclick="onSendFitJobClick()"> -->
+		<input id="btnConnect" type="button" value="Connect"  onclick="onConnectClick()">
+	<hr>
+
+</body>
+</html>
