@@ -52,6 +52,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = 'Conenct'
     TabOrder = 2
+    OnClick = btnConenctClick
   end
   object btnDisconnect: TButton
     Left = 232
@@ -86,8 +87,25 @@ object frmMain: TfrmMain
     TabOrder = 6
     OnClick = Button2Click
   end
+  object Panel1: TPanel
+    Left = 80
+    Top = 184
+    Width = 185
+    Height = 41
+    Caption = 'Panel1'
+    TabOrder = 7
+  end
   object socket: TSocketConnection
-    Left = 344
+    ServerName = 'DESKTOP-TDH2GBF'
+    Host = 'localhost'
+    Port = 5500
+    SupportCallbacks = False
+    Left = 264
+    Top = 104
+  end
+  object ApplicationEvents1: TApplicationEvents
+    OnIdle = ApplicationEvents1Idle
+    Left = 376
     Top = 40
   end
 end
