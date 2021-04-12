@@ -1,39 +1,8 @@
 <html>
     <head>
-        <script>
-            function onConnectClick()
-            {
-                console.log('Clicked')
-                $.ajax({
-                url: "/onconnect",
-                type: "get",
-                data: {message: JSON.stringify({"host":"rsa","port":"5500"})},
-                success: function(response) {
-                    try {
-                        console.log(response);
-        /*
-        **
-                        var reply;
-                        if (typeof(response) != 'string')
-                            reply = JSON.parse(response);
-                        else
-                            reply = response;
-                        console.log(JSON.stringify(reply));
-                        handle_reply(reply);
-                    **
-        */
-    }
-                    catch (err) {
-                        console.log(err);
-                    }
-                },
-                error: function(xhr) {
-                    alert('error');
-                    console.log(xhr.toString());
-                }
-            });
-            }
-        </script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+        <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
               <title>Red Pitaya PSD and MCA Interface</title>
     </head>
     <body>
