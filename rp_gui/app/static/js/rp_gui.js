@@ -3,15 +3,21 @@ function onConnectClick()
 {
     console.log('Clicked')
     var host, port;
+    var dictMessage = {};
     host= uploadHost ();
     port = uploadPort ();
+    dictMessage["host"] = host;
+    dictMessage["port"] = port.toString();
+    console.log(JSON.stringify(dictMessage));
     $.ajax({
     url: "/onconnect",
     type: "get",
-    data: {message: JSON.stringify({"host":"rsa","port":"5500"})},
+    //data: {message: JSON.stringify({"host":"rsa","port":"5500"})},
+    data: {message: JSON.stringify(dictMessage)},
     success: function(response) {
         try {
             console.log(response);
+            document.getElementById('connect_status').value = response;
 /*
 **
             var reply;

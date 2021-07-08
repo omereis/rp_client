@@ -31,6 +31,6 @@ RUN ln -s /usr/bin/python3.7 /usr/bin/python && \
 RUN pip install flask
 
 RUN mv vimrc .vimrc
-ENV FLASK_APP=microblog.py
+ENV FLASK_APP=rp_gui.py
 
-EXPOSE 5005
+EXPOSE 5500

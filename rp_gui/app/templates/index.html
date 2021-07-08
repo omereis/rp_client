@@ -1,0 +1,134 @@
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+        <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
+		<link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}">
+              <title>Red Pitaya PSD and MCA Interface</title>
+    </head>
+    <body>
+<div>
+	<h3 style="text-align:center">Red Pitaya PSD &amp; MCA Interface</h3>
+	<table  style="border:2px solid" width="100%">
+		<tr>
+			<td width="50%" style="border: 1px solid blue">
+				Server Details
+				<table style="border:1px" width="50%">
+					<tr>
+						<td>Server Name</td><td><input type="text" id="server_name" value="rsa"></td>
+						<td><input id="btnConnect" type="button" value="Connect"  onclick="onConnectClick()"></td>
+						<td>Status</td><td><input type="text" id="connect_status" readonly></td>
+					</tr>
+					<tr>
+						<td>Server Port</td><td><input type="text" id="server_port" value="5500"></td>
+					</tr>
+				</table>
+			</td>
+			<td style="border: 1px solid rgb(0, 140, 255)">
+				<p style="text-align: center">Sampling Details</p>
+				<table style="border: 3px solid rgb(0, 255, 234); width: 100%;">
+					<tr>
+						<td style="width: 50%;">
+							<p style="text-align: center;">Sampling</p>
+							<table style="border: 3px solid rgb(0, 255, 234); width: 100%;">
+								<tr>
+									<td>Rate</td>
+									<td>
+										<select id="comboRate">
+											<option id="rate125">125 Mhz</option>
+											<option id="rate15_625">15.625 Mhz</option>
+											<option id="rate1_953">1.953 Mhz</option>
+											<option id="rate122_070">122.070 Kilo hz</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Decimation</td>
+									<td>
+										<select id="comboDecimation">
+											<option id="dcm1">1 (for 125 Mhz)</option>
+											<option id="dcm8">8 (for 15.625 Mhz)</option>
+											<option id="dcm64">64 (for 1.953 Mhz)</option>
+											<option id="dcm1024">1024 (for 122.070 Kilo hz)</option>
+										</select>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td style="width: 50%;">
+							<p style="text-align: center;">Trigger</p>
+							<table style="border: 3px solid rgb(0, 255, 234); width: 100%;background-color: cadetblue;">
+								<tr>
+									<td>level</td>
+									<td><input type="text" value="5" id="txtTriggerLevel">millivolts</td>
+								</tr>
+								<tr>
+									<td>Direction</td>
+									<td><select id="comboTriggerDir">
+										<option id="dirUp">Up</option>
+										<option id="dirDown">Down</option>
+									</td>
+								</tr>
+								<tr>
+									<td>Source</td>
+									<td><select id="comboTriggerSrc">
+										<option id="srcIn1">In 1</option>
+										<option id="srcIn2">In 2</option>
+										<option id="srcExt">External</option>
+									</td>
+								</tr>
+							</table>
+							</td>
+					</tr>
+				</table>
+					<table style="border: 2px solid rgb(81, 255, 0); width: 100%;">
+					<tr>
+						<td>
+							Input Channel
+						</td>
+						<td>
+							<select id="comboInput">
+								<option id="In_1" value="In 1">In 1</option>
+								<option id="In_2" value="In 2">In 2</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Rate</td>
+						<td>
+							<select id="comboRate">
+								<option id="rate125">125 Mhz</option>
+								<option id="rate15_625">15.625 Mhz</option>
+								<option id="rate1_953">1.953 Mhz</option>
+								<option id="rate122_070">122.070 Kilo hz</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Decimation</td>
+						<td>
+							<select id="comboDecimation">
+								<option id="dcm1">1 (for 125 Mhz)</option>
+								<option id="dcm8">8 (for 15.625 Mhz)</option>
+								<option id="dcm64">64 (for 1.953 Mhz)</option>
+								<option id="dcm1024">1024 (for 122.070 Kilo hz)</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+				Decimation
+				Rate
+				Trigger
+					Delay
+					Direction
+					Level
+					Source
+			</td>
+		</tr>
+	</table>
+    <hr>
+	<hr>
+
+</body>
+</html>
+
