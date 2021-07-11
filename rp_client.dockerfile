@@ -3,6 +3,8 @@ FROM ubuntu:16.04
 
 RUN apt -y update
 RUN apt -y upgrade
+RUN apt install -y libzmq3-dev
+RUN apt install -y g++
 RUN apt install -y vim man
 RUN apt install -y tree curl
 RUN apt install -y git wget cmake
@@ -32,5 +34,6 @@ RUN pip install flask
 
 RUN mv vimrc .vimrc
 ENV FLASK_APP=rp_gui.py
+ENV FLASK_DEBUG=1
 
-EXPOSE 5500
+EXPOSE 5005

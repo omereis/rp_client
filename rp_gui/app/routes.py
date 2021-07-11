@@ -1,3 +1,6 @@
+###############################################################################
+#                                 routes.py                                   #
+###############################################################################
 from flask import Flask, render_template, request
 from app import app
 import json
@@ -8,7 +11,7 @@ from app import app
 import socket
 
 g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+#------------------------------------------------------------------------------
 @app.route('/')
 @app.route('/index')
 def index():
@@ -26,7 +29,7 @@ def index():
         }
     ]
     return render_template('index.html', title='Home', user=user, posts=posts, status='disconnected')
-
+#------------------------------------------------------------------------------
 @app.route('/onconnect', methods=["GET"])
 def on_connect ():
     print ('Just clicked')
@@ -36,6 +39,7 @@ def on_connect ():
         res = request.args['message']
         print(f'res: "{res}"')
         print(f'Type(res): {type(res)}')
+        print("request.json", request.json)
         dictMessage = json.loads(res)
         print(f'Dictionary message: "{dictMessage}"')
         print(f'Host: {dictMessage["host"]}')
@@ -50,6 +54,11 @@ def on_connect ():
         print (f'run time error in OnConnect\n: {e}')
     return (strReply)
 #    return ('on_connect result')
+#------------------------------------------------------------------------------
+@app.route('/onparams', methods=["GET"])
+def on_params ():
+        res = request.args['message']
+        print(f'res: "{res}"')
+        return ("ok")
+#------------------------------------------------------------------------------
 
-
- 

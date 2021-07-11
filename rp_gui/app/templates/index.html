@@ -25,12 +25,21 @@
 				</table>
 			</td>
 			<td style="border: 1px solid rgb(0, 140, 255)">
-				<p style="text-align: center">Sampling Details</p>
-				<table style="border: 3px solid rgb(0, 255, 234); width: 100%;">
+				<!-- <p style="text-align: center">Sampling Details</p> -->
+				<table style="width: 100%;">
 					<tr>
+						<td style="width: 10%;"></td>
+						<td style="width: 80%;">
+							<p style="text-align: center">Sampling Details</p>
+						</td>
+						<td style="width: 10%;" id="txtSampling"><p style="text-align: center"></p></td>
+					</tr>
+				</table>
+				<table style="width: 100%;">
+					<tr style="vertical-align: top;">
 						<td style="width: 50%;">
 							<p style="text-align: center;">Sampling</p>
-							<table style="border: 3px solid rgb(0, 255, 234); width: 100%;">
+							<table style="width: 100%;">
 								<tr>
 									<td>Rate</td>
 									<td>
@@ -57,10 +66,10 @@
 						</td>
 						<td style="width: 50%;">
 							<p style="text-align: center;">Trigger</p>
-							<table style="border: 3px solid rgb(0, 255, 234); width: 100%;background-color: cadetblue;">
+							<table style="width: 100%;background-color: cadetblue;">
 								<tr>
 									<td>level</td>
-									<td><input type="text" value="5" id="txtTriggerLevel">millivolts</td>
+									<td><input type="text" value="5" id="txtTriggerLevel">&nbsp;millivolts</td>
 								</tr>
 								<tr>
 									<td>Direction</td>
@@ -78,51 +87,14 @@
 									</td>
 								</tr>
 							</table>
-							</td>
-					</tr>
-				</table>
-					<table style="border: 2px solid rgb(81, 255, 0); width: 100%;">
-					<tr>
-						<td>
-							Input Channel
 						</td>
-						<td>
-							<select id="comboInput">
-								<option id="In_1" value="In 1">In 1</option>
-								<option id="In_2" value="In 2">In 2</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>Rate</td>
-						<td>
-							<select id="comboRate">
-								<option id="rate125">125 Mhz</option>
-								<option id="rate15_625">15.625 Mhz</option>
-								<option id="rate1_953">1.953 Mhz</option>
-								<option id="rate122_070">122.070 Kilo hz</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>Decimation</td>
-						<td>
-							<select id="comboDecimation">
-								<option id="dcm1">1 (for 125 Mhz)</option>
-								<option id="dcm8">8 (for 15.625 Mhz)</option>
-								<option id="dcm64">64 (for 1.953 Mhz)</option>
-								<option id="dcm1024">1024 (for 122.070 Kilo hz)</option>
-							</select>
+						<td style="text-align: center;">
+							<input id="btnReadSampling" type="button" value="Read from Red Pitaya"  onclick="onUpdateSamplingClick()">
+							<br><br>
+							<input id="btnUpdateSampling" type="button" value="Update Red Pitaya"  onclick="onReadSamplingClick()">
 						</td>
 					</tr>
 				</table>
-				Decimation
-				Rate
-				Trigger
-					Delay
-					Direction
-					Level
-					Source
 			</td>
 		</tr>
 	</table>
