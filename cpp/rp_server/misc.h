@@ -4,9 +4,9 @@
 #define miscH
 //---------------------------------------------------------------------------
 #include <string>
-#include <System.hpp>
+#include "jsoncpp/json/json.h"
+
 //---------------------------------------------------------------------------
-std::string GetAppIni (const std::string &strIni);
-std::string WStringToString (const std::wstring &wstr);
-std::string UnicodeToString (const UnicodeString ustr);
+std::string StringifyJson (const Json::Value &val);
+std::string ReadFileAsString (const std::string &strFile);
 #endif
