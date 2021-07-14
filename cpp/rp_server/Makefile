@@ -15,8 +15,17 @@ INCLUDES = rp_setup.h misc.h
 SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp
 
+RP_OBJ = rp_server.o rp_setup.o trim.o misc.o
+RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp
+RP_INC = 
 
-all: read_json
+all: read_json rp_server
+
+rp_server.o : rp_server.cpp $(RP_INC)
+	$(CPP) -c $(CFLAGS) $< -o $@
+
+rp_server: $(RP_OBJ)
+	$(CPP) -g $(RP_OBJ) $(LDFLAGS) -o $@
 
 read_json.o : read_json.cpp $(INCLUDES)
 	$(CPP) -c $(CFLAGS) $< -o $@

@@ -7,8 +7,6 @@
 #include "bd_types.h"
 #include "trim.h"
 
-#include "jsoncpp/json/json.h"
-
 using namespace std;
 
 //-----------------------------------------------------------------------------
