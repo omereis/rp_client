@@ -4,17 +4,26 @@
 from flask import Flask, render_template, request
 from app import app
 import json
+import zmq
 
 from flask import render_template
 from app import app
 
 import socket
 
-g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+g_socket = None
 #------------------------------------------------------------------------------
 @app.route('/')
 @app.route('/index')
 def index():
+    context = zmq.Context()
+
+#  Socket to talk to server
+    print("Connecting to hello world server…")
+    g_socket = context.socket(zmq.REQ)
+    g_socket.connect("tcp://localhost:5555")
+
     user = {'username': 'Joe'}
     posts = [
         {
@@ -57,8 +66,23 @@ def on_connect ():
 #------------------------------------------------------------------------------
 @app.route('/onparams', methods=["GET"])
 def on_params ():
-        res = request.args['message']
-        print(f'res: "{res}"')
-        return ("ok")
+    global g_socket
+    res = request.args['message']
+    print(f'res: "{res}"')
+    if (g_socket == None):
+        g_socket = InitSocket()
+    g_socket.send(res)
+    reply = g_socket.recv()
+    return (reply)
+#------------------------------------------------------------------------------
+def InitSocket():
+    context = zmq.Context()
+
+#  Socket to talk to server
+    print("Connecting to hello world server…")
+    socket = context.socket(zmq.REQ)
+    socket.connect("tcp://localhost:5555")
+    return (socket)
+
 #------------------------------------------------------------------------------
 
