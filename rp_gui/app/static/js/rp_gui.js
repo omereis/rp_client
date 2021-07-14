@@ -1,3 +1,7 @@
+/******************************************************************************\
+|                                 rp_gui.js                                    |
+\******************************************************************************/
+
 //-----------------------------------------------------------------------------
 function onConnectClick()
 {
@@ -18,17 +22,6 @@ function onConnectClick()
         try {
             console.log(response);
             document.getElementById('connect_status').value = response;
-/*
-**
-            var reply;
-            if (typeof(response) != 'string')
-                reply = JSON.parse(response);
-            else
-                reply = response;
-            console.log(JSON.stringify(reply));
-            handle_reply(reply);
-        **
-*/
 }
         catch (err) {
             console.log(err);
