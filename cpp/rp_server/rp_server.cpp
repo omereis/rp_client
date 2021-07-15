@@ -15,8 +15,6 @@ using namespace std;
 
 #include "jsoncpp/json/json.h"
 
-std::string ToLower (const std::string &str);
-
 int main (void)
 {
     //  Socket to talk to clients
@@ -27,6 +25,7 @@ int main (void)
 	Json::Value root;
 	Json::Reader reader;
     TRedPitayaSetup rp_setup;
+    string strReply;
 
     Json::Value jSetup = rp_setup.AsJson();
     rp_setup.LoadFromJson("rp_setup.json");
@@ -36,19 +35,25 @@ int main (void)
         zmq_recv (responder, buffer, 1024, 0);
         std::string strJson = ToLower (buffer);
         printf ("Received Message:\n%s\n", strJson.c_str());
+        if (reader.parse (strJson, root)) {
+            Json::Value jSetup = root["setup"];
+            if (!jSetup.isNull()) {
+                string strCmd = jSetup.asString();
+                if (ToLower(strCmd) == string("read")) {
+                    Json::Value RpSetup = rp_setup.AsJson();
+                    strReply = StringifyJson (RpSetup);
+                }
+            }
+
+            printf ("Message: %s\n", StringifyJson(root).c_str());
+        }
         sleep (1);          //  Do some 'work'
-        zmq_send (responder, "World", 5, 0);
+        if (strReply.length() > 0)
+            zmq_send (responder, strReply.c_str(), strReply.length(), 0);
+        else
+            zmq_send (responder, "World", 5, 0);
     }
     return 0;
 }
 //-----------------------------------------------------------------------------
-
-std::string ToLower (const std::string &str)
-{
-	std::string strLower;
-
-	for (int n=0 ; n < str.size() ; n++)
-		strLower += tolower(str[n]);
-	return (strLower);
-}
 
