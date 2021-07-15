@@ -44,10 +44,10 @@
 									<td>Rate</td>
 									<td>
 										<select id="comboRate">
-											<option id="rate125">125 Mhz</option>
-											<option id="rate15_625">15.625 Mhz</option>
-											<option id="rate1_953">1.953 Mhz</option>
-											<option id="rate122_070">122.070 Kilo hz</option>
+											<option id="rate125"     value="125000000">125 Mhz</option>
+											<option id="rate15_625"  value= "15625000">15.625 Mhz</option>
+											<option id="rate1_953"   value= "1953000">1.953 Mhz</option>
+											<option id="rate122_070" value= "122070">122.070 Kilo hz</option>
 										</select>
 									</td>
 								</tr>
@@ -55,10 +55,10 @@
 									<td>Decimation</td>
 									<td>
 										<select id="comboDecimation">
-											<option id="dcm1">1 (for 125 Mhz)</option>
-											<option id="dcm8">8 (for 15.625 Mhz)</option>
-											<option id="dcm64">64 (for 1.953 Mhz)</option>
-											<option id="dcm1024">1024 (for 122.070 Kilo hz)</option>
+											<option id="dcm1"    value= "1">1 (for 125 Mhz)</option>
+											<option id="dcm8"    value= "8">8 (for 15.625 Mhz)</option>
+											<option id="dcm64"   value= "64">64 (for 1.953 Mhz)</option>
+											<option id="dcm1024" value= "1024">1024 (for 122.070 Kilo hz)</option>
 										</select>
 									</td>
 								</tr>
@@ -74,24 +74,24 @@
 								<tr>
 									<td>Direction</td>
 									<td><select id="comboTriggerDir">
-										<option id="dirUp">Up</option>
-										<option id="dirDown">Down</option>
+										<option id="dirUp"   value="up">Up</option>
+										<option id="dirDown" value="down">Down</option>
 									</td>
 								</tr>
 								<tr>
 									<td>Source</td>
 									<td><select id="comboTriggerSrc">
-										<option id="srcIn1">In 1</option>
-										<option id="srcIn2">In 2</option>
-										<option id="srcExt">External</option>
+										<option id="srcIn1" value="in1">In 1</option>
+										<option id="srcIn2" value="in2">In 2</option>
+										<option id="srcExt" value="ext">External</option>
 									</td>
 								</tr>
 							</table>
 						</td>
 						<td style="text-align: center;">
-							<input id="btnReadSampling" type="button" value="Read from Red Pitaya"  onclick="onUpdateSamplingClick()">
+							<input id="btnReadSampling" type="button" value="Read from Red Pitaya" onclick="onReadSamplingClick() ">
 							<br><br>
-							<input id="btnUpdateSampling" type="button" value="Update Red Pitaya"  onclick="onReadSamplingClick()">
+							<input id="btnUpdateSampling" type="button" value="Update Red Pitaya" onclick="onUpdateSamplingClick() ">
 						</td>
 					</tr>
 				</table>

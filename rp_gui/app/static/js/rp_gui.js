@@ -75,33 +75,43 @@ function uploadPort ()
 }
 //-----------------------------------------------------------------------------
 function onReadSamplingClick () {
-    console.log('onReadSamplingClick');
-
-    var dictMessage = {};
-    var sampling = uploadSampling ();
-    var trigger = uploadTrigger ();
-    dictMessage["sampling"] = sampling;
-    dictMessage["trigger"] = trigger;
-    console.log(JSON.stringify(dictMessage));
-    $.ajax({
-    url: "/onparams",
-    type: "get",
-    //data: {message: JSON.stringify({"host":"rsa","port":"5500"})},
-    data: {message: JSON.stringify(dictMessage)},
-    success: function(response) {
-        try {
-            console.log(response);
-            document.getElementById('txtSampling').textContent = response;
-        }
-        catch (err) {
-            console.log(err);
-        }
-    },
-    error: function(xhr) {
-        alert('error');
-        console.log(xhr.toString());
+    var crOld = document.body.style.cursor;
+    try {
+        document.body.style.cursor = "wait";
+        var dictMessage = {};
+        //var sampling = uploadSampling ();
+        //var trigger = uploadTrigger ();
+        dictMessage["setup"] = "read";
+        //dictMessage["sampling"] = sampling;
+        //dictMessage["trigger"] = trigger;
+        console.log(JSON.stringify(dictMessage));
+        $.ajax({
+            url: "/onparams",
+            type: "get",
+            data: {message: JSON.stringify(dictMessage)},
+            success: function(response) {
+                try {
+                    console.log(response);
+                    downloadSetup (response);
+                    //document.getElementById('txtSampling').textContent = response;
+                }
+                catch (err) {
+                    console.log(err);
+                }
+            },
+            error: function(xhr) {
+                alert('error');
+                console.log(xhr.toString());
+            }
+        });
     }
-});
+    catch (e) {
+        console.log(e);
+    }
+    finally {
+        document.body.style.cursor = crOld;
+    }
+
 }
 //-----------------------------------------------------------------------------
 function uploadSampling () {
@@ -214,6 +224,84 @@ function uploadTriggerSrc () {
 }
 //-----------------------------------------------------------------------------
 function onUpdateSamplingClick () {
-    console.log('onReadSamplingClick');
+    var crOld = document.body.style.cursor;
+    try {
+        var dictMessage = {};
+        var sampling = uploadSampling ();
+        var trigger = uploadTrigger ();
+        dictMessage["sampling"] = sampling;
+        dictMessage["trigger"] = trigger;
+        console.log(JSON.stringify(dictMessage));
+        document.body.style.cursor = "wait";
+        $.ajax({
+            url: "/onparams",
+            type: "get",
+            data: {message: JSON.stringify(dictMessage)},
+            success: function(response) {
+                try {
+                    console.log(response);
+                    document.getElementById('txtSampling').textContent = response;
+                }
+                catch (err) {
+                    console.log(err);
+                }
+            },
+            error: function(xhr) {
+                alert('error');
+                console.log(xhr.toString());
+            }
+        });
+    }
+    catch (e) {
+        console.log(e);
+    }
+    finally {
+        document.body.style.cursor = crOld;
+    }
+}
+//-----------------------------------------------------------------------------
+function downloadSetup (strResponse) {
+    try {
+        var jSetup = JSON.parse(strResponse);
+        downloadSampling (jSetup["sampling"]);
+        downloadTrigger (jSetup["trigger"]);
+    }
+    catch (error) {
+        console.log(error);
+        alert (error);
+    }
+}
+//-----------------------------------------------------------------------------
+function downloadSampling (jSampling) {
+    //var rate = jSampling["rate"];
+    selectComboItem ("comboRate", jSampling["rate"]);
+    selectComboItem ("comboDecimation", jSampling["decimation"]);
+    //console.log(rate);
+}
+//-----------------------------------------------------------------------------
+function selectComboItem (strCombo, strValue) {
+    try {
+        var n, nFound=null;
+        var combo = document.getElementById(strCombo);
+        for (n=0 ; (n < combo.options.length) && (nFound == null) ; n++) {
+            var strOption = combo.options[n].value;
+            if (strOption == strValue)
+                nFound = n;
+        }
+        if (nFound != null)
+            combo.selectedIndex = nFound;
+    }
+    catch (error) {
+        alert ("Runtime error in 'selectComboItem':\nerror");
+    }
+}
+//-----------------------------------------------------------------------------
+function downloadTrigger (jTrigger) {
+    selectComboItem ("comboTriggerDir", jTrigger["in"]);
+    selectComboItem ("comboTriggerSrc", jTrigger["src"]);
+    var txtLevel = document.getElementById("txtTriggerLevel");
+    var level = parseFloat(jTrigger["level"]) * 1e3;
+    var strLevel = level.toString();
+    txtLevel.value = strLevel;//jTrigger["level"];
 }
 
