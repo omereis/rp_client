@@ -71,7 +71,7 @@ def on_params ():
     print(f'res: "{res}"')
     if (g_socket == None):
         g_socket = InitSocket()
-    g_socket.send(res)
+    g_socket.send_string(res)
     reply = g_socket.recv()
     return (reply)
 #------------------------------------------------------------------------------
