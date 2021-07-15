@@ -35,6 +35,10 @@ RUN pip install flask
 RUN pip install pyzmq
 
 RUN mv $HOME/vimrc $HOME/.vimrc
+
+RUN make rp_server
+CMD ["/home/oe/cpp/rp_server/rp_server"]
+
 ENV FLASK_APP=rp_gui.py
 ENV FLASK_DEBUG=1
 
