@@ -50,4 +50,14 @@ string ReadFileAsString (const std::string &strFile)
 	}
     return (strLine);
 }
+//-----------------------------------------------------------------------------
+
+string ToLower (const std::string &str)
+{
+	string strLower;
+
+	for (int n=0 ; n < str.size() ; n++)
+		strLower += tolower(str[n]);
+	return (strLower);
+}
 //---------------------------------------------------------------------------
