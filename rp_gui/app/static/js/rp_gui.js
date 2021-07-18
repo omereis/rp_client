@@ -227,10 +227,12 @@ function onUpdateSamplingClick () {
     var crOld = document.body.style.cursor;
     try {
         var dictMessage = {};
+        var dictSetup = {};
         var sampling = uploadSampling ();
         var trigger = uploadTrigger ();
-        dictMessage["sampling"] = sampling;
-        dictMessage["trigger"] = trigger;
+        dictSetup["sampling"] = sampling;
+        dictSetup["trigger"] = trigger;
+        dictMessage["setup"] = dictSetup;
         console.log(JSON.stringify(dictMessage));
         document.body.style.cursor = "wait";
         $.ajax({
@@ -239,8 +241,9 @@ function onUpdateSamplingClick () {
             data: {message: JSON.stringify(dictMessage)},
             success: function(response) {
                 try {
-                    console.log(response);
-                    document.getElementById('txtSampling').textContent = response;
+                    downloadSetup (response);
+                    //console.log(response);
+                    //document.getElementById('txtSampling').textContent = response;
                 }
                 catch (err) {
                     console.log(err);

@@ -99,6 +99,13 @@ Json::Value TRedPitayaSampling::AsJson()
     return (jSampling);
 }
 //-----------------------------------------------------------------------------
+
+void TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
+{
+    SetRate (jSetup["rate"].asString());
+    SetDecimation (jSetup["decimation"].asString());
+}
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //
 // TRedPitayaTrigger
@@ -210,6 +217,12 @@ Json::Value TRedPitayaTrigger::AsJson()
     return(jTrigger);
 }
 //-----------------------------------------------------------------------------
+
+void TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
+{
+
+}
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // TRedPitayaSetup
 //-----------------------------------------------------------------------------
@@ -297,5 +310,38 @@ Json::Value TRedPitayaSetup::AsJson()
     jSetup["sampling"] = m_sampling.AsJson();
     jSetup["trigger"] = m_trigger.AsJson();
     return (jSetup);
+}
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
+{
+    bool fUpdate;
+
+    try {
+        m_sampling.UpdateFromJson(jSetup["sampling"]);
+        m_trigger.UpdateFromJson(jSetup["trigger"]);
+        fUpdate = true;
+    }
+    catch (...) {
+        fUpdate = false;
+    }
+    return (fUpdate);
+}
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::SaveToJson (const std::string &strFile)
+{
+    bool fLoad;
+
+    try {
+        string strJson = StringifyJson (AsJson());
+        FILE *file = fopen (strFile.c_str(), "w+");
+        fprintf (file, "%s\n", strJson.c_str());
+        fclose (file);
+        fLoad = true;
+    }
+    catch (std::exception &exp) {
+        fprintf (stderr, "Runtime error in 'SaveToJson':\n%s\n", exp.what());
+        fLoad = false;
+    }
+    return (fLoad);
 }
 //-----------------------------------------------------------------------------

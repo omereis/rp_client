@@ -22,6 +22,7 @@ public:
 
     bool LoadFromJson (Json::Value jSampling);
     Json::Value AsJson();
+    void UpdateFromJson(Json::Value &jSetup);
 
     string GetRate () const;
     void SetRate (const string &strRate);
@@ -47,6 +48,7 @@ public:
 
     bool LoadFromJson (Json::Value jTrigger);
 	Json::Value AsJson();
+    void UpdateFromJson(Json::Value &jSetup);
 
     string GetLevel () const;
     void SetLevel (const string &strLevel);
@@ -75,7 +77,9 @@ public:
     void Clear ();
 
     bool LoadFromJson(const string &strFile);
+    bool SaveToJson (const std::string &strFile);
     Json::Value AsJson();
+    bool  UpdateFromJson(Json::Value &jSetup);
 
     TRedPitayaTrigger GetTrigger() const;
     void SetTrigger (const TRedPitayaTrigger &trigger);

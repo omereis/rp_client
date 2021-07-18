@@ -24,6 +24,8 @@ string ExtractDir (const string &strPath, string &strFile);
 string compose_json_filename (char *szFile);
 string ReadFileAsString (string &strFile);
 void read_setup (TRedPitayaSetup &rp_setup);
+void write_setup(TRedPitayaSetup &rp_setup);
+string GetJsonFile ();
 
 string strMenu[] =   {"1. Read Setup",
                     "2. Write Setup",
@@ -54,7 +56,7 @@ int main (void) {
                     if (nOption == 1)
                         read_setup (rp_setup);
                     else if (nOption == 2)
-                        printf ("Option not supported\n");
+                        write_setup(rp_setup);
                     else if (nOption == 3)
                         fQuit = true;
                 }
@@ -148,5 +150,44 @@ void read_setup (TRedPitayaSetup &rp_setup)
 {
     Json::Value jSetup = rp_setup.AsJson();
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
+}
+//-----------------------------------------------------------------------------
+
+void write_setup(TRedPitayaSetup &rp_setup)
+{
+    string strFile = GetJsonFile ();
+
+    if (strFile.length() > 0) {
+    	Json::Value root, sampling, rate;
+	    Json::Reader reader;
+        string strJson = read_file_as_line (strFile);
+
+        if (reader.parse (strJson, root)) {
+            if (!root.isNull()) {
+                rp_setup.UpdateFromJson(root);
+				printf ("\nWritten setup:\n'%s'\n", StringifyJson (rp_setup.AsJson()).c_str());
+            }
+        }
+    }
+}
+//-----------------------------------------------------------------------------
+
+string GetJsonFile ()
+{
+    string strFile;
+    char *szFile, szBuf[1024];
+
+    printf ("Enter JSON file name [.json]");
+    szFile = fgets(szBuf, 1024, stdin);
+    if (szFile != NULL) {
+        	strFile = string (szFile);
+        	strFile = trimString(strFile);
+        	if (strFile.length() > 0) {
+                size_t s = strFile.find_last_of (".");
+                if (s == string::npos)
+                    strFile += ".json";
+            }
+    }
+    return (strFile);
 }
 //-----------------------------------------------------------------------------
