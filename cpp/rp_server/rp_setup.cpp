@@ -32,6 +32,8 @@ bool TRedPitayaSampling::operator== (const TRedPitayaSampling &other) const
         return (false);
     if (GetBufferSize() != other.GetBufferSize())
         return (false);
+    if (GetSignalPoints() != other.GetSignalPoints())
+        return (false);
     return (true);
 }
 //-----------------------------------------------------------------------------
@@ -44,6 +46,8 @@ void TRedPitayaSampling::Clear ()
 {
     SetRate ("125000000");
     SetDecimation ("1");
+    SetBufferSize (1000);
+    SetSignalPoints (200);
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSampling::AssignAll (const TRedPitayaSampling &other)
@@ -51,6 +55,7 @@ void TRedPitayaSampling::AssignAll (const TRedPitayaSampling &other)
     SetRate (other.GetRate());
     SetDecimation (other.GetDecimation());
     SetBufferSize (other.GetBufferSize());
+    SetSignalPoints (other.GetSignalPoints());
 }
 //-----------------------------------------------------------------------------
 string TRedPitayaSampling::GetRate () const
@@ -102,6 +107,7 @@ Json::Value TRedPitayaSampling::AsJson()
     jSampling["rate"] = GetRate();
     jSampling["decimation"] = GetDecimation();
     jSampling["buffer_length"] = std::to_string (GetBufferSize ());
+    jSampling["signal_points"] = std::to_string (GetSignalPoints());
     return (jSampling);
 }
 //-----------------------------------------------------------------------------
@@ -112,6 +118,8 @@ void TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
     SetDecimation (jSetup["decimation"].asString());
     if (!jSetup["buffer_length"].isNull())
         SetBufferSize(jSetup["buffer_length"].asString());
+    if (!jSetup["signal_points"].isNull())
+        SetBufferSize(jSetup["signal_points"].asString());
 }
 //-----------------------------------------------------------------------------
 
@@ -127,6 +135,29 @@ void TRedPitayaSampling::SetBufferSize (const std::string &strSize) {
 void TRedPitayaSampling::SetBufferSize (int nSize)
 {
     m_nBufferSize = nSize;
+}
+//-----------------------------------------------------------------------------
+int TRedPitayaSampling::GetSignalPoints () const
+{
+    return (m_nSignalPoints);
+}
+//-----------------------------------------------------------------------------
+void TRedPitayaSampling::SetSignalPoints (int nPoints)
+{
+    m_nSignalPoints = max (1, nPoints);
+}
+//-----------------------------------------------------------------------------
+void TRedPitayaSampling::SetSignalPoints (const std::string &strPoints)
+{
+    int nPoints;
+
+    try {
+        nPoints = std::stoi (strPoints);
+    }
+    catch (...) {
+        nPoints = 200;
+    }
+    SetSignalPoints (nPoints);
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

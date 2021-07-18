@@ -31,12 +31,16 @@ public:
     int GetBufferSize () const;
     void SetBufferSize (int nSize);
     void SetBufferSize (const std::string &strSize);
+    int GetSignalPoints () const;
+    void SetSignalPoints (int nPoints);
+    void SetSignalPoints (const std::string &strPoints);
 protected:
     void AssignAll (const TRedPitayaSampling &other);
 private:
     string m_strRate;
     string m_strDecimation;
     int m_nBufferSize;
+    int m_nSignalPoints;
 };
 //-----------------------------------------------------------------------------
 

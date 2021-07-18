@@ -78,7 +78,8 @@ function onReadSamplingClick () {
     var crOld = document.body.style.cursor;
     try {
         document.body.style.cursor = "wait";
-        var dictMessage = {};
+        document.getElementById("txtMessage").value = "Reading...";
+                var dictMessage = {};
         dictMessage["setup"] = "read";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
@@ -88,6 +89,7 @@ function onReadSamplingClick () {
             success: function(response) {
                 try {
                     console.log(response);
+                    document.getElementById("txtMessage").value = "";
                     downloadSetup (response);
                     //document.getElementById('txtSampling').textContent = response;
                 }
@@ -115,6 +117,7 @@ function uploadSampling () {
     msg["rate"] = uploadRate ();
     msg["decimation"] = uploadDecimation ();
     msg["buffer_length"] = uploadBufferLength();
+    msg["signal_points"] = uploadSignalPoints();
     return (msg);
 }
 //-----------------------------------------------------------------------------
@@ -163,16 +166,24 @@ function uploadDecimation() {
 }
 //-----------------------------------------------------------------------------
 function uploadBufferLength() {
+    return (uploadTextAsInteger ("txtQueueSize", 1000));
+}
+//-----------------------------------------------------------------------------
+function uploadSignalPoints() {
+    return (uploadTextAsInteger ("txtSignalPoints", 200));
+}
+//-----------------------------------------------------------------------------
+function uploadTextAsInteger (txtId, nDefault) {
     var size;
 
     try {
-        var txt = document.getElementById("txtQueueSize")
+        var txt = document.getElementById(txtId)
         if (txt != null)
             size = txt.value;
     }
     catch (err) {
         alert (err);
-        size = "1000";
+        size = nDefault;
     }
     return (size);
 }
@@ -245,6 +256,7 @@ function onUpdateSamplingClick () {
         dictSetup["sampling"] = sampling;
         dictSetup["trigger"] = trigger;
         dictMessage["setup"] = dictSetup;
+        document.getElementById("txtMessage").value = "Sent...";
         console.log(JSON.stringify(dictMessage));
         document.body.style.cursor = "wait";
         $.ajax({
@@ -254,6 +266,7 @@ function onUpdateSamplingClick () {
             success: function(response) {
                 try {
                     downloadSetup (response);
+                    document.getElementById("txtMessage").value = "";
                     //console.log(response);
                     //document.getElementById('txtSampling').textContent = response;
                 }
@@ -294,6 +307,9 @@ function downloadSampling (jSampling) {
     var txt = document.getElementById("txtQueueSize");
     if (txt != null)
         txt.value =  jSampling["buffer_length"];
+    txt = document.getElementById("txtSignalPoints");
+    if (txt != null)
+        txt.value =  jSampling["signal_points"];
     //console.log(rate);
 }
 //-----------------------------------------------------------------------------

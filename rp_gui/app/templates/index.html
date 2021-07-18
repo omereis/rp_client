@@ -56,6 +56,10 @@
 									<td>Queue size</td>
 									<td><input type="text" size="10" value="4000" id="txtQueueSize"></input></td>
 								</tr>
+								<tr>
+									<td>Points in Signal</td>
+									<td><input type="text" size="10" value="200" id="txtSignalPoints"></input></td>
+								</tr>
 							</table>
 						</td>
 						<td style="text-align: center;">Trigger
@@ -85,6 +89,9 @@
 							<input id="btnReadSampling" type="button" value="Read from Red Pitaya" onclick="onReadSamplingClick() ">
 							<br><br>
 							<input id="btnUpdateSampling" type="button" value="Update Red Pitaya" onclick="onUpdateSamplingClick() ">
+							<br>
+							<input id="txtMessage" type="text" value="..." size="5" readonly>
+							<!-- <p id="pTemp">Message</p> -->
 						</td>
 					</tr>
 				</table>
