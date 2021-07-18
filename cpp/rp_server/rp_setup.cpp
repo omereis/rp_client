@@ -30,6 +30,8 @@ bool TRedPitayaSampling::operator== (const TRedPitayaSampling &other) const
         return (false);
     if (GetDecimation() != other.GetDecimation())
         return (false);
+    if (GetBufferSize() != other.GetBufferSize())
+        return (false);
     return (true);
 }
 //-----------------------------------------------------------------------------
@@ -48,6 +50,7 @@ void TRedPitayaSampling::AssignAll (const TRedPitayaSampling &other)
 {
     SetRate (other.GetRate());
     SetDecimation (other.GetDecimation());
+    SetBufferSize (other.GetBufferSize());
 }
 //-----------------------------------------------------------------------------
 string TRedPitayaSampling::GetRate () const
@@ -75,12 +78,14 @@ bool  TRedPitayaSampling::LoadFromJson (Json::Value jSampling)
     bool fLoad;
 
     try {
-        Json::Value jRate = jSampling["rate"], jDecimation = jSampling["decimation"];
+        Json::Value jRate = jSampling["rate"], jDecimation = jSampling["decimation"], jBufferSize = jSampling["buffer_size"];
 
         if (!jRate.isNull())
             SetRate (jRate.asString());
         if (!jDecimation.isNull())
             SetDecimation (jDecimation.asString());
+        if (!jBufferSize.isNull())
+            SetBufferSize (jBufferSize.asString());
         fLoad = true;
     }
     catch (...) {
@@ -96,6 +101,7 @@ Json::Value TRedPitayaSampling::AsJson()
 
     jSampling["rate"] = GetRate();
     jSampling["decimation"] = GetDecimation();
+    jSampling["buffer_length"] = std::to_string (GetBufferSize ());
     return (jSampling);
 }
 //-----------------------------------------------------------------------------
@@ -104,6 +110,23 @@ void TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
 {
     SetRate (jSetup["rate"].asString());
     SetDecimation (jSetup["decimation"].asString());
+    if (!jSetup["buffer_length"].isNull())
+        SetBufferSize(jSetup["buffer_length"].asString());
+}
+//-----------------------------------------------------------------------------
+
+int TRedPitayaSampling::GetBufferSize () const
+{
+    return (m_nBufferSize);
+}
+//-----------------------------------------------------------------------------
+void TRedPitayaSampling::SetBufferSize (const std::string &strSize) {
+    SetBufferSize(std::stoi(strSize));
+}
+//-----------------------------------------------------------------------------
+void TRedPitayaSampling::SetBufferSize (int nSize)
+{
+    m_nBufferSize = nSize;
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

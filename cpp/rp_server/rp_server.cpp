@@ -16,7 +16,7 @@ using namespace std;
 #include "jsoncpp/json/json.h"
 
 //-----------------------------------------------------------------------------
-std::string HandleSetup();
+std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 //-----------------------------------------------------------------------------
 int main (void)
 {
@@ -42,28 +42,6 @@ int main (void)
         	printf ("Message parsed\n");
             if (!root["setup"].isNull())
                 strReply = HandleSetup(root["setup"], rp_setup);
-/*
-            Json::Value jSetup = root["setup"];
-			if (!jSetup.isNull())
-	        	printf ("found setup message\n");
-			else
-	        	printf ("NOT setup message\n");
-            if (!jSetup.isNull()) {
-	        	printf ("\nParsing setup message\n");
-				if (jSetup.isObject()) {
-                    rp_setup.UpdateFromJson(jSetup);
-                    rp_setup.SaveToJson("rp_setup.json");
-				}
-				else {
-                	string strCmd = jSetup.asString();
-					printf ("Command parsed: '%s'\n", strCmd.c_str());
-                	if (ToLower(strCmd) == string("read")) {
-                    	strReply = StringifyJson (rp_setup.AsJson());
-                	}
-				}
-            }
-            printf ("Message: %s\n", StringifyJson(root).c_str());
-*/
         }
         sleep (1);          //  Do some 'work'
         if (strReply.length() > 0)

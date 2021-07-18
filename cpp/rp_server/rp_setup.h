@@ -28,11 +28,15 @@ public:
     void SetRate (const string &strRate);
     string GetDecimation () const;
     void  SetDecimation (const string &str);
+    int GetBufferSize () const;
+    void SetBufferSize (int nSize);
+    void SetBufferSize (const std::string &strSize);
 protected:
     void AssignAll (const TRedPitayaSampling &other);
 private:
     string m_strRate;
     string m_strDecimation;
+    int m_nBufferSize;
 };
 //-----------------------------------------------------------------------------
 

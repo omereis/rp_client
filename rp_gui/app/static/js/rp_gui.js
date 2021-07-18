@@ -79,11 +79,7 @@ function onReadSamplingClick () {
     try {
         document.body.style.cursor = "wait";
         var dictMessage = {};
-        //var sampling = uploadSampling ();
-        //var trigger = uploadTrigger ();
         dictMessage["setup"] = "read";
-        //dictMessage["sampling"] = sampling;
-        //dictMessage["trigger"] = trigger;
         console.log(JSON.stringify(dictMessage));
         $.ajax({
             url: "/onparams",
@@ -118,6 +114,7 @@ function uploadSampling () {
     var msg = {};
     msg["rate"] = uploadRate ();
     msg["decimation"] = uploadDecimation ();
+    msg["buffer_length"] = uploadBufferLength();
     return (msg);
 }
 //-----------------------------------------------------------------------------
@@ -163,6 +160,21 @@ function uploadDecimation() {
         decimation = 1;
     }
     return (decimation);
+}
+//-----------------------------------------------------------------------------
+function uploadBufferLength() {
+    var size;
+
+    try {
+        var txt = document.getElementById("txtQueueSize")
+        if (txt != null)
+            size = txt.value;
+    }
+    catch (err) {
+        alert (err);
+        size = "1000";
+    }
+    return (size);
 }
 //-----------------------------------------------------------------------------
 function uploadTrigger() {
@@ -279,6 +291,9 @@ function downloadSampling (jSampling) {
     //var rate = jSampling["rate"];
     selectComboItem ("comboRate", jSampling["rate"]);
     selectComboItem ("comboDecimation", jSampling["decimation"]);
+    var txt = document.getElementById("txtQueueSize");
+    if (txt != null)
+        txt.value =  jSampling["buffer_length"];
     //console.log(rate);
 }
 //-----------------------------------------------------------------------------

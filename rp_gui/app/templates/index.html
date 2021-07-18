@@ -9,36 +9,26 @@
     <body>
 <div>
 	<h3 style="text-align:center">Red Pitaya PSD &amp; MCA Interface</h3>
-	<table  style="border:2px solid" width="100%">
+	<!-- <table  style="border:2px solid" width="100%"> -->
+	<table  style="border:2px solid">
 		<tr>
-			<td width="50%" style="border: 1px solid blue">
+			<td style="border: 1px solid blue">
 				Server Details
-				<table style="border:1px" width="50%">
+				<table>
 					<tr>
-						<td>Server Name</td><td><input type="text" id="server_name" value="rsa"></td>
-						<td><input id="btnConnect" type="button" value="Connect"  onclick="onConnectClick()"></td>
-						<td>Status</td><td><input type="text" id="connect_status" readonly></td>
+						<td>Server Name</td><td><input type="text" id="server_name" size="10" value="rsa"></td>
+						<td><input id="btnConnect" type="button" value="Connect" size="10" onclick="onConnectClick()"></td>
+						<td>Status</td><td><input type="text" id="connect_status" size="10" readonly></td>
 					</tr>
 					<tr>
-						<td>Server Port</td><td><input type="text" id="server_port" value="5500"></td>
+						<td>Server Port</td><td><input type="text" id="server_port" value="5500" size="10" ></td>
 					</tr>
 				</table>
 			</td>
 			<td style="border: 1px solid rgb(0, 140, 255)">
-				<!-- <p style="text-align: center">Sampling Details</p> -->
-				<table style="width: 100%;">
-					<tr>
-						<td style="width: 10%;"></td>
-						<td style="width: 80%;">
-							<p style="text-align: center">Sampling Details</p>
-						</td>
-						<td style="width: 10%;" id="txtSampling"><p style="text-align: center"></p></td>
-					</tr>
-				</table>
 				<table style="width: 100%;">
 					<tr style="vertical-align: top;">
-						<td style="width: 50%;">
-							<p style="text-align: center;">Sampling</p>
+						<td  style="text-align: center;">Sampling
 							<table style="width: 100%;">
 								<tr>
 									<td>Rate</td>
@@ -62,10 +52,13 @@
 										</select>
 									</td>
 								</tr>
+								<tr>
+									<td>Queue size</td>
+									<td><input type="text" size="10" value="4000" id="txtQueueSize"></input></td>
+								</tr>
 							</table>
 						</td>
-						<td style="width: 50%;">
-							<p style="text-align: center;">Trigger</p>
+						<td style="text-align: center;">Trigger
 							<table style="width: 100%;background-color: cadetblue;">
 								<tr>
 									<td>level</td>
@@ -99,8 +92,36 @@
 		</tr>
 	</table>
     <hr>
+	<table style="border: 1px solid rgb(0, 140, 255);">
+		<tr>
+		<td>
+			<table>
+				<tr>
+					<td colspan="2" style="text-align: center;">MCA</td>
+				</tr>
+				<tr>
+					<td>Channels</td>
+					<td><input id="txtMcaChannels" type="input" value="1024"></td>
+				</tr>
+			</table>
+		</td>
+		<td>
+			<table>
+				<th>
+					<td>PSD</td>
+				</th>
+				<tr>
+					<td>A</td>
+				</tr>
+			</table>
+		</td>
+		</tr>
+		<tr style="text-align: center;">
+			<td><input type="button" value="Send Setup"></td>
+			<td><input type="button" value="Read Setup"></td>
+		</tr>
+	</table>
 	<hr>
 
 </body>
 </html>
-
