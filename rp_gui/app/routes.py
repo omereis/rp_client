@@ -75,6 +75,18 @@ def on_params ():
     reply = g_socket.recv()
     return (reply)
 #------------------------------------------------------------------------------
+@app.route('/onreadpulse', methods=["GET"])
+def onreadpulse():
+    global g_socket
+    print("onreadpulse");
+    res = request.args['message']
+    print(f'res: "{res}"')
+    if (g_socket == None):
+        g_socket = InitSocket()
+    g_socket.send_string(res)
+    reply = g_socket.recv()
+    return (reply)
+#------------------------------------------------------------------------------
 def InitSocket():
     context = zmq.Context()
 
