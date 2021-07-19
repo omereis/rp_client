@@ -338,4 +338,49 @@ function downloadTrigger (jTrigger) {
     var strLevel = level.toString();
     txtLevel.value = strLevel;//jTrigger["level"];
 }
-
+//-----------------------------------------------------------------------------
+function onGetPulses() {
+    try {
+        var dictMessage = {};
+        var dictPulse = uploadPulses();
+        dictMessage["read"] = dictPulse;
+        document.getElementById("cellPulseResult").textContent = "Reading...";
+        console.log(JSON.stringify(dictMessage));
+        $.ajax({
+            url: "/onreadpulse",
+            type: "get",
+            data: {message: JSON.stringify(dictMessage)},
+            success: function(response) {
+                try {
+                    document.getElementById("cellPulseResult").textContent = response;
+                    //console.log(response);
+                    //document.getElementById('txtSampling').textContent = response;
+                }
+                catch (err) {
+                    console.log(err);
+                }
+            },
+            error: function(xhr) {
+                alert('error');
+                console.log(xhr.toString());
+            }
+        });
+    }
+    catch (e) {
+        console.log(e);
+    }
+}
+//-----------------------------------------------------------------------------
+function uploadPulses() {
+    var msg = {};
+    var nPulses;
+    try {
+        nPulses = parseInt (document.getElementById("txtNumPulses").value);
+    }
+    catch (e) {
+        console.log(e);
+        nPulses = 1;
+    }
+    msg["pulse"] = nPulses;
+    return (msg);
+}
