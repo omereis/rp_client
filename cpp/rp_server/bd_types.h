@@ -6,6 +6,7 @@
 #define  BD_TYPES_H
 
 #include <vector>
+#include <queue>
 #include <string>
 
 using namespace std;
@@ -13,6 +14,14 @@ using namespace std;
 //---------------------------------------------------------------------------
 #ifndef	TStringVec
 typedef vector<string> TStringVec;
+#endif
+//---------------------------------------------------------------------------
+#ifndef	TFloatVec
+typedef vector<float> TFloatVec;
+#endif
+//---------------------------------------------------------------------------
+#ifndef	TFloatVecQueue
+typedef queue<TFloatVec> TFloatVecQueue;
 #endif
 //---------------------------------------------------------------------------
 #endif
