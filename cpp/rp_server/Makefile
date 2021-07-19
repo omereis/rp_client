@@ -11,7 +11,7 @@ CPP = gcc
 CFLAGS = -std=c++14 -g
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o
-INCLUDES = rp_setup.h misc.h
+INCLUDES = rp_setup.h misc.h timer.h
 SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp
 
