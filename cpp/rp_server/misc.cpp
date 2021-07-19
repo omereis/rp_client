@@ -4,7 +4,6 @@
 //---------------------------------------------------------------------------
 
 #include "misc.h"
-#include "bd_types.h"
 #include "trim.h"
 
 using namespace std;
@@ -90,5 +89,33 @@ string ToLower (const std::string &str)
 	for (int n=0 ; n < str.size() ; n++)
 		strLower += tolower(str[n]);
 	return (strLower);
+}
+//-----------------------------------------------------------------------------
+
+bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vDate)
+{
+	bool fRead;
+
+	try {
+		vDate.clear();
+		char *szLine, szBuf[1024];
+		FILE *file = fopen (strFile.c_str(), "r");
+		if (file != NULL) {
+			while ((szLine = fgets(szBuf, 1024, file)) != NULL) {
+				float r = (float) atof (szLine);
+				vDate.push_back (r);
+			}
+			fRead = true;
+		}
+		else {
+			fprintf (stderr, "Could not open file %s\n", strFile.c_str());
+			fRead = false;
+		}
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error in 'ReadVectorFromFile':\n%s\n", exp.what());
+		fRead = false;
+	}
+	return (fRead);
 }
 //---------------------------------------------------------------------------
