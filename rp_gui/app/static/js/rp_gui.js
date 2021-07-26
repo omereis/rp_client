@@ -419,7 +419,7 @@ function downloadPulse (response) {
 var chartPulse=null;
 //-----------------------------------------------------------------------------
 function showPulseOnChart (jPulse) {
-    var n, m, num;
+    var n, m, num, rate, factor;
 
     if (chartPulse == null)
         initPulseChart();
@@ -429,8 +429,18 @@ function showPulseOnChart (jPulse) {
         // X axis
         if (chartPulse.data.labels.length != jPulse[0].length) {
             chartPulse.data.labels = [];
-            for (m=0 ; m < jPulse[0].length ; m++)
-                chartPulse.data.labels.push(m);
+            try {
+                rate = 1.0 / parseFloat(uploadRate ());
+                factor = 1e9;
+            }
+            catch (e) {
+                rate = 1;
+                factor = 1;
+                console.log(e);
+            }
+            for (m=0 ; m < jPulse[0].length ; m++) {
+                chartPulse.data.labels.push(m * rate * factor);
+            }
         }
         for (m=0 ; m < jPulse[n].length ; m++) {
             try {
@@ -448,7 +458,8 @@ function showPulseOnChart (jPulse) {
 }
 //-----------------------------------------------------------------------------
 function initPulseChart() {
-	var myChart=document.getElementById("pulseChart").getContext("2d");
+	//var myChart=document.getElementById("pulseChart").getContext("2d");
+    var myChart=document.getElementById("idCanvas").getContext("2d");
 
 	if (chartPulse == null) {
 		chartPulse = new Chart (myChart,{
@@ -463,6 +474,15 @@ function initPulseChart() {
 				}]
 			},
 			options: {
+                scales : {
+                    x: {
+                        ticks: {
+                            callback: function (val, index) {
+                                return val.toFixed(2);
+                            }
+                        }
+                    }
+                },
                   plugins: {
                     zoom: {
                       pan: {
@@ -489,47 +509,7 @@ function initPulseChart() {
                     }
                 }
             }
-	})
+	    });
 	}
 }
 //-----------------------------------------------------------------------------
-var mdPopChart=null;
-//-----------------------------------------------------------------------------
-function testChart () {
-	var myChart=document.getElementById("myChart").getContext("2d");
-
-	if (mdPopChart == null) {
-		mdPopChart = new Chart (myChart,{
-			type: 'bar', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
-			data: {
-				labels: ["	Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Fredrick"],
-				datasets: [{
-					label: 'Population',
-					data: [620915, 99615, 86395, 71452, 67752, 65455],
-                    backgroundcolor: "blue"
-				}]
-			},
-			options: {}
-	})
-	}
-
-}
-//-----------------------------------------------------------------------------
-function onAddCityClick() {
-    var name=null, population=null;
-
-    try {
-        name       = document.getElementById("txtCityName").value;
-        population = document.getElementById("txtCityPopulation").value;
-    }
-    catch (e) {
-        console.log(e);
-    }
-    if ((name != null) && (population != null)) {
-        if (mdPopChart == null)
-            testChart();
-        mdPopChart.data.datasets[0].data.push(population);
-        mdPopChart.data.labels.push(name);
-        mdPopChart.update();
-    }
-}

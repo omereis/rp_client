@@ -104,102 +104,56 @@
 		</tr>
 	</table>
     <hr>
-	<table style="border: 1px solid rgb(0, 140, 255);">
-		<tr>
-		<td>
-			<table>
-				<tr>
-					<td colspan="2" style="text-align: center;">MCA</td>
-				</tr>
-				<tr>
-					<td>Channels</td>
-					<td><input id="txtMcaChannels" type="input" value="1024"></td>
-				</tr>
-			</table>
-		</td>
-		<td>
-			<table>
-				<th>
-					<td>PSD</td>
-				</th>
-				<tr>
-					<td>A</td>
-				</tr>
-			</table>
-		</td>
-		</tr>
-		<tr style="text-align: center;">
-			<td><input type="button" value="Send Setup"></td>
-			<td><input type="button" value="Read Setup"></td>
-		</tr>
-	</table>
 	<table>
 		<tr>
-			<td colspan="2" style="text-align: center;">Pulse</td>
+			<td colspan="5" style="text-align: center;">Setup</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="text-align: center;">MCA</td>
+			<td colspan="2" style="text-align: center;">PSD</td>
+			<td rowspan="4">Chart<br><canvas id="psd_review"></canvas></td>
+		</tr>
+		<tr>
+			<td>Channels</td>
+			<td><input id="txtMcaChannels" type="input" value="1024"></td>
+			<td>Constant</td>
+			<td><input id="txtPsdConst" type="input" size="5" value="1"></td>
+		</tr>
+		<tr>
+			<td>Min. Voltage</td>
+			<td><input id="txtMcaMinC" type="input" size="5" style="text-align: center;" value="1"></td>
+			<td>Exponent</td>
+			<td><input id="txtPsdExp" type="input"  size="5" value="1"></td>
+		</tr>
+		<tr>
+			<td>Max. Voltage</td>
+			<td><input id="txtMcaMaxC" type="input" size="10"></td>
+			<td>Max. Pulse Time</td>
+			<td><input id="txtPsePulseTime" type="input" size="10"></td>
+		<tr style="text-align: center;">
+			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Send Setup"></td>
+			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Read Setup"></td>
+			<td><input type="button" value="Preview"></td>
+		</tr>
+		</table>
+		<hr>
+	<table>
+		<tr>
+			<td style="text-align: center;">Pulse</td>
 		</tr>
 		<tr>
 			<td><input id="btnGetPulse" type="button" onclick="onGetPulses()" value="Read Pulses"></td>
 			<td><input type="text" size="10" id="txtNumPulses" value="2"></td>
-			<td id="cellPulseResult">
-				<canvas id="idCanvas"></canvas>
-			</td>
+			<!-- <td><div id="cellPulseResult">Idle</div></td> -->
+		</tr>
+		<tr>
+			<td>Alphanumeric</td>
+			<td><div id="cellPulseResult">Idle</div></td>
 		</tr>
 	</table>
-<hr>
-<input type="button" onclick="testChart ()" value="Test chart">
-
-<hr>
-	<div class="container">
-		<canvas id="pulseChart"></canvas>
+	<div>
+		<canvas id="idCanvas"></canvas>
 	</div>
 <hr>
-
-<span>My Chart.JS</span>
-<table>
-	<tr>
-		<td>City Name</td>
-		<td><input type="text" id="txtCityName" size="10"></td>
-	</tr>
-	<tr>
-		<td>City Population</td>
-		<td><input type="text" id="txtCityPopulation" size="10"></td>
-	</tr>
-	<tr>
-		<td rowspan="2">
-			<input type="button" id="btnAddCity" value="Add City" onclick="onAddCityClick()">
-		</td>
-	</tr>
-</table>
-<div class="container">
-	<canvas id="myChart"></canvas>
-</div>
-<!--
-	<script>
-	var myChart=document.getElementById("myChart").getContext("2d");
-
-	var massPopChart = new Chart (myChart,{
-		type: 'bar', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
-		data: {
-			labels: ["	Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Fredrick"],
-			datasets: [{
-				label: 'Population',
-				data: [620915, 99615, 86395, 71452, 67752]
-			}]
-		},
-		options: {}
-	})
-</script>
--->
-<hr>
-<!--
-	<canvas id="myChartID" style="width:100%;max-width:700px;color: white;"></canvas>
-<hr>
-<div id="chartContainer_demo" style="height: 370px; width: 100%;">
-</div>
-<hr>
-<div id="chartContainer" style="height: 370px; width: 100%;">
-</div>
-<hr>
--->
 </body>
 </html>
