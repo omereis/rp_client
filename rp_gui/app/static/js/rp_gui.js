@@ -399,8 +399,6 @@ function uploadPulses() {
 //-----------------------------------------------------------------------------
 function downloadPulse (response) {
     document.getElementById("cellPulseResult").textContent = response;
-    if (g_chart == null)
-        g_chart = new CanvasJS.Chart("chartContainer");
     var y = 0;
     var data = [];
     var dataSeries = { type: "line" };
@@ -414,13 +412,85 @@ function downloadPulse (response) {
                     y: parseFloat(jPulse[0][n])
                 });
         }
+        showPulseOnChart (jPulse);
     }
-	g_chart.data[0].dataPoints = dataPoints;
-    dataSeries.dataPoints = dataPoints;
-    //data.push(dataSeries);
-    g_chart.data.push(dataSeries);
-	g_chart.render();
-    y += 0;
+}
+//-----------------------------------------------------------------------------
+var chartPulse=null;
+//-----------------------------------------------------------------------------
+function showPulseOnChart (jPulse) {
+    var n, m, num;
+
+    if (chartPulse == null)
+        initPulseChart();
+    chartPulse.data.datasets = [];
+    for (n=0 ; n < jPulse.length ; n++) {
+        var ds = {data: [], label: ' '};
+        // X axis
+        if (chartPulse.data.labels.length != jPulse[0].length) {
+            chartPulse.data.labels = [];
+            for (m=0 ; m < jPulse[0].length ; m++)
+                chartPulse.data.labels.push(m);
+        }
+        for (m=0 ; m < jPulse[n].length ; m++) {
+            try {
+                num = parseFloat(jPulse[n][m])
+            }
+            catch (e) {
+                console.log(e);
+                num = 0;
+            }
+            ds.data.push(num);
+        }
+        chartPulse.data.datasets.push(ds);
+    }
+    chartPulse.update();
+}
+//-----------------------------------------------------------------------------
+function initPulseChart() {
+	var myChart=document.getElementById("pulseChart").getContext("2d");
+
+	if (chartPulse == null) {
+		chartPulse = new Chart (myChart,{
+			type: 'line', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
+			data: {
+				labels: ["	Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Fredrick"],
+				datasets: [{
+					label: 'Pulse',
+					data: [620915, 99615, 86395, 71452, 67752, 65455],
+                    //backgroundcolor: "blue",
+					borderColor: 'rgb(75, 192, 192)'
+				}]
+			},
+			options: {
+                  plugins: {
+                    zoom: {
+                      pan: {
+                        enabled: true,
+                        mode: 'x'
+                      },
+                      zoom: {
+                        pinch: {
+                          enabled: true
+                        },
+                        wheel: {
+                          enabled: true
+                        },
+                        mode: 'x'
+                      },
+                      limits: {
+                        x: {
+                          minDelay: 0,
+                          maxDelay: 4000,
+                          minDuration: 1000,
+                          maxDuration: 20000
+                        }
+                      }
+                    }
+                }
+            }
+	})
+	}
 }
 //-----------------------------------------------------------------------------
 var mdPopChart=null;
