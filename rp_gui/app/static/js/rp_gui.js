@@ -3,6 +3,19 @@
 \******************************************************************************/
 
 //-----------------------------------------------------------------------------
+function include(file) {
+// source:
+// https://www.geeksforgeeks.org/how-to-include-a-javascript-file-in-another-javascript-file/  
+    var script  = document.createElement('script');
+    script.src  = file;
+    script.type = 'text/javascript';
+    script.defer = true;
+
+    document.getElementsByTagName('head').item(0).appendChild(script);
+}
+//include ('https://canvasjs.com/assets/script/canvasjs.min.js');
+//var g_chart = null;//new CanvasJS.Chart("chartContainer");
+//-----------------------------------------------------------------------------
 function onConnectClick()
 {
     console.log('Clicked')
@@ -352,9 +365,8 @@ function onGetPulses() {
             data: {message: JSON.stringify(dictMessage)},
             success: function(response) {
                 try {
-                    document.getElementById("cellPulseResult").textContent = response;
-                    //console.log(response);
-                    //document.getElementById('txtSampling').textContent = response;
+                    downloadPulse (response);
+                    //document.getElementById("cellPulseResult").textContent = response;
                 }
                 catch (err) {
                     console.log(err);
@@ -379,8 +391,75 @@ function uploadPulses() {
     }
     catch (e) {
         console.log(e);
-        nPulses = 1;
+        nPulses = 0;
     }
     msg["pulse"] = nPulses;
     return (msg);
+}
+//-----------------------------------------------------------------------------
+function downloadPulse (response) {
+    document.getElementById("cellPulseResult").textContent = response;
+    if (g_chart == null)
+        g_chart = new CanvasJS.Chart("chartContainer");
+    var y = 0;
+    var data = [];
+    var dataSeries = { type: "line" };
+    var dataPoints = [];
+    var jPulse = JSON.parse(response);
+    if (jPulse.length > 0) {
+        for (var n=0 ; n < jPulse[0].length ; n++) {
+            //dataPoints.push({x: n, y: parseFloat(jPulse[0][n]));
+            dataPoints.push({
+                    x: n,
+                    y: parseFloat(jPulse[0][n])
+                });
+        }
+    }
+	g_chart.data[0].dataPoints = dataPoints;
+    dataSeries.dataPoints = dataPoints;
+    //data.push(dataSeries);
+    g_chart.data.push(dataSeries);
+	g_chart.render();
+    y += 0;
+}
+//-----------------------------------------------------------------------------
+var mdPopChart=null;
+//-----------------------------------------------------------------------------
+function testChart () {
+	var myChart=document.getElementById("myChart").getContext("2d");
+
+	if (mdPopChart == null) {
+		mdPopChart = new Chart (myChart,{
+			type: 'bar', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
+			data: {
+				labels: ["	Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Fredrick"],
+				datasets: [{
+					label: 'Population',
+					data: [620915, 99615, 86395, 71452, 67752, 65455],
+                    backgroundcolor: "blue"
+				}]
+			},
+			options: {}
+	})
+	}
+
+}
+//-----------------------------------------------------------------------------
+function onAddCityClick() {
+    var name=null, population=null;
+
+    try {
+        name       = document.getElementById("txtCityName").value;
+        population = document.getElementById("txtCityPopulation").value;
+    }
+    catch (e) {
+        console.log(e);
+    }
+    if ((name != null) && (population != null)) {
+        if (mdPopChart == null)
+            testChart();
+        mdPopChart.data.datasets[0].data.push(population);
+        mdPopChart.data.labels.push(name);
+        mdPopChart.update();
+    }
 }

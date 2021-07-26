@@ -3,13 +3,18 @@
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
         <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.0/chart.min.js"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+<!-- Charting -->
+
+<!-- Page styles -->
 		<link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}">
-              <title>Red Pitaya PSD and MCA Interface</title>
-    </head>
+        <title>Red Pitaya PSD and MCA Interface</title>
+	</head>
     <body>
-<div>
+	<div>
 	<h3 style="text-align:center">Red Pitaya PSD &amp; MCA Interface</h3>
-	<!-- <table  style="border:2px solid" width="100%"> -->
 	<table  style="border:2px solid">
 		<tr>
 			<td style="border: 1px solid blue">
@@ -134,11 +139,61 @@
 		</tr>
 		<tr>
 			<td><input id="btnGetPulse" type="button" onclick="onGetPulses()" value="Read Pulses"></td>
-			<td><input type="text" size="10" id="txtNumPulses" value="5"></td>
-			<td id="cellPulseResult"></td>
+			<td><input type="text" size="10" id="txtNumPulses" value="2"></td>
+			<td id="cellPulseResult">
+				<canvas id="idCanvas"></canvas>
+			</td>
 		</tr>
 	</table>
 <hr>
+<input type="button" onclick="testChart ()" value="Test chart">
+<hr>
+<span>My Chart.JS</span>
+<table>
+	<tr>
+		<td>City Name</td>
+		<td><input type="text" id="txtCityName" size="10"></td>
+	</tr>
+	<tr>
+		<td>City Population</td>
+		<td><input type="text" id="txtCityPopulation" size="10"></td>
+	</tr>
+	<tr>
+		<td rowspan="2">
+			<input type="button" id="btnAddCity" value="Add City" onclick="onAddCityClick()">
+		</td>
+	</tr>
+</table>
+<div class="container">
+	<canvas id="myChart"></canvas>
+</div>
+<!--
+	<script>
+	var myChart=document.getElementById("myChart").getContext("2d");
 
+	var massPopChart = new Chart (myChart,{
+		type: 'bar', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
+		data: {
+			labels: ["	Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Fredrick"],
+			datasets: [{
+				label: 'Population',
+				data: [620915, 99615, 86395, 71452, 67752]
+			}]
+		},
+		options: {}
+	})
+</script>
+-->
+<hr>
+<!--
+	<canvas id="myChartID" style="width:100%;max-width:700px;color: white;"></canvas>
+<hr>
+<div id="chartContainer_demo" style="height: 370px; width: 100%;">
+</div>
+<hr>
+<div id="chartContainer" style="height: 370px; width: 100%;">
+</div>
+<hr>
+-->
 </body>
 </html>

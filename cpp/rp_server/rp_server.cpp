@@ -99,28 +99,29 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 	mutex mtx;
     std::string strReply, strNumber, strPulses;
     char szNum[128];
-    Json::Value jPulse(Json::arrayValue);
+    Json::Value jAllPulses(Json::arrayValue), jPulse(Json::arrayValue);
     int n, nPulses;
     
     try {
         strPulses = jRead["pulse"].asString();
         nPulses = std::stoi(strPulses);
+        if (nPulses <= 0)
+            nPulses = (int) g_qPulses.size();
         printf ("Reading pulse");
-		if (g_qPulses.size() > 0) {
+        for (n=0 ; n < nPulses ; n++) {
         	mtx.lock ();
         	vPulse = g_qPulses.back();
         	g_qPulses.pop();
         	mtx.unlock ();
-            for (i=vPulse.begin(), n=0 ; (i != vPulse.end()) && (n < nPulses) ; i++, n++) {
-                //strNumber = std::to_string (*i);
+            for (i=vPulse.begin() ; i != vPulse.end() ; i++) {
                 sprintf (szNum, "%.3f", *i);
                 strNumber = std::string (szNum);
                 jPulse.append (strNumber);
             }
-        	strReply = StringifyJson(jPulse);
-		}
-		else
-        	strReply = "no pulse";
+            jAllPulses.append(jPulse);
+            jPulse.clear();
+        }
+        strReply = StringifyJson(jAllPulses);
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
