@@ -46,21 +46,21 @@ def on_connect ():
     strReply=""
     try:
         res = request.args['message']
-        print(f'res: "{res}"')
-        print(f'Type(res): {type(res)}')
+        print('res: ', res)
+        print('Type(res): ', type(res))
         print("request.json", request.json)
         dictMessage = json.loads(res)
-        print(f'Dictionary message: "{dictMessage}"')
-        print(f'Host: {dictMessage["host"]}')
-        print(f'Port: {dictMessage["port"]}')
+        print('Dictionary message: ', dictMessage)
+        print('Host: ', dictMessage["host"])
+        print('Port: ', dictMessage["port"])
         g_socket.connect((dictMessage["host"],dictMessage["port"]))
         strReply ="connection ok"
         g_socket.close()
 #        ws = websocket.create_connection(f'ws://{bumps_params.server}:{bumps_params.mp_port}')
-        print (f'on_connect message:\n{res}')
+        print ('on_connect message:\n', res)
     except Exception as e:
         strReply ="connection ok"
-        print (f'run time error in OnConnect\n: {e}')
+        print ('run time error in OnConnect\n: ', e)
     return (strReply)
 #    return ('on_connect result')
 #------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ def on_connect ():
 def on_params ():
     global g_socket
     res = request.args['message']
-    print(f'res: "{res}"')
+    print('res: ', res)
     if (g_socket == None):
         g_socket = InitSocket()
     g_socket.send_string(res)
@@ -80,7 +80,7 @@ def on_gui_message():
     global g_socket
     print("on_gui_message");
     res = request.args['message']
-    print(f'res: "{res}"')
+    print('res: ', res)
     if (g_socket == None):
         g_socket = InitSocket()
     g_socket.send_string(res)
@@ -92,7 +92,7 @@ def onreadpulse():
     global g_socket
     print("onreadpulse");
     res = request.args['message']
-    print(f'res: "{res}"')
+    print('res: ', res)
     if (g_socket == None):
         g_socket = InitSocket()
     g_socket.send_string(res)

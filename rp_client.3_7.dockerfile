@@ -13,31 +13,33 @@ RUN apt install -y iputils-ping
 RUN apt install -y curl zip unzip tar
 
 RUN apt update && apt install -y software-properties-common && add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt update && apt install -y python3.5
+RUN apt update && apt install -y python3.7
 
 ENV HOME=/home/oe
 
 WORKDIR /home/oe/cpp/rp_server
 
 
+# RUN mkdir -p /home/oe/vcpkg && \
+# 	git clone https://github.com/Microsoft/vcpkg /home/oe/vcpkg &&\
+# 	/home/oe/vcpkg/bootstrap-vcpkg.sh
+
 COPY ./ $HOME
 
-RUN python3.5 $HOME/get-pip.py
+RUN python3.7 $HOME/get-pip.py
 
-RUN ln -s /usr/bin/python3.5 /usr/bin/python
-
-#RUN ln -s /usr/bin/python3.7 /usr/bin/python && \
-#	ln -s /usr/bin/pip3.7 /usr/bin/pip
+RUN ln -s /usr/bin/python3.7 /usr/bin/python && \
+	ln -s /usr/bin/pip3.7 /usr/bin/pip
 
 RUN pip install flask
 RUN pip install pyzmq
 
 RUN mv $HOME/vimrc $HOME/.vimrc
 
+# RUN make rp_server
+# CMD ["/home/oe/cpp/rp_server/rp_server"]
+
 ENV FLASK_APP=rp_gui.py
 ENV FLASK_DEBUG=1
-
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
 
 EXPOSE 5005
