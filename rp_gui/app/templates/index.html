@@ -106,6 +106,19 @@
     <hr>
 	<table>
 		<tr>
+			<td><input type="button" value="Start" onclick="onStartClick()"></td>
+			<td><input type="button" value="Stop" onclick="onStopClick()"></td>
+		</tr>
+		<tr>
+			<td colspan="2" style="text-align: center;"><input type="button" value="Status" onclick="onStatusClick()"></td>
+		</tr>
+		<tr>
+			<td colspan="2"><span id="spanStartStop">unkown</td>
+		</tr>
+	</table>
+    <hr>
+	<table>
+		<tr>
 			<td colspan="5" style="text-align: center;">Setup</td>
 		</tr>
 		<tr>
@@ -121,13 +134,13 @@
 		</tr>
 		<tr>
 			<td>Min. Voltage</td>
-			<td><input id="txtMcaMinC" type="input" size="5" style="text-align: center;" value="1"></td>
+			<td><input id="txtMcaMinV" type="input" size="2" style="text-align: center;" value="1"></td>
 			<td>Exponent</td>
 			<td><input id="txtPsdExp" type="input"  size="5" value="1"></td>
 		</tr>
 		<tr>
 			<td>Max. Voltage</td>
-			<td><input id="txtMcaMaxC" type="input" size="10"></td>
+			<td><input id="txtMcaMaxV" type="input" size="2"  style="text-align: center;"></td>
 			<td>Max. Pulse Time</td>
 			<td><input id="txtPsePulseTime" type="input" size="10"></td>
 		<tr style="text-align: center;">

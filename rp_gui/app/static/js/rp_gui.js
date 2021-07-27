@@ -366,7 +366,6 @@ function onGetPulses() {
             success: function(response) {
                 try {
                     downloadPulse (response);
-                    //document.getElementById("cellPulseResult").textContent = response;
                 }
                 catch (err) {
                     console.log(err);
@@ -399,14 +398,10 @@ function uploadPulses() {
 //-----------------------------------------------------------------------------
 function downloadPulse (response) {
     document.getElementById("cellPulseResult").textContent = response;
-    var y = 0;
-    var data = [];
-    var dataSeries = { type: "line" };
     var dataPoints = [];
     var jPulse = JSON.parse(response);
     if (jPulse.length > 0) {
         for (var n=0 ; n < jPulse[0].length ; n++) {
-            //dataPoints.push({x: n, y: parseFloat(jPulse[0][n]));
             dataPoints.push({
                     x: n,
                     y: parseFloat(jPulse[0][n])
@@ -414,6 +409,52 @@ function downloadPulse (response) {
         }
         showPulseOnChart (jPulse);
     }
+    else
+        document.getElementById("cellPulseResult").value = "no data";
+}
+//-----------------------------------------------------------------------------
+function onStartClick() {
+    SendStartStop ("start");
+}
+//-----------------------------------------------------------------------------
+function SendStartStop (cmd) {
+    try {
+        var dictMessage = {};
+        dictMessage["sampling"] = cmd;//"start";
+        document.getElementById("spanStartStop").textContent = "Message Sent...";
+        console.log(JSON.stringify(dictMessage));
+        $.ajax({
+            url: "/on_gui_message",
+            type: "get",
+            data: {message: JSON.stringify(dictMessage)},
+            success: function(response) {
+                try {
+                    var j = JSON.parse(response);
+                    document.getElementById("spanStartStop").textContent = j.sampling;
+                    console.log (response);
+                }
+                catch (err) {
+                    console.log(err);
+                }
+            },
+            error: function(xhr) {
+                document.getElementById("spanStartStop").textContent = e;
+                console.log(xhr.toString());
+            }
+        });
+    }
+    catch (e) {
+        document.getElementById("spanStartStop").textContent = e;
+        console.log(e);
+    }
+}
+//-----------------------------------------------------------------------------
+function onStopClick(){
+    SendStartStop ("stop");
+}
+//-----------------------------------------------------------------------------
+function onStatusClick() {
+    SendStartStop ("status");
 }
 //-----------------------------------------------------------------------------
 var chartPulse=null;
@@ -478,7 +519,7 @@ function initPulseChart() {
                     x: {
                         ticks: {
                             callback: function (val, index) {
-                                return val.toFixed(2);
+                                return val.toFixed(1);
                             }
                         }
                     }

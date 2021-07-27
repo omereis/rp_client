@@ -1,7 +1,7 @@
 ###############################################################################
 #                                 routes.py                                   #
 ###############################################################################
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, templating
 from app import app
 import json
 import zmq
@@ -67,6 +67,18 @@ def on_connect ():
 @app.route('/onparams', methods=["GET"])
 def on_params ():
     global g_socket
+    res = request.args['message']
+    print(f'res: "{res}"')
+    if (g_socket == None):
+        g_socket = InitSocket()
+    g_socket.send_string(res)
+    reply = g_socket.recv()
+    return (reply)
+#------------------------------------------------------------------------------
+@app.route('/on_gui_message', methods=["GET"])
+def on_gui_message():
+    global g_socket
+    print("on_gui_message");
     res = request.args['message']
     print(f'res: "{res}"')
     if (g_socket == None):
