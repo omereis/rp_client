@@ -24,4 +24,8 @@ typedef vector<float> TFloatVec;
 typedef queue<TFloatVec> TFloatVecQueue;
 #endif
 //---------------------------------------------------------------------------
+#ifndef	uint
+typedef	unsigned int	uint;
+#endif
+//---------------------------------------------------------------------------
 #endif

@@ -10,18 +10,21 @@
 CPP = gcc
 CFLAGS = -std=c++14 -g
 
-OBJECTS = read_json.o rp_setup.o trim.o misc.o
+OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o
 INCLUDES = rp_setup.h misc.h timer.h
 SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp
 
-RP_OBJ = rp_server.o rp_setup.o trim.o misc.o
-RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp
+RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o
+RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp
 RP_INC = 
 
 all: read_json rp_server
 
 rp_server.o : rp_server.cpp $(RP_INC)
+	$(CPP) -c $(CFLAGS) $< -o $@
+
+mca_params.o : mca_params.cpp $(RP_INC)
 	$(CPP) -c $(CFLAGS) $< -o $@
 
 rp_server: $(RP_OBJ)

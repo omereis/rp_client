@@ -311,12 +311,14 @@ void TRedPitayaSetup::Clear ()
 {
     m_trigger.Clear();
     m_sampling.Clear ();
+    m_mca_params.Clear();
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
 {
     SetTrigger (other.GetTrigger());
     SetSampling (other.GetSampling());
+    m_mca_params = other.m_mca_params;
 }
 //-----------------------------------------------------------------------------
 TRedPitayaTrigger TRedPitayaSetup::GetTrigger() const
@@ -339,6 +341,16 @@ void TRedPitayaSetup::SetSampling (const TRedPitayaSampling &sampling)
     m_sampling = sampling;
 }
 //-----------------------------------------------------------------------------
+TMcaParams TRedPitayaSetup::GetMcaParams () const
+{
+    return (m_mca_params);
+}
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaParams (const TMcaParams &mca_params)
+{
+    m_mca_params = mca_params;
+}
+//-----------------------------------------------------------------------------
 bool  TRedPitayaSetup::LoadFromJson(const string &strFile)
 {
 	Json::Value root, jSampling, jTrigger;
@@ -349,10 +361,13 @@ bool  TRedPitayaSetup::LoadFromJson(const string &strFile)
     if (reader.parse (strJson, root)) {
         jSampling = root["sampling"];
         jTrigger = root["trigger"];
+		Json::Value jMCA = root["mca"];
         if (!jSampling.isNull())
             m_sampling.LoadFromJson (jSampling);
         if (!jTrigger.isNull())
             m_trigger.LoadFromJson (jTrigger);
+        if (!jMCA.isNull())
+            m_mca_params.LoadFromJson (jMCA);
     }
 
     return (true);

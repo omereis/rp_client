@@ -7,7 +7,7 @@
 #include "jsoncpp/json/json.h"
 
 #include <string>
-
+#include "mca_params.h"
 using namespace std;
 
 class TRedPitayaSampling {
@@ -93,11 +93,15 @@ public:
     void SetTrigger (const TRedPitayaTrigger &trigger);
     TRedPitayaSampling GetSampling () const;
     void SetSampling (const TRedPitayaSampling &sampling);
+
+    TMcaParams GetMcaParams () const;
+    void SetMcaParams (const TMcaParams &mca_params);
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
     TRedPitayaTrigger m_trigger;
     TRedPitayaSampling m_sampling;
+    TMcaParams m_mca_params;
 };
 //-----------------------------------------------------------------------------
 #define  __RP_SETUP_H
