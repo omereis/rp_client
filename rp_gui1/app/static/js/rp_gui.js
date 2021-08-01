@@ -92,8 +92,8 @@ function onReadSamplingClick () {
     try {
         document.body.style.cursor = "wait";
         document.getElementById("txtMessage").value = "Reading...";
-        var dictMessage = {};
-        dictMessage["setup"] = {"read" : "sampling"};
+                var dictMessage = {};
+        dictMessage["setup"] = "read";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
             url: "/onparams",
@@ -122,6 +122,7 @@ function onReadSamplingClick () {
     finally {
         document.body.style.cursor = crOld;
     }
+
 }
 //-----------------------------------------------------------------------------
 function uploadSampling () {
@@ -300,98 +301,11 @@ function onUpdateSamplingClick () {
     }
 }
 //-----------------------------------------------------------------------------
-function onReadAppSetupClick () {
-    var crOld = document.body.style.cursor;
-    try {
-        document.body.style.cursor = "wait";
-        document.getElementById("txtMessage").value = "Reading...";
-        var dictMessage = {};
-        dictMessage["setup"] = {"read" : "applications"};
-        console.log(JSON.stringify(dictMessage));
-        $.ajax({
-            url: "/onparams",
-            type: "get",
-            data: {message: JSON.stringify(dictMessage)},
-            success: function(response) {
-                try {
-                    console.log(response);
-                    document.getElementById("txtMessage").value = "";
-                    downloadAppsSetup (response);
-                }
-                catch (err) {
-                    console.log(err);
-                }
-            },
-            error: function(xhr) {
-                alert('error');
-                console.log(xhr.toString());
-            }
-        });
-    }
-    catch (e) {
-        console.log(e);
-    }
-    finally {
-        document.body.style.cursor = crOld;
-    }
-}
-//-----------------------------------------------------------------------------
-function onWriteAppSetupClick () {
-    var crOld = document.body.style.cursor;
-    try {
-        document.body.style.cursor = "wait";
-        document.getElementById("txtMessage").value = "Reading...";
-        var dictSetup = {};
-        var dictMessage = {};
-        dictSetup["mca"] = uploadMcaSetup();
-        dictSetup["psd"] = uploadPsdSetup();
-        dictMessage["setup"] = dictSetup;
-        console.log(JSON.stringify(dictMessage));
-        $.ajax({
-            url: "/onparams",
-            type: "get",
-            data: {message: JSON.stringify(dictMessage)},
-            success: function(response) {
-                try {
-                    console.log(response);
-                    document.getElementById("txtMessage").value = "";
-                    downloadAppsSetup (response);
-                }
-                catch (err) {
-                    console.log(err);
-                }
-            },
-            error: function(xhr) {
-                alert('error');
-                console.log(xhr.toString());
-            }
-        });
-    }
-    catch (e) {
-        console.log(e);
-    }
-    finally {
-        document.body.style.cursor = crOld;
-    }
-}
-//-----------------------------------------------------------------------------
 function downloadSetup (strResponse) {
     try {
         var jSetup = JSON.parse(strResponse);
         downloadSampling (jSetup["sampling"]);
         downloadTrigger (jSetup["trigger"]);
-    }
-    catch (error) {
-        console.log(error);
-        alert (error);
-    }
-}
-//-----------------------------------------------------------------------------
-function downloadAppsSetup (response) {
-    try {
-        var jSetup = JSON.parse(response);
-        downloadMcaSetup (jSetup["mca"]);
-        downloadPsdSetup (jSetup["psd"]);
     }
     catch (error) {
         console.log(error);
@@ -410,17 +324,6 @@ function downloadSampling (jSampling) {
     if (txt != null)
         txt.value =  jSampling["signal_points"];
     //console.log(rate);
-}
-//-----------------------------------------------------------------------------
-function downloadMcaSetup (jMca) {
-    document.getElementById("txtMcaChannels").value = jMca.channels;
-    document.getElementById("txtMcaMinV").value     = jMca.min_voltage;
-    document.getElementById("txtMcaMaxV").value     = jMca.max_voltage;
-    console.log(JSON.stringify(jMca));
-}
-//-----------------------------------------------------------------------------
-function downloadPsdSetup (jPsd) {
-    console.log(JSON.stringify(jPsd));
 }
 //-----------------------------------------------------------------------------
 function selectComboItem (strCombo, strValue) {
@@ -649,19 +552,5 @@ function initPulseChart() {
             }
 	    });
 	}
-}
-//-----------------------------------------------------------------------------
-function uploadMcaSetup() {
-    var jMca = {};
-    jMca["channels"] = document.getElementById("txtMcaChannels").value;
-    jMca["min_voltage"] = document.getElementById("txtMcaMinV").value;
-    jMca["max_voltage"] = document.getElementById("txtMcaMaxV").value;
-    return (jMca);
-}
-//-----------------------------------------------------------------------------
-function uploadPsdSetup() {
-    var jPsd = {};
-    jPsd["psd"] ="not yet supported";
-    return (jPsd);
 }
 //-----------------------------------------------------------------------------

@@ -79,23 +79,40 @@ void TMcaParams::SetMaxVoltage (double dMaxVoltage)
     m_dMaxVoltage = dMaxVoltage;
 }
 //-----------------------------------------------------------------------------
-bool TMcaParams::LoadFromJson (Json::Value jMCA)
+Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
 {
-    Json::Value jChannels=jMCA["channels"], jMinVoltage=jMCA["min_voltage"], jMaxVoltage=jMCA["max_voltage"];
-    bool f;
+    Json::Value jNew;
 
     try {
-        if (!jChannels.isNull())
-            SetChannels (jChannels.asInt());
-        if (!jMinVoltage.isNull())
-            SetMinVoltage (jMinVoltage.asDouble());
-        if (!jMaxVoltage.isNull())
-            SetMaxVoltage (jMaxVoltage.asDouble());
-        f = true;
+        if (!jMCA.isNull()) {
+            Json::Value jChannels=jMCA["channels"], jMinVoltage=jMCA["min_voltage"], jMaxVoltage=jMCA["max_voltage"];
+            if (!jChannels.isNull())
+                SetChannels ((uint)std::stoi(jChannels.asString()));
+            if (!jMinVoltage.isNull())
+                SetMinVoltage (std::stof (jMinVoltage.asString()));
+            if (!jMaxVoltage.isNull())
+                SetMaxVoltage (std::stof (jMaxVoltage.asString()));
+            jNew = AsJson();
+        }
     }
-    catch (...) {
-        f = false;
+    catch (std::exception &exp) {
+        jNew["error"] = exp.what();
     }
-    return (f);
+    return (jNew);
+}
+//-----------------------------------------------------------------------------
+Json::Value TMcaParams::AsJson () const
+{
+    Json::Value jMCA;//jChannels=jMCA["channels"], jMinVoltage=jMCA["min_voltage"], jMaxVoltage=jMCA["max_voltage"];
+
+    try {
+        jMCA["channels"] = GetChannels();
+        jMCA["min_voltage"] = GetMinVoltage();
+        jMCA["max_voltage"] = GetMaxVoltage();
+    }
+    catch (std::exception &exp) {
+        jMCA["error"] = exp.what();
+    }
+    return (jMCA);
 }
 //-----------------------------------------------------------------------------

@@ -20,9 +20,9 @@ public:
     bool operator!= (const TRedPitayaSampling &other) const;
     void Clear ();
 
-    bool LoadFromJson (Json::Value jSampling);
+    Json::Value LoadFromJson (Json::Value jSampling);
     Json::Value AsJson();
-    void UpdateFromJson(Json::Value &jSetup);
+    Json::Value UpdateFromJson(Json::Value &jSetup);
 
     string GetRate () const;
     void SetRate (const string &strRate);
@@ -54,9 +54,9 @@ public:
     bool operator!= (const TRedPitayaTrigger &other) const;
     void Clear ();
 
-    bool LoadFromJson (Json::Value jTrigger);
+    Json::Value LoadFromJson (Json::Value &jTrigger);
 	Json::Value AsJson();
-    void UpdateFromJson(Json::Value &jSetup);
+    Json::Value UpdateFromJson(Json::Value &jSetup);
 
     string GetLevel () const;
     void SetLevel (const string &strLevel);
@@ -87,7 +87,7 @@ public:
     bool LoadFromJson(const string &strFile);
     bool SaveToJson (const std::string &strFile);
     Json::Value AsJson();
-    bool  UpdateFromJson(Json::Value &jSetup);
+    Json::Value UpdateFromJson(Json::Value &jSetup);
 
     TRedPitayaTrigger GetTrigger() const;
     void SetTrigger (const TRedPitayaTrigger &trigger);
@@ -96,6 +96,8 @@ public:
 
     TMcaParams GetMcaParams () const;
     void SetMcaParams (const TMcaParams &mca_params);
+    Json::Value McaAsJson();
+    Json::Value AppsAsJson();
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:

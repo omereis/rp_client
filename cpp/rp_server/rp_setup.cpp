@@ -79,9 +79,9 @@ void  TRedPitayaSampling::SetDecimation (const string &str)
     m_strDecimation = str;
 }
 //-----------------------------------------------------------------------------
-bool  TRedPitayaSampling::LoadFromJson (Json::Value jSampling)
+Json::Value TRedPitayaSampling::LoadFromJson (Json::Value jSampling)
 {
-    bool fLoad;
+    Json::Value jNew;
 
     try {
         Json::Value jRate = jSampling["rate"], jDecimation = jSampling["decimation"], jBufferSize = jSampling["buffer_size"];
@@ -92,12 +92,12 @@ bool  TRedPitayaSampling::LoadFromJson (Json::Value jSampling)
             SetDecimation (jDecimation.asString());
         if (!jBufferSize.isNull())
             SetBufferSize (jBufferSize.asString());
-        fLoad = true;
+        jNew = AsJson();
     }
-    catch (...) {
-        fLoad = false;
+    catch (std::exception &exp) {
+        jNew["error"] = exp.what();
     }
-    return (fLoad);
+    return (jNew);
 }
 //-----------------------------------------------------------------------------
 
@@ -113,14 +113,23 @@ Json::Value TRedPitayaSampling::AsJson()
 }
 //-----------------------------------------------------------------------------
 
-void TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
+Json::Value TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
 {
-    SetRate (jSetup["rate"].asString());
-    SetDecimation (jSetup["decimation"].asString());
-    if (!jSetup["buffer_length"].isNull())
-        SetBufferSize(jSetup["buffer_length"].asString());
-    if (!jSetup["signal_points"].isNull())
-        SetBufferSize(jSetup["signal_points"].asString());
+    Json::Value jNew;
+    
+    try {
+        SetRate (jSetup["rate"].asString());
+        SetDecimation (jSetup["decimation"].asString());
+        if (!jSetup["buffer_length"].isNull())
+            SetBufferSize(jSetup["buffer_length"].asString());
+        if (!jSetup["signal_points"].isNull())
+            SetBufferSize(jSetup["signal_points"].asString());
+        jNew = AsJson();
+    }
+    catch (std::exception exp) {
+        jNew["error"] = exp.what();
+    }
+    return (jNew);
 }
 //-----------------------------------------------------------------------------
 
@@ -241,9 +250,9 @@ void TRedPitayaTrigger::SetSrc (const string &strSrc)
     m_strSrc = strSrc;
 }
 //-----------------------------------------------------------------------------
-bool TRedPitayaTrigger::LoadFromJson (Json::Value jTrigger)
+Json::Value TRedPitayaTrigger::LoadFromJson (Json::Value &jTrigger)
 {
-    bool fLoad;
+    Json::Value jNew;
 
     try {
         Json::Value jLevel = jTrigger["level"], jDir = jTrigger["dir"], jSrc = jTrigger["src"];
@@ -254,12 +263,12 @@ bool TRedPitayaTrigger::LoadFromJson (Json::Value jTrigger)
             SetDir (jDir.asString());
         if (!jDir.isNull())
             SetSrc (jSrc.asString());
-        fLoad = true;
+		jNew = AsJson();
     }
-    catch (...) {
-        fLoad = false;
+    catch (std::exception &exp) {
+		jNew["error"] = exp.what();
     }
-    return (fLoad);
+    return (jNew);
 }
 //-----------------------------------------------------------------------------
 Json::Value TRedPitayaTrigger::AsJson()
@@ -273,9 +282,20 @@ Json::Value TRedPitayaTrigger::AsJson()
 }
 //-----------------------------------------------------------------------------
 
-void TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
+Json::Value TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
 {
+    Json::Value jNew;
 
+    try {
+        SetLevel (jSetup["level"].asString());
+        SetDir (jSetup["dir"].asString());
+        SetSrc (jSetup["src"].asString());
+        jNew = AsJson();
+    }
+    catch (std::exception exp) {
+        jNew["error"] = exp.what();
+    }
+    return (jNew);
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -351,7 +371,24 @@ void TRedPitayaSetup::SetMcaParams (const TMcaParams &mca_params)
     m_mca_params = mca_params;
 }
 //-----------------------------------------------------------------------------
-bool  TRedPitayaSetup::LoadFromJson(const string &strFile)
+Json::Value TRedPitayaSetup::AppsAsJson()
+{
+    Json::Value jAppsMca;
+
+    jAppsMca["mca"] = McaAsJson();
+    jAppsMca["psd"] = "no psd yet";
+    return (jAppsMca);
+}
+//-----------------------------------------------------------------------------
+Json::Value TRedPitayaSetup::McaAsJson()
+{
+    Json::Value jMCA;
+
+    jMCA["mca"] = m_mca_params.AsJson();
+    return (jMCA);
+}
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::LoadFromJson(const string &strFile)
 {
 	Json::Value root, jSampling, jTrigger;
 	Json::Reader reader;
@@ -382,19 +419,19 @@ Json::Value TRedPitayaSetup::AsJson()
     return (jSetup);
 }
 //-----------------------------------------------------------------------------
-bool TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
+Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
 {
-    bool fUpdate;
+    Json::Value jNewSetup;
 
     try {
-        m_sampling.UpdateFromJson(jSetup["sampling"]);
-        m_trigger.UpdateFromJson(jSetup["trigger"]);
-        fUpdate = true;
+        jNewSetup["sampling"] = m_sampling.UpdateFromJson(jSetup["sampling"]);
+        jNewSetup["trigger"] = m_trigger.UpdateFromJson(jSetup["trigger"]);
+        jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
     }
-    catch (...) {
-        fUpdate = false;
+    catch (std::exception &exp) {
+		jNewSetup["error"] = exp.what();
     }
-    return (fUpdate);
+    return (jNewSetup);
 }
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::SaveToJson (const std::string &strFile)

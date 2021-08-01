@@ -86,11 +86,24 @@ std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
     std::string strReply;
 
     try {
-    	if (jSetup.isObject()) {
-            rp_setup.UpdateFromJson(jSetup);
+        Json::Value jRead = jSetup["read"], jNew;
+    	if (jRead.isNull()) {
+            jNew = rp_setup.UpdateFromJson(jSetup);
             rp_setup.SaveToJson("rp_setup.json");
+            strReply = StringifyJson(jNew);
 		}
-        strReply = StringifyJson (rp_setup.AsJson());
+        else {
+            string strCmd = jRead.asString();
+            strCmd = ToLower(strCmd);
+            if (strCmd == "sampling")
+                strReply = StringifyJson (rp_setup.AsJson());
+            else if (strCmd == "applications") {
+                Json::Value j = rp_setup.McaAsJson();
+                strReply = StringifyJson (j);//rp_setup.McaAsJson());
+			}
+        }
+		if (strReply.length() == 0)
+	        strReply = StringifyJson (rp_setup.AsJson());
     }
     catch (std::exception &err) {
         Json::Value root;

@@ -18,7 +18,8 @@ public:
     bool operator!= (const TMcaParams &other) const;
     void Clear ();
 //-----------------------------------------------------------------------------
-    bool LoadFromJson (Json::Value jMCA);
+    Json::Value LoadFromJson (Json::Value jMCA);
+    Json::Value AsJson () const;
 //-----------------------------------------------------------------------------
     uint GetChannels () const;
     void SetChannels (uint uiChannels);
