@@ -75,11 +75,14 @@ def on_params ():
     reply = g_socket.recv()
     return (reply)
 #------------------------------------------------------------------------------
-@app.route('/on_gui_message', methods=["GET"])
+@app.route('/on_gui_message', methods=["GET","POST"])
 def on_gui_message():
     global g_socket
-    print("on_gui_message");
-    res = request.args['message']
+    if request.method == "GET":
+        print("on_gui_message")
+        res = request.args['message']
+    else:
+        res = json.dumps(request.json)
     print('res: ', res)
     if (g_socket == None):
         g_socket = InitSocket()

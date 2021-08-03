@@ -3,10 +3,6 @@
 \******************************************************************************/
 
 //-----------------------------------------------------------------------------
-const SamplingTitle = "Sampling";
-const McaTitle = "MCA";
-const StatusTitle = "Status";
-//-----------------------------------------------------------------------------
 function include(file) {
 // source:
 // https://www.geeksforgeeks.org/how-to-include-a-javascript-file-in-another-javascript-file/  
@@ -97,7 +93,7 @@ function onReadSamplingClick () {
         document.body.style.cursor = "wait";
         document.getElementById("txtMessage").value = "Reading...";
         var dictMessage = {};
-        dictMessage["setup"] = {"read" : SamplingTitle};//"sampling"};
+        dictMessage["setup"] = {"read" : "sampling"};
         console.log(JSON.stringify(dictMessage));
         $.ajax({
             url: "/onparams",
@@ -269,8 +265,7 @@ function onUpdateSamplingClick () {
         var dictSetup = {};
         var sampling = uploadSampling ();
         var trigger = uploadTrigger ();
-        //dictSetup["sampling"] = sampling;
-        dictSetup[SamplingTitle] = sampling;
+        dictSetup["sampling"] = sampling;
         dictSetup["trigger"] = trigger;
         dictMessage["setup"] = dictSetup;
         document.getElementById("txtMessage").value = "Sent...";
@@ -383,8 +378,7 @@ function onWriteAppSetupClick () {
 function downloadSetup (strResponse) {
     try {
         var jSetup = JSON.parse(strResponse);
-        //downloadSampling (jSetup["sampling"]);
-        downloadSampling (jSetup[SamplingTitle]);
+        downloadSampling (jSetup["sampling"]);
         downloadTrigger (jSetup["trigger"]);
     }
     catch (error) {
@@ -459,7 +453,7 @@ function onGetPulses() {
     try {
         var dictMessage = {};
         var dictPulse = uploadPulses();
-        dictMessage["ReadPulse"] = dictPulse;
+        dictMessage["read"] = dictPulse;
         document.getElementById("cellPulseResult").textContent = "Reading...";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
@@ -495,8 +489,8 @@ function uploadPulses() {
         console.log(e);
         nPulses = 0;
     }
-    //msg["pulse"] = nPulses;
-    return (nPulses);
+    msg["pulse"] = nPulses;
+    return (msg);
 }
 //-----------------------------------------------------------------------------
 function downloadPulse (response) {
@@ -524,8 +518,7 @@ function onStartClick() {
 function SendStartStop (cmd) {
     try {
         var dictMessage = {};
-        //dictMessage["sampling"] = cmd;//"start";
-        dictMessage[SamplingTitle] = cmd;
+        dictMessage["sampling"] = cmd;//"start";
         document.getElementById("spanStartStop").textContent = "Message Sent...";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
@@ -535,7 +528,7 @@ function SendStartStop (cmd) {
             success: function(response) {
                 try {
                     var j = JSON.parse(response);
-                    document.getElementById("spanStartStop").textContent = j.Sampling;
+                    document.getElementById("spanStartStop").textContent = j.sampling;
                     console.log (response);
                 }
                 catch (err) {
@@ -543,7 +536,7 @@ function SendStartStop (cmd) {
                 }
             },
             error: function(xhr) {
-                document.getElementById("spanStartStop").textContent = xhr;
+                document.getElementById("spanStartStop").textContent = e;
                 console.log(xhr.toString());
             }
         });
@@ -555,7 +548,7 @@ function SendStartStop (cmd) {
 }
 //-----------------------------------------------------------------------------
 function onStopClick(){
-    SendStartStop (false);
+    SendStartStop (flase);
     //SendStartStop ("stop");
 }
 //-----------------------------------------------------------------------------
@@ -677,8 +670,7 @@ function uploadPsdSetup() {
 function onMcaStatus () {
     try {
         var dictMessage = {};
-        //dictMessage["sampling"] = cmd;//"start";
-        dictMessage[McaTitle] = StatusTitle;
+        dictMessage["MCA"] = "status";//"start";
         document.getElementById("MCA_Status").textContent = "Message Sent...";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
@@ -688,7 +680,7 @@ function onMcaStatus () {
             success: function(response) {
                 try {
                     var j = JSON.parse(response);
-                    document.getElementById("MCA_Status").textContent = j[StatusTitle];
+                    document.getElementById("MCA_Status").textContent = j.mca;
                     console.log (response);
                 }
                 catch (err) {
@@ -696,64 +688,14 @@ function onMcaStatus () {
                 }
             },
             error: function(xhr) {
-                document.getElementById("MCA_Status").textContent = xhr;
+                document.getElementById("spanStartStop").textContent = e;
                 console.log(xhr.toString());
             }
         });
     }
     catch (e) {
-        document.getElementById("MCA_Status").textContent = e;
+        document.getElementById("spanStartStop").textContent = e;
         console.log(e);
     }
-}
-//-----------------------------------------------------------------------------
-function onMcaStartStop () {
-    try {
-        var dictMessage = {};
-        var mca_cmd = uploadMcaCommand ();
-        dictMessage[McaTitle] = mca_cmd;
-        document.getElementById("MCA_Status").textContent = "Message Sent...";
-        console.log(JSON.stringify(dictMessage));
-        $.ajax({
-            url: "/on_gui_message",
-            type: "get",
-            data: {message: JSON.stringify(dictMessage)},
-            success: function(response) {
-                try {
-                    var j = JSON.parse(response);
-                    document.getElementById("MCA_Status").textContent = j[StatusTitle];
-                    console.log (response);
-                }
-                catch (err) {
-                    console.log(err);
-                }
-            },
-            error: function(xhr) {
-                document.getElementById("MCA_Status").textContent = xhr;
-                console.log(xhr.toString());
-            }
-        });
-    }
-    catch (e) {
-        document.getElementById("MCA_Status").textContent = e;
-        console.log(e);
-    }
-}
-//-----------------------------------------------------------------------------
-function uploadMcaCommand () {
-    var cmd;
-
-    try {
-        var current = document.getElementById("MCA_Status").textContent;
-        if (current == "true")
-            cmd = false;
-        else
-        cmd = true;
-    }
-    catch (err) {
-        console.log(e);
-        cmd = false;
-    }
-    return (cmd);
 }
 //-----------------------------------------------------------------------------
