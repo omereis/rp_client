@@ -782,7 +782,7 @@ function onReadMcaClick() {
                 try {
                     var jMCA = JSON.parse(response);
                     if (McaTitle in jMCA)
-                        downloadMca(jMCA);
+                        downloadMca(jMCA[McaTitle]);
                     //document.getElementById(MCAStatusID).textContent = j[StatusTitle];
                     else
                         document.getElementById(MCAStatusID).textContent = response;
@@ -806,11 +806,23 @@ function onReadMcaClick() {
 }
 //-----------------------------------------------------------------------------
 function downloadMca (jMca) {
-    var ds = {data: [], label: ' '}, num;
+    var ds = {data: [], label: []}, num;
+	var aLabels=[];
 
     if (chartMca == null)
         initMcaChart();
+/*
+	for (var n=0 ; n < 1024 ; n++) {
+		ds.data.push(1024 - (n+1));
+		aLabels.push(n+1);
+	}
+
+*/
+
+/*
+*/
     for (var n=0 ; n < jMca.length ; n++) {
+		aLabels.push(n+1);
         try {
             num = parseFloat(jMca[n])
         }
@@ -818,8 +830,14 @@ function downloadMca (jMca) {
             console.log(e);
             num = 0;
         }
+		if (num > 0)
+			num += 0;
         ds.data.push(num);
     }
+
+    while (chartMca.data.datasets.length > 0)
+		chartMca.data.datasets.pop();
+	chartMca.data.labels = aLabels;
     chartMca.data.datasets.push(ds);
     chartMca.update();
 }
@@ -828,66 +846,30 @@ function initMcaChart() {
 	//var myChart=document.getElementById("pulseChart").getContext("2d");
     var canvasChart=document.getElementById("idMcaCanvas").getContext("2d");
     var channels = document.getElementById("txtMcaChannels").value;
-    var aLabels=[];
-
-    for (var n=1 ; n <= channels ; n++)
-        aLabels.push(n.toString());
 
     try {
-        if (chartMca == null) {
-            chartMca = new Chart (canvasChart,{
-                type: 'bar', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
-                data: {
-                    labels: aLabels,//[],
-                    datasets: [{
-                        label: 'MCA',
-                        data: [],//[620915, 99615, 86395, 71452, 67752, 65455],
-                        //backgroundcolor: "blue",
-                        borderColor: 'rgb(75, 192, 192)'
-                    }]
-                },
-                options: {
-                    scales : {
-                        x: {
-                            ticks: {
-                                callback: function (val, index) {
-                                    return val.toFixed(1);
-                                }
-                            }
-                        }
-                    },
-                      plugins: {
-                        zoom: {
-                          pan: {
-                            enabled: true,
-                            mode: 'x'
-                          },
-                          zoom: {
-                            pinch: {
-                              enabled: true
-                            },
-                            wheel: {
-                              enabled: true
-                            },
-                            mode: 'x'
-                          },
-                          limits: {
-                            x: {
-                              minDelay: 0,
-                              maxDelay: 4000,
-                              minDuration: 1000,
-                              maxDuration: 20000
-                            }
-                          }
-                        }
-                    }
-                }
-            });
-        }
+        chartMca = new Chart(canvasChart, {
+            type: 'bar',
+            data: {
+                labels: [1, 2, 3, 4, 5],//["Africa", "Asia", "Europe", "Latin America", "North America"],
+                datasets: [ {
+                    label: "",//"Population (millions)",
+                    //backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
+                    data: [2478,5267,734,784,433]
+                } ]
+            },
+            options: {
+                legend: { display: false },
+                title: {
+                    display: false,//true,
+                    text: 'Predicted world population (millions) in 2050'
+              }
+            }
+        });
     }
     catch (err) {
         console.log(err);
-	}
+    }
 }
 //-----------------------------------------------------------------------------
 function onSaveMca() {
@@ -895,6 +877,9 @@ function onSaveMca() {
 }
 //-----------------------------------------------------------------------------
 function testBarChart() {
+/* Source
+https://tobiasahlin.com/blog/chartjs-charts-to-get-you-started/#horizontal-bar-chart
+*/
 	var ctx = document.getElementById("idMcaCanvas")
 /*new Chart(document.getElementById("idMcaChart"), {*/
 	new Chart(ctx, {
