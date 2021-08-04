@@ -36,6 +36,7 @@ static const char *g_szAll       = "All";
 static const char *g_szError     = "Error";
 static const char *g_szReset     = "Reset";
 static const char *g_szMCA       = "MCA";
+static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
@@ -54,6 +55,8 @@ void SafeSetMcaParams (const TMcaParams &params);
 void SafeAddToMca (const TFloatVec &vPulse);
 void SafeResetMca();
 void SafeReadMca (Json::Value &jResult);
+void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
+string SaveMCA ();
 //-----------------------------------------------------------------------------
 int main (void)
 {
@@ -89,13 +92,9 @@ int main (void)
             else if (!root[g_szMCA].isNull())
                 strReply = HandleMCA(root[g_szMCA], rp_setup);
         }
-        sleep (1);          //  Do some 'work'
         if (strReply.length() == 0)
             strReply = std::string("World");
-        //if (strReply.length() > 0)
             zmq_send (responder, strReply.c_str(), strReply.length(), 0);
-        //else
-            //zmq_send (responder, "World", 5, 0);
     }
     return 0;
 }
@@ -309,6 +308,10 @@ std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
         }
         else if (str == g_szReadMca)
             SafeReadMca (jResult);
+        else if (str == g_szSaveMCA)
+            jResult = SaveMCA ();
+        else
+            jResult[g_szMCA] = "Command Unknown";
     }
     catch (std::exception &exp) {
         jResult[g_szError] = exp.what();
@@ -317,15 +320,27 @@ std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
 }
 //-----------------------------------------------------------------------------
 
-void SafeReadMca (Json::Value &jResult)
+void SafeGetMcaSpectrum (TFloatVec &vSpectrum)
 {
     mutex mtx;
-    TFloatVec vSpectrum;
-    TFloatVec::iterator i;
 
     mtx.lock();
     g_mca_calculator.GetSpectrum (vSpectrum);
     mtx.unlock();
+}
+//-----------------------------------------------------------------------------
+
+void SafeReadMca (Json::Value &jResult)
+{
+//    mutex mtx;
+//    TFloatVec vSpectrum;
+    TFloatVec::iterator i;
+    TFloatVec vSpectrum;
+
+//    mtx.lock();
+//    g_mca_calculator.GetSpectrum (vSpectrum);
+//    mtx.unlock();
+    SafeGetMcaSpectrum (vSpectrum);
     for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
         jResult[g_szMCA].append(*i);
 }
@@ -362,11 +377,16 @@ void AddPulse ()
 
     if ((SafeGetStatus ())) {
         if (ReadVectorFromFile ("pulse.csv", vPulse)) {
-            float f, fMax = VectorMax (vPulse) * 0.1;
+            float f, fMax = VectorMax (vPulse) * 0.1, r, rMax, noise;
 
             for (i=vPulse.begin() ; i != vPulse.end() ; i++) {
                 f = *i;
-                f += (rand() / RAND_MAX) * fMax;
+                r = (float) rand();
+                rMax = (float) RAND_MAX;
+                noise = (r / rMax) * fMax;
+                //f = *i;
+                //f += (rand() / RAND_MAX) * fMax;
+                f += noise;
                 *i = f;
             }
             mtx.lock ();
@@ -405,4 +425,29 @@ void ExportDebugPulse(TFloatVecQueue &qDebug)
         mtxPulses.push_back(*i);
     }
 */
+}
+//-----------------------------------------------------------------------------
+
+string SaveMCA ()
+{
+    string strResult;
+    TFloatVec vSpectrum;
+    TFloatVec::iterator i;
+
+    try {
+
+        strResult = "mca.csv";
+        SafeGetMcaSpectrum (vSpectrum);
+        FILE *file = fopen (strResult.c_str(), "w+");
+        if (file != NULL) {
+            for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
+                fprintf (file, "%g\n", *i);
+        }
+        fclose (file);
+    }
+    catch (std::exception exp) {
+        strResult = exp.what();
+    }
+    return (strResult);
+
 }

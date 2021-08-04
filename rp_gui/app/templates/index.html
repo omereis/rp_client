@@ -144,25 +144,29 @@
 			<td>Max. Pulse Time</td>
 			<td><input id="txtPsePulseTime" type="input" size="10"></td>
 		<tr style="text-align: center;">
-			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Read Application Setup" onclick="onReadAppSetupClick ()"></td>
+			<td colspan="3" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Read Application Setup" onclick="onReadAppSetupClick ()"></td>
 			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Send Application Setup" onclick="onWriteAppSetupClick()"></td>
 			<td><input type="button" value="Preview"></td>
 		</tr>
 		<tr style="text-align: center;">
-			<td style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="MCA Start/Stop" onclick="onMcaStartStop ()"></td>
+			<td style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="MCA Start" onclick="onMcaStart ()"></td>
+			<td style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="MCA Stop" onclick="onMcaStop ()"></td>
 			<td style="text-align: center;"><input type="button" value="MCA Status" onclick="onMcaStatus ()"></td>
 			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="PSD Start/Stop""></td>
 			<td><input type="button" value="Preview"></td>
 		</tr>
 		<tr style="text-align: center;">
-			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><span id="MCA_Status"></span></td>
+			<td colspan="3" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><span id="MCA_Status"></span></td>
 			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><span id="PSD_Status"></span></td>
 			<td><input type="button" value="Preview"></td>
 		</tr>
 		<tr style="text-align: center;">
-			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Reset MCA""></td>
+			<td style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Reset MCA""></td>
+			<td style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Read MCA" onclick=onReadMcaClick()></td>
 			<td colspan="2" style="text-align: center;border-top: 3px solid rgb(34, 189, 209);"><input type="button" value="Reset PSD""></td>
-			<td><input type="button" value="Preview"></td>
+			<td><input type="button" value="Preview" onclick="onSaveMca()"><br>
+				<input type="button" value="Bar Chart" onclick="testBarChart()">
+			</td>
 		</tr>
 		</table>
 		<hr>
@@ -181,7 +185,10 @@
 		</tr>
 	</table>
 	<div>
-		<canvas id="idCanvas"></canvas>
+		<canvas id="idPulseCanvas"></canvas>
+	</div>
+	<div>
+		<canvas id="idMcaCanvas"></canvas>
 	</div>
 <hr>
 </body>

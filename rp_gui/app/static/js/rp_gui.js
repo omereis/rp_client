@@ -6,6 +6,8 @@
 const SamplingTitle = "Sampling";
 const McaTitle = "MCA";
 const StatusTitle = "Status";
+const ReadMcaTitle = "ReadMca";
+const MCAStatusID = "MCA_Status";
 //-----------------------------------------------------------------------------
 function include(file) {
 // source:
@@ -309,7 +311,7 @@ function onReadAppSetupClick () {
     var crOld = document.body.style.cursor;
     try {
         document.body.style.cursor = "wait";
-        document.getElementById("MCA_Status").textContent = "Reading...";
+        document.getElementById(MCAStatusID).textContent = "Reading...";
         var dictMessage = {};
         dictMessage["setup"] = {"read" : "applications"};
         console.log(JSON.stringify(dictMessage));
@@ -320,7 +322,7 @@ function onReadAppSetupClick () {
             success: function(response) {
                 try {
                     console.log(response);
-                    document.getElementById("MCA_Status").textContent = "done reading";
+                    document.getElementById(MCAStatusID).textContent = "done reading";
                     downloadAppsSetup (response);
                 }
                 catch (err) {
@@ -345,7 +347,7 @@ function onWriteAppSetupClick () {
     var crOld = document.body.style.cursor;
     try {
         document.body.style.cursor = "wait";
-        document.getElementById("MCA_Status").textContent = "Setting...";
+        document.getElementById(MCAStatusID).textContent = "Setting...";
         var dictSetup = {};
         var dictMessage = {};
         dictSetup["mca"] = uploadMcaSetup();
@@ -359,7 +361,7 @@ function onWriteAppSetupClick () {
             success: function(response) {
                 try {
                     console.log(response);
-                    document.getElementById("MCA_Status").textContent = "done setting";
+                    document.getElementById(MCAStatusID).textContent = "done setting";
                     downloadAppsSetup (response);
                 }
                 catch (err) {
@@ -500,7 +502,7 @@ function uploadPulses() {
 }
 //-----------------------------------------------------------------------------
 function downloadPulse (response) {
-    document.getElementById("cellPulseResult").textContent = response;
+    //document.getElementById("cellPulseResult").textContent = response;
     var dataPoints = [];
     var jPulse = JSON.parse(response);
     if (jPulse.length > 0) {
@@ -564,6 +566,7 @@ function onStatusClick() {
 }
 //-----------------------------------------------------------------------------
 var chartPulse=null;
+var chartMca=null;
 //-----------------------------------------------------------------------------
 function showPulseOnChart (jPulse) {
     var n, m, num, rate, factor;
@@ -606,7 +609,7 @@ function showPulseOnChart (jPulse) {
 //-----------------------------------------------------------------------------
 function initPulseChart() {
 	//var myChart=document.getElementById("pulseChart").getContext("2d");
-    var myChart=document.getElementById("idCanvas").getContext("2d");
+    var myChart=document.getElementById("idPulseCanvas").getContext("2d");
 
 	if (chartPulse == null) {
 		chartPulse = new Chart (myChart,{
@@ -679,7 +682,7 @@ function onMcaStatus () {
         var dictMessage = {};
         //dictMessage["sampling"] = cmd;//"start";
         dictMessage[McaTitle] = StatusTitle;
-        document.getElementById("MCA_Status").textContent = "Message Sent...";
+        document.getElementById(MCAStatusID).textContent = "Message Sent...";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
             url: "/on_gui_message",
@@ -688,7 +691,7 @@ function onMcaStatus () {
             success: function(response) {
                 try {
                     var j = JSON.parse(response);
-                    document.getElementById("MCA_Status").textContent = j[StatusTitle];
+                    document.getElementById(MCAStatusID).textContent = j[StatusTitle];
                     console.log (response);
                 }
                 catch (err) {
@@ -696,23 +699,31 @@ function onMcaStatus () {
                 }
             },
             error: function(xhr) {
-                document.getElementById("MCA_Status").textContent = xhr;
+                document.getElementById(MCAStatusID).textContent = xhr;
                 console.log(xhr.toString());
             }
         });
     }
     catch (e) {
-        document.getElementById("MCA_Status").textContent = e;
+        document.getElementById(MCAStatusID).textContent = e;
         console.log(e);
     }
 }
 //-----------------------------------------------------------------------------
-function onMcaStartStop () {
+function onMcaStart () {
+    onMcaStartStop (true);
+}
+//-----------------------------------------------------------------------------
+function onMcaStop () {
+    onMcaStartStop (false);
+}
+//-----------------------------------------------------------------------------
+function onMcaStartStop (mca_cmd) {
     try {
         var dictMessage = {};
-        var mca_cmd = uploadMcaCommand ();
+        //var mca_cmd = uploadMcaCommand ();
         dictMessage[McaTitle] = mca_cmd;
-        document.getElementById("MCA_Status").textContent = "Message Sent...";
+        document.getElementById(MCAStatusID).textContent = "Message Sent...";
         console.log(JSON.stringify(dictMessage));
         $.ajax({
             url: "/on_gui_message",
@@ -721,7 +732,7 @@ function onMcaStartStop () {
             success: function(response) {
                 try {
                     var j = JSON.parse(response);
-                    document.getElementById("MCA_Status").textContent = j[StatusTitle];
+                    document.getElementById(MCAStatusID).textContent = j[StatusTitle];
                     console.log (response);
                 }
                 catch (err) {
@@ -729,13 +740,13 @@ function onMcaStartStop () {
                 }
             },
             error: function(xhr) {
-                document.getElementById("MCA_Status").textContent = xhr;
+                document.getElementById(MCAStatusID).textContent = xhr;
                 console.log(xhr.toString());
             }
         });
     }
     catch (e) {
-        document.getElementById("MCA_Status").textContent = e;
+        document.getElementById(MCAStatusID).textContent = e;
         console.log(e);
     }
 }
@@ -744,7 +755,7 @@ function uploadMcaCommand () {
     var cmd;
 
     try {
-        var current = document.getElementById("MCA_Status").textContent;
+        var current = document.getElementById(MCAStatusID).textContent;
         if (current == "true")
             cmd = false;
         else
@@ -755,5 +766,157 @@ function uploadMcaCommand () {
         cmd = false;
     }
     return (cmd);
+}
+//-----------------------------------------------------------------------------
+function onReadMcaClick() {
+    try {
+        var dictMessage = {};
+        dictMessage[McaTitle] = ReadMcaTitle;
+        document.getElementById(MCAStatusID).textContent = "Message Sent...";
+        console.log(JSON.stringify(dictMessage));
+        $.ajax({
+            url: "/on_gui_message",
+            type: "get",
+            data: {message: JSON.stringify(dictMessage)},
+            success: function(response) {
+                try {
+                    var jMCA = JSON.parse(response);
+                    if (McaTitle in jMCA)
+                        downloadMca(jMCA);
+                    //document.getElementById(MCAStatusID).textContent = j[StatusTitle];
+                    else
+                        document.getElementById(MCAStatusID).textContent = response;
+                    console.log (response);
+                }
+                catch (err) {
+                    console.log(err);
+                    document.getElementById(MCAStatusID).textContent = err;
+                }
+            },
+            error: function(xhr) {
+                document.getElementById(MCAStatusID).textContent = xhr;
+                console.log(xhr.toString());
+            }
+        });
+    }
+    catch (e) {
+        document.getElementById(MCAStatusID).textContent = e;
+        console.log(e);
+    }
+}
+//-----------------------------------------------------------------------------
+function downloadMca (jMca) {
+    var ds = {data: [], label: ' '}, num;
+
+    if (chartMca == null)
+        initMcaChart();
+    for (var n=0 ; n < jMca.length ; n++) {
+        try {
+            num = parseFloat(jMca[n])
+        }
+        catch (e) {
+            console.log(e);
+            num = 0;
+        }
+        ds.data.push(num);
+    }
+    chartMca.data.datasets.push(ds);
+    chartMca.update();
+}
+//-----------------------------------------------------------------------------
+function initMcaChart() {
+	//var myChart=document.getElementById("pulseChart").getContext("2d");
+    var canvasChart=document.getElementById("idMcaCanvas").getContext("2d");
+    var channels = document.getElementById("txtMcaChannels").value;
+    var aLabels=[];
+
+    for (var n=1 ; n <= channels ; n++)
+        aLabels.push(n.toString());
+
+    try {
+        if (chartMca == null) {
+            chartMca = new Chart (canvasChart,{
+                type: 'bar', // bar, horizontal bar. pie, line. doughnut, radar. polarArea
+                data: {
+                    labels: aLabels,//[],
+                    datasets: [{
+                        label: 'MCA',
+                        data: [],//[620915, 99615, 86395, 71452, 67752, 65455],
+                        //backgroundcolor: "blue",
+                        borderColor: 'rgb(75, 192, 192)'
+                    }]
+                },
+                options: {
+                    scales : {
+                        x: {
+                            ticks: {
+                                callback: function (val, index) {
+                                    return val.toFixed(1);
+                                }
+                            }
+                        }
+                    },
+                      plugins: {
+                        zoom: {
+                          pan: {
+                            enabled: true,
+                            mode: 'x'
+                          },
+                          zoom: {
+                            pinch: {
+                              enabled: true
+                            },
+                            wheel: {
+                              enabled: true
+                            },
+                            mode: 'x'
+                          },
+                          limits: {
+                            x: {
+                              minDelay: 0,
+                              maxDelay: 4000,
+                              minDuration: 1000,
+                              maxDuration: 20000
+                            }
+                          }
+                        }
+                    }
+                }
+            });
+        }
+    }
+    catch (err) {
+        console.log(err);
+	}
+}
+//-----------------------------------------------------------------------------
+function onSaveMca() {
+    onMcaStartStop ("SaveMca");
+}
+//-----------------------------------------------------------------------------
+function testBarChart() {
+	var ctx = document.getElementById("idMcaCanvas")
+/*new Chart(document.getElementById("idMcaChart"), {*/
+	new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["Africa", "Asia", "Europe", "Latin America", "North America"],
+      datasets: [
+        {
+          label: "Population (millions)",
+          backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
+          data: [2478,5267,734,784,433]
+        }
+      ]
+    },
+    options: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: 'Predicted world population (millions) in 2050'
+      }
+    }
+});
+
 }
 //-----------------------------------------------------------------------------

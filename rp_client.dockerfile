@@ -18,6 +18,7 @@ RUN apt update && apt install -y python3.5
 ENV HOME=/home/oe
 
 WORKDIR /home/oe/cpp
+#WORKDIR /home/oe/cpp/rp_server
 
 
 COPY ./ $HOME

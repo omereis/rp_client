@@ -50,7 +50,7 @@ int TCalcMca::HeightIndex (float fSignalMin, float fSignalMax)
     }
     else
         idx = -1;
-    return (-1);
+    return (idx);
 }
 //-----------------------------------------------------------------------------
 void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
@@ -71,8 +71,10 @@ void TCalcMca::NewPulse (const TFloatVec &vPulse)
 
     GetVectorMinMax (vPulse, fMin, fMax);
     int idx = HeightIndex (fMin, fMax);
-    if (idx >= 0)
-        m_vSpectrum[idx] += 1;
+    if (idx >= 0) {
+        int n = m_vSpectrum[idx];
+        m_vSpectrum[idx] = (n + 1);
+	}
 }
 //-----------------------------------------------------------------------------
 void TCalcMca::ResetSpectrum ()
