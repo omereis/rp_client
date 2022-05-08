@@ -1,0 +1,11 @@
+Set-PSReadLineOption -Colors @{
+  Command            = 'Blue'
+  Number             = 'White'
+  Member             = 'White'
+  Operator           = 'Black'
+  Type               = 'Black'
+  Variable           = 'Black'
+  Parameter          = 'Black'
+  ContinuationPrompt = 'Black'
+  Default            = 'Black'
+}
