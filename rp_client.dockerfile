@@ -17,7 +17,7 @@ RUN apt update && apt install -y python3.5
 
 ENV HOME=/home/oe
 
-WORKDIR /home/oe/cpp
+WORKDIR /home/oe/server
 #WORKDIR /home/oe/cpp/rp_server
 
 
@@ -35,10 +35,11 @@ RUN pip install pyzmq
 
 RUN mv $HOME/vimrc $HOME/.vimrc
 
-ENV FLASK_APP=rp_gui.py
-ENV FLASK_DEBUG=1
+#ENV FLASK_APP=rp_gui.py
+#ENV FLASK_DEBUG=1
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 EXPOSE 5005
+EXPOSE 5000
