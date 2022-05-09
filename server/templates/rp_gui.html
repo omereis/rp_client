@@ -1,9 +1,63 @@
 <html>
     <head>
-
+        <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
     </head>
-    <body background-color: #efefef;>
+    <body style="background-color: #a4f4e9;">
         
     </body>
-    <h1>Red Pitaya Nuclear Signal Analysis</h1>
+	<h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
+    <br>
+    <a href="red_pitaya_setup">Setup</a>
+    <br>
+    <a href="other_links">other links</a>
+    <br>
+    <table>
+        <tr>
+            <th>Setup</th>
+            <td>
+                <table>
+                    <tr>
+                        <td>Rate</td>
+                        <td><i>card rate here</i></td>
+                    </tr>
+                    <tr>
+                        <td>Decimation</td>
+                        <td><i>Card decimation here</i></td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <th colspan="2">Trigger</th>
+                    </tr>
+                    <tr>
+                        <td>Level</td><td><i>Trigger Level Here </i></td>
+                    </tr>
+                    <tr>
+                        <td>Input</td><td><i>Trigger Input Here </i></td>
+                    </tr>
+                    <tr>
+                        <td>Level/Edge</td><td><i>Trigger Level/Edge Here </i></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="button" value="Read from Card"</td>
+            <td><a href="/setup.html">Update Card</a></td>
+        </tr>
+        <tr>
+            <th>Signal</th>
+            <td>
+                chart here
+            </td>
+        </tr>
+        <tr>
+            <th>PSD</th>
+            <td>PSD Chart</td>
+        </tr>
+        <tr>
+            <th>MCA</th>
+            <td>MCA Chart</td>
+        </tr>
+    </table>
 </html>
