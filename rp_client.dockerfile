@@ -35,6 +35,14 @@ RUN pip install pyzmq
 
 RUN mv $HOME/vimrc $HOME/.vimrc
 
+
+#RUN apt-get install -y erlang
+#RUN apt-get install -y rabbitmq-server
+
+#RUN  /etc/init.d/dbus start
+#RUN service rabbitmq-server status
+#RUN service rabbitmq-server start
+
 #ENV FLASK_APP=rp_gui.py
 #ENV FLASK_DEBUG=1
 
@@ -43,3 +51,4 @@ ENV LANG=C.UTF-8
 
 EXPOSE 5005
 EXPOSE 5000
+#EXPOSE 5672
