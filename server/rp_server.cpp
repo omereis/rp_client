@@ -208,11 +208,15 @@ std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
             strCommand = ToLower(jSetup.asString());
         //jRead = jSetup["read"];
         if (strCommand == "read") {
+            jNew = rp_setup.AsJson();
+        }
+        else {
     	//if (jRead.isNull()) {
             jNew = rp_setup.UpdateFromJson(jSetup);
             rp_setup.SaveToJson("rp_setup.json");
-            strReply = StringifyJson(jNew);
 		}
+        strReply = StringifyJson(jNew);
+/*
         else {
             string strCmd = jRead.asString();
             strCmd = ToLower(strCmd);
@@ -223,6 +227,7 @@ std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
                 strReply = StringifyJson (j);//rp_setup.McaAsJson());
 			}
         }
+*/
 		if (strReply.length() == 0)
 	        strReply = StringifyJson (rp_setup.AsJson());
     }
