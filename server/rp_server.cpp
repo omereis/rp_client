@@ -9,10 +9,14 @@
 #include <unistd.h>
 #include <assert.h>
 
+//#include <nlohmann/json.hpp>
+
 #include <mutex>
 #include <thread>
 
 using namespace std;
+//using json = nlohmann::json;
+
 #include "rp_setup.h"
 #include "misc.h"
 #include "timer.h"
@@ -56,6 +60,11 @@ void SafeAddToMca (const TFloatVec &vPulse);
 void SafeResetMca();
 void SafeReadMca (Json::Value &jResult);
 void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
+//void parse_json (std::string &strJson);
+bool CountBraces (std::string &strJson);
+int CountInString (const std::string &strJson, int c);
+//json::iterator jsonKey (json &j, const std::string &strKey);
+//-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
 int main (void)
@@ -67,6 +76,8 @@ int main (void)
     assert (rc == 0);
 	Json::Value root;
 	Json::Reader reader;
+    //json jMessage;
+    //json::iterator ij;
     TRedPitayaSetup rp_setup;
     string strReply;
     Timer t;
@@ -81,6 +92,11 @@ int main (void)
         zmq_recv (responder, buffer, 1024, 0);
         std::string strJson = buffer;
         printf ("Received Message:\n%s\n", strJson.c_str());
+        //parse_json (strJson);
+        strJson = ReplaceAll(strJson, "\'", "\"");
+
+        //jMessage = json::parse(strJson);
+        //ij = jsonKey (jMessage, "setup");
         if (reader.parse (strJson, root)) {
         	printf ("Message parsed\n");
             if (!root["setup"].isNull())
@@ -92,6 +108,8 @@ int main (void)
             else if (!root[g_szMCA].isNull())
                 strReply = HandleMCA(root[g_szMCA], rp_setup);
         }
+        else
+            fprintf (stderr, "Parsing error\n");
         if (strReply.length() == 0)
             strReply = std::string("World");
             zmq_send (responder, strReply.c_str(), strReply.length(), 0);
@@ -100,14 +118,97 @@ int main (void)
 }
 
 //-----------------------------------------------------------------------------
+int CountInString (const std::string &strJson, int c)
+{
+    int iStart=0, nCount=0;
+
+    iStart = strJson.find (c, iStart);
+    while (iStart != std::string::npos) {
+        nCount++;
+        iStart = strJson.find (c, iStart + 1);
+    }
+    return (nCount);
+}
+
+//-----------------------------------------------------------------------------
+bool CountBraces (std::string &strJson)
+{
+    int nOpen = CountInString (strJson, '{');
+    int nClose = CountInString (strJson, '}');
+    return ((nOpen > 0) && (nOpen == nClose));
+}
+
+/*
+//-----------------------------------------------------------------------------
+void parse_json (std::string &strJson)
+{
+    int n;
+    std::string strErr;
+    bool fInJson=false;
+
+    if (CountBraces (strJson)) {
+        strErr = "Braces Balance OK";
+        int iStart = strJson.find('{');
+        int iValue = get_key (strJson, iStart, strKey);
+    }
+    else
+        strErr = "Braces Balance Err";
+	printf ("%s\n", strErr.c_str());
+}
+
+//-----------------------------------------------------------------------------
+int get_key (const std::string &strJson, int iStart, std::string &strKey)
+{
+    strKey = "";
+    int iClose, iOpen = strJson.find('\'', iStart);
+
+    iOpen = strJson.find(iStart, '\'');
+    if (iOpen == string::npos) {
+        iOpen = strJson.find('\"', iStart);
+        if (iOpen == string::npos) {// open not found
+            return (string::npos);
+        }
+    }
+    else {
+        iClose = strJson.find()
+        if ( == string::npos) {// open not found
+    }
+}
+*/
+
+/*
+//-----------------------------------------------------------------------------
+
+json::iterator jsonKey (json &j, const std::string &strKey)
+{
+    json::iterator i;
+
+    try {
+		json jj = j[strKey];
+		std::cout << jj.begin().key() << "\n";
+		i = j.begin();
+        //i = j.at(strKey);
+    }
+    catch (std::exception &e) {
+		i = j.end();
+        //i = NULL;
+    }
+    return (i);
+}
+*/
+//-----------------------------------------------------------------------------
 
 std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 {
-    std::string strReply;
+    std::string strReply, strCommand;
+    Json::Value jRead, jNew;
 
     try {
-        Json::Value jRead = jSetup["read"], jNew;
-    	if (jRead.isNull()) {
+        if (jSetup.isString())
+            strCommand = ToLower(jSetup.asString());
+        //jRead = jSetup["read"];
+        if (strCommand == "read") {
+    	//if (jRead.isNull()) {
             jNew = rp_setup.UpdateFromJson(jSetup);
             rp_setup.SaveToJson("rp_setup.json");
             strReply = StringifyJson(jNew);
