@@ -1,4 +1,5 @@
 from scpi_t import rp_channels,rp_decimation,rp_sampling
+import json
 
 rp_trig_type = ['EDGE', 'LEVEL']
 
@@ -21,12 +22,24 @@ class TRedPitayaSetup():
         #self.socket.connect("tcp://localhost:5555")
 
     def read_hardware(self, socket):
-        cmd = {'setup':'read'}
+        cmd = {"setup":"read"}
         fRead = None
+        print(str(cmd))
         try:
-            socket.send_string(str(cmd))
+            s = str(json.dumps(cmd))
+            print("before send: %s " % s)
+            #print(str(cmd))
+            socket.send_string(s)
+            print("message sent")
+            #socket.send_string(str(cmd))
             message = socket.recv()
-            print(message)
+            print("message recieved")
+            print("type(message) %s" % type(message))
+            msg_str = str(message)
+            print("string message: %s" % msg_str)
+            msg_s = message.decode('utf-8')
+            print("msg_s %s" % msg_s)
+            print("message %s" % message)
             fRead = True
         except Exception as e:
             print("Runtime error in read_hardware: %s" % e)
