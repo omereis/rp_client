@@ -46,6 +46,8 @@ RUN mv $HOME/vimrc $HOME/.vimrc
 #ENV FLASK_APP=rp_gui.py
 #ENV FLASK_DEBUG=1
 
+#RUN mv /home/oe/server/modern/ /usr/include
+
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
