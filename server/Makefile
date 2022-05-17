@@ -8,7 +8,7 @@
 #		add rule for file.o that depends on file.cpp AND all includes
 #*****************************************************************************/
 CPP = gcc
-CFLAGS = -std=c++14 -g
+CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o
 INCLUDES = rp_setup.h misc.h timer.h
