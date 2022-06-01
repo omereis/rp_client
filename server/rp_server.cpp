@@ -206,12 +206,10 @@ std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
     try {
         if (jSetup.isString())
             strCommand = ToLower(jSetup.asString());
-        //jRead = jSetup["read"];
         if (strCommand == "read") {
             jNew = rp_setup.AsJson();
         }
         else {
-    	//if (jRead.isNull()) {
             jNew = rp_setup.UpdateFromJson(jSetup);
             rp_setup.SaveToJson("rp_setup.json");
 		}

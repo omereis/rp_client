@@ -32,6 +32,7 @@ RUN ln -s /usr/bin/python3.5 /usr/bin/python
 
 RUN pip install flask
 RUN pip install pyzmq
+RUN pip install websockets
 
 RUN mv $HOME/vimrc $HOME/.vimrc
 
@@ -53,4 +54,5 @@ ENV LANG=C.UTF-8
 
 EXPOSE 5005
 EXPOSE 5000
+EXPOSE 5678
 #EXPOSE 5672

@@ -1,6 +1,9 @@
 <html>
     <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
         <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
+        <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
+        <script src="{{ url_for ('static', filename='js/rp_ws.js') }}" charset="utf-8"></script>
     </head>
     <body style="background-color: #a4f4e9;">
         
@@ -8,6 +11,9 @@
 	<h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
     <br>
     <a href="red_pitaya_setup">Setup</a>
+    <br><input type="button" value="Red Pitaya Setup" onclick="OnRedPitayaSetupClick()"><br>
+    <br>
+	<br><a href="/websockets">Web Sockets</a>
     <br>
     <a href="other_links">other links</a>
     <br>
