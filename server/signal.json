@@ -1,0 +1,8 @@
+{
+    "Sampling": "True",
+    "ReadPulse": {
+        "buffer_length":"5",
+        "trigger":"1"
+    }
+}
+
