@@ -1,7 +1,9 @@
 import zmq
 from flask import Flask,render_template, request
 from RedPitayaSetup import TRedPitayaSetup
-import sys, socket, json
+import sys, socket, json, time
+from datetime import datetime
+from multiprocessing import Process, Queue
 
 app = Flask(__name__)
 txtHostName = None
@@ -35,16 +37,57 @@ def open_socket(port=5555):
     return socket
 
 #------------------------------------------------------------------------------
-def read_setup(dictCommand):
-    socket = open_socket()
-    s = str(json.dumps(dictCommand))
-    print("before send: {}".foamat(s))
-    socket.send_string(s)
-    print("message sent")
+def message_to_rp (dictCommand, qData):
+    try:
+        socket = open_socket()
+        s = str(json.dumps(dictCommand))
+        socket.send_string(s)
+        print("message sent")
+        message = socket.recv()
+        #print("message recieved:\n{}".format(message))
+        msg_str = message.decode('utf-8')
+        qData.put(msg_str)
+    except Exception as e:
+        print("Runtime error opening socket:\n%s" % e)
+    finally:
+        socket.close()
 
-    message = socket.recv()
-    print("message recieved:\n{}".format(message))
-    msg_str = str(message)
+#------------------------------------------------------------------------------
+def message_server(dictCommand):
+    try:
+        msg_str=''
+        #socket = open_socket()
+        #s = str(json.dumps(dictCommand))
+        #socket.send_string(s)
+        #print("message sent")
+
+        #message = socket.recv()
+        #print("message recieved:\n{}".format(message))
+        #msg_str = message.decode('utf-8')
+        qData = Queue()
+        prcSender = Process(target=message_to_rp, args=(dictCommand, qData,))
+        prcSender.start()
+        fProcessAlive = prcSender.is_alive()
+        dtStart = datetime.now()
+        dtDelta = 0
+        while ((fProcessAlive == True) & (dtDelta < 1)):
+            fProcessAlive = prcSender.is_alive()
+            time.sleep(0.1)
+            dtDelta = (datetime.now() - dtStart).total_seconds()
+            print('Waiting {}'.format(dtDelta))
+        if (dtDelta < 1):
+            prcSender.join()
+            while qData.qsize() > 0:
+                msg_str += qData.get()
+            print('Message:\n"{}"'.format(msg_str))
+        else:
+            prcSender.terminate()
+            msg_str = 'timeout'
+    except Exception as e:
+        print("Runtime error opening socket:\n%s" % e)
+    #finally:
+        #socket.close()
+    print('Reply: "{}"'.format(msg_str))
     return (msg_str)
 
 #------------------------------------------------------------------------------
@@ -52,7 +95,7 @@ def client_setup_command (dictCommand):
     txtReply = ''
     try:
         if (dictCommand['setup'] == 'read'):
-            txtReply = read_setup(dictCommand)
+            txtReply = message_server(dictCommand)
     except Exception as e:
         txtReply = "Runtime in client_setup_command:\n{}".format(e)
         print(txtReply)
@@ -64,12 +107,29 @@ def OnRedPitayaMessage():
     txtReply = 'Red Pitaya Reply'
     res = request.args['message']
     print(res)
+    print('type(res): {}'.format(type(res)))
     try:
+        res = request.args['message'].lower()
+        print(res)
         dictCommand = json.loads(res)
         if 'setup' in dictCommand:
             txtReply = client_setup_command (dictCommand)
+        if 'sampling' in dictCommand:
+            txtReply = client_read_signal (dictCommand)
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
+        print(txtReply)
+    return (txtReply)
+
+#------------------------------------------------------------------------------
+def client_read_signal (dictCommand):
+    txtReply = ''
+    try:
+        #if (dictCommand['setup'] == 'read'):
+        txtReply = message_server(dictCommand)
+        print('reading signal\n{}'.format(txtReply))
+    except Exception as e:
+        txtReply = "Runtime in client_setup_command:\n{}".format(e)
         print(txtReply)
     return (txtReply)
 
