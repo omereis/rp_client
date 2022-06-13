@@ -8,7 +8,8 @@
 //-----------------------------------------------------------------------------
 function onReadRedPitayaSetupClick () {
     var msg = new Object;
-    msg['setup'] = 'read';
+    //msg['setup'] = 'read';
+    msg["sampling"] = "true";
     sendMesssageThroughFlask(msg, setupHandler);
 }
 
@@ -253,7 +254,8 @@ function readSamplingStatus (reply) {
     //var dv = document.getElementById("dvSampling");
     var p = document.getElementById("cellStatus");
     try {
-        var txt, cl, status = JSON.parse(reply).sampling;
+		var jReply = JSON.parse(reply);
+        var txt, cl, status = jReply.sampling;
         if (status == true) {
             cl = 'green';
             txt = 'On';
@@ -263,6 +265,8 @@ function readSamplingStatus (reply) {
             txt = 'Off';
         }
         p.style.backgroundColor = cl;
+		if (jReply.hasOwnProperty("pulse_count"))
+			txt += " (" + jReply.pulse_count.toString() + ")";
         p.innerText = txt;
     }
     catch (exception) {

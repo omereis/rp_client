@@ -91,7 +91,7 @@ int main (void)
     while (1) {
         char buffer [1024];
         zmq_recv (responder, buffer, 1024, 0);
-        std::string strJson = buffer;
+        std::string strJson = ToLower(buffer);
         printf ("Received Message:\n%s\n", strJson.c_str());
         //parse_json (strJson);
         strJson = ReplaceAll(strJson, "\'", "\"");
@@ -100,21 +100,22 @@ int main (void)
         //ij = jsonKey (jMessage, "setup");
         if (reader.parse (strJson, root)) {
         	printf ("Message parsed\n");
+			strReply  = "";
             if (!root["setup"].isNull())
-                strReply = HandleSetup(root["setup"], rp_setup);
+                strReply += HandleSetup(root["setup"], rp_setup);
             if (!root[g_szReadPulse].isNull())
-                strReply = HandleRead(root[g_szReadPulse], rp_setup);
+                strReply += HandleRead(root[g_szReadPulse], rp_setup);
             if (!root[g_szSampling].isNull())
-                strReply = HandleSampling(root[g_szSampling], rp_setup);
+                strReply += HandleSampling(root[g_szSampling], rp_setup);
             if (!root[g_szMCA].isNull())
-                strReply = HandleMCA(root[g_szMCA], rp_setup);
+                strReply += HandleMCA(root[g_szMCA], rp_setup);
         }
         else {
             fprintf (stderr, "Parsing error\n");
-			strReply = strJson + "\nParsing Error";
+			strReply += strJson + "\nParsing Error";
 		}
         if (strReply.length() == 0)
-            strReply = std::string("World");
+            strReply += std::string("World");
         zmq_send (responder, strReply.c_str(), strReply.length(), 0);
 		printf ("Reply:\n%s\n", strReply.c_str());
     }
@@ -383,8 +384,10 @@ std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
             fCommandOK = true;
         else
             fCommandOK = false;
-        if (fCommandOK)
+        if (fCommandOK) {
             jResult[g_szSampling] = (SafeGetStatus () ? true : false);
+			jResult["pulse_count"] = to_string(g_qDebug.size());
+		}
             //jResult["sampling"] = (SafeGetStatus () ? "Running" : "stopped");
         else
             jResult[g_szSampling] = "Command Unknown";
@@ -417,6 +420,7 @@ std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
         else if (str == g_szReset) {
             SafeResetMca();
             jResult[g_szStatus] = g_szReset;
+			jResult["pulse_count"] = to_string(g_qDebug.size());
         }
         else if (str == g_szReadMca)
             SafeReadMca (jResult);
