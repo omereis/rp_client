@@ -249,9 +249,9 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     TFloatVec vPulse;
     TFloatVec::iterator i;
 	mutex mtx;
-    std::string strReply, strNumber, strPulses;
+    std::string strReply, strNumber, strPulses, strPulse;
     char szNum[128];
-    Json::Value jAllPulses(Json::arrayValue), jPulse(Json::arrayValue);
+    Json::Value jAllPulses(Json::arrayValue), jPulse(Json::arrayValue), jPulseData;
     int n, nPulses;
     
     try {
@@ -263,9 +263,11 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
         nPulses = std::stoi(strPulses);
         if (nPulses <= 0)
             nPulses = (int) g_qPulses.size();
-        printf ("Reading pulse");
+        fprintf (stderr, "Reading pulse\n");
         //if (SafeQueueSize () > 0) {
             for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
+                strPulse = "pulse" + to_string(n);
+                jPulseData["title"] = strPulse;
         	    mtx.lock ();
         	    vPulse = g_qPulses.back();
         	    g_qPulses.pop();
@@ -273,10 +275,13 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
                 for (i=vPulse.begin() ; i != vPulse.end() ; i++) {
                     sprintf (szNum, "%.3f", *i);
                     strNumber = std::string (szNum);
-                    jPulse.append (*i);
+                    jPulse.append(strNumber.c_str());
+                    //jPulse.append (*i);
                 }
-                jAllPulses.append(jPulse);
+                jPulseData["values"] = jPulse;
+                jAllPulses.append(jPulseData);
                 jPulse.clear();
+                jPulseData.clear();
             }
         //}
         strReply = StringifyJson(jAllPulses);
