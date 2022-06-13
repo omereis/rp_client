@@ -11,7 +11,7 @@
 	<h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
     <br>
     <a href="red_pitaya_setup">Setup</a>
-    <br><input type="button" value="Red Pitaya Setup" onclick="OnRedPitayaSetupClick()"><br>
+    <br><input type="button" value="Red Pitaya Setup" onclick="onReadRedPitayaSetupClick()"><br>
     <br>
 	<br><a href="/websockets">Web Sockets</a>
     <br>
@@ -19,16 +19,34 @@
     <br>
     <table>
         <tr>
-            <th>Setup</th>
+            <th>Setup></th>
             <td>
                 <table>
                     <tr>
                         <td>Rate</td>
-                        <td><i>card rate here</i></td>
+                        <td><select id="comboRate">
+                            <option value=""></option>
+                            <option value="125000000">125Msps</option>
+                            <option value="15625000">15.625Msps</option>
+                            <option value="1953000">1.953Msps</option>
+                            <option value="122070">122.070ksps</option>
+                            <option value="15258">15.258ksps</option>
+                            <option value="1907">1.907ksps</option>
+                        </select></td>
                     </tr>
                     <tr>
                         <td>Decimation</td>
-                        <td><i>Card decimation here</i></td>
+                        <td><select id="comboDecimation">
+                            <option value=""></option>
+                            <option value="1">1</option>
+                            <option value="8">8</option>
+                            <option value="64">64</option>
+                            <option value="1024">1024</option>
+                            <option value="8192">8192</option>
+                            <option value="65536">65536</option>
+                        </select>
+
+                        </td>
                     </tr>
                 </table>
                 <table>
@@ -36,24 +54,57 @@
                         <th colspan="2">Trigger</th>
                     </tr>
                     <tr>
-                        <td>Level</td><td><i>Trigger Level Here </i></td>
+                        <td>Level</td><td><input type="text" id="txtTriggerLevel"></td>
                     </tr>
                     <tr>
-                        <td>Input</td><td><i>Trigger Input Here </i></td>
+                        <td>Direction</td>
+                        <td><select id="comboTriggerDir">
+                            <option value=""></option>"
+                            <option value="Up">Up</option>"
+                            <option value="Down">Down</option>"
+                        </select>
+                        </td>
                     </tr>
                     <tr>
-                        <td>Level/Edge</td><td><i>Trigger Level/Edge Here </i></td>
+                        <td>Activation</td>
+                        <td><select id="comboTriggerActivation">
+                                <option value=""></option>"
+                                <option value="Level">Level</option>"
+                                <option value="Edge">Edge</option>"
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Input</td>
+                        <td><select id="comboTriggerIn">
+                                <option value=""></option>"
+                                <option value="In 1">Level</option>"
+                                <option value="In 2">Edge</option>"
+                            </select>
+                        </td>
                     </tr>
                 </table>
             </td>
         </tr>
         <tr>
-            <td><input type="button" value="Read from Card"</td>
+            <td><input type="button" value="Read from Card"  onclick="onReadRedPitayaSetupClick()"></td>
             <td><a href="/setup.html">Update Card</a></td>
         </tr>
         <tr>
-            <th>Signal</th>
-            <td>
+            <th>
+                <table>
+                    <tr>
+                        <th colspan="4">Signal</th>
+                    </tr>
+                    <tr>
+                        <td><input type="button" value="Read Status" onclick="onReadStatusClick()"></td>
+                        <td><input type="button" value="on" onclick="onSamplingOn()"></td>
+                        <td><input type="button" value="off" onclick="onSamplingOff()"></td>
+                        <td id="cellStatus">status</td>
+                    </tr>
+                </table>
+            </th>
+            <td id="cellSignal">
                 chart here
             </td>
         </tr>
@@ -66,4 +117,5 @@
             <td>MCA Chart</td>
         </tr>
     </table>
+    <textarea id="txtReply"  rows="4" cols="50"></textarea>
 </html>
