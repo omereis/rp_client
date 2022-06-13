@@ -32,13 +32,14 @@ TFloatVecQueue g_qDebug;
 bool g_fRunning = false;
 TMcaParams g_mca_params;
 TCalcMca g_mca_calculator;
-static const char *g_szReadPulse = "ReadPulse";
-static const char *g_szReadMca   = "ReadMca";
-static const char *g_szSampling  = "Sampling";
-static const char *g_szStatus    = "Status";
-static const char *g_szAll       = "All";
-static const char *g_szError     = "Error";
-static const char *g_szReset     = "Reset";
+static const char *g_szReadPulse = "read_pulse";
+static const char *g_szBufferLength = "buffer_length";
+static const char *g_szReadMca   = "rea_dmca";
+static const char *g_szSampling  = "sampling";
+static const char *g_szStatus    = "status";
+static const char *g_szAll       = "all";
+static const char *g_szError     = "error";
+static const char *g_szReset     = "reset";
 static const char *g_szMCA       = "MCA";
 static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
@@ -101,18 +102,21 @@ int main (void)
         	printf ("Message parsed\n");
             if (!root["setup"].isNull())
                 strReply = HandleSetup(root["setup"], rp_setup);
-            else if (!root[g_szReadPulse].isNull())
+            if (!root[g_szReadPulse].isNull())
                 strReply = HandleRead(root[g_szReadPulse], rp_setup);
-            else if (!root[g_szSampling].isNull())
+            if (!root[g_szSampling].isNull())
                 strReply = HandleSampling(root[g_szSampling], rp_setup);
-            else if (!root[g_szMCA].isNull())
+            if (!root[g_szMCA].isNull())
                 strReply = HandleMCA(root[g_szMCA], rp_setup);
         }
-        else
+        else {
             fprintf (stderr, "Parsing error\n");
+			strReply = strJson + "\nParsing Error";
+		}
         if (strReply.length() == 0)
             strReply = std::string("World");
-            zmq_send (responder, strReply.c_str(), strReply.length(), 0);
+        zmq_send (responder, strReply.c_str(), strReply.length(), 0);
+		printf ("Reply:\n%s\n", strReply.c_str());
     }
     return 0;
 }
@@ -250,13 +254,17 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     int n, nPulses;
     
     try {
-        strPulses = jRead.asString();
+        strPulses = StringifyJson (jRead);
+        if (!jRead[g_szBufferLength].isNull())
+			strPulses = jRead[g_szBufferLength].asString();
+        else
+            strPulses = "0";
         nPulses = std::stoi(strPulses);
         if (nPulses <= 0)
             nPulses = (int) g_qPulses.size();
         printf ("Reading pulse");
-        if (SafeQueueSize () > 0) {
-            for (n=0 ; n < nPulses ; n++) {
+        //if (SafeQueueSize () > 0) {
+            for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
         	    mtx.lock ();
         	    vPulse = g_qPulses.back();
         	    g_qPulses.pop();
@@ -269,7 +277,7 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
                 jAllPulses.append(jPulse);
                 jPulse.clear();
             }
-        }
+        //}
         strReply = StringifyJson(jAllPulses);
         ExportDebugPulse(g_qDebug);
     }
@@ -290,8 +298,8 @@ size_t SafeQueueSize ()
     mtx.unlock ();
     return (s);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
 void SafeStartStop (bool fCommand)
 {
 	mutex mtx;
