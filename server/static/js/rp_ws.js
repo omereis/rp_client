@@ -4,10 +4,12 @@
 \******************************************************************************/
 
 /******************************************************************************/
-function OnRedPitayaSetupClick () {
+
+//-----------------------------------------------------------------------------
+function onReadRedPitayaSetupClick () {
     var msg = new Object;
     msg['setup'] = 'read';
-    sendMesssageThroughFlask(msg);
+    sendMesssageThroughFlask(msg, setupHandler);
 }
 
 var webSocket   = null;
@@ -18,8 +20,106 @@ var ws_endpoint = null;
 /**
  * Event handler for clicking on button "Connect"
  */
+
 //-----------------------------------------------------------------------------
-function sendMesssageThroughFlask(message) {
+function setupHandler (reply) {
+    var txt = document.getElementById("txtReply");
+    if (txt != null)
+        txt.value = reply;
+    try {
+        dictSetup = JSON.parse(reply);
+        DownloadRate (dictSetup.sampling.rate);
+        DownloadDecimation (dictSetup.sampling.decimation);
+        downloadTriggerLevel (dictSetup.trigger.level);
+        downloadTriggerDir (dictSetup.trigger.dir);
+        downloadTriggerSrc (dictSetup.trigger.src);
+    }
+    catch (err) {
+        console.log(err);
+    }
+}
+
+//-----------------------------------------------------------------------------
+function DownloadRate (rate) {
+    IntToCombo ("comboRate", parseInt(rate));
+}
+
+//-----------------------------------------------------------------------------
+function DownloadDecimation (decimation)
+{
+    IntToCombo ("comboDecimation", parseInt(decimation));
+}
+
+//-----------------------------------------------------------------------------
+function downloadTriggerDir (dir) {
+    txtToCombo ("comboTriggerDir", dir);
+}
+
+//-----------------------------------------------------------------------------
+function downloadTriggerSrc (src) {
+    txtToCombo ("comboTriggerActivation", src);
+}
+
+//-----------------------------------------------------------------------------
+function downloadTriggerSrc (src) {
+    txtToCombo ("comboTriggerIn", src);
+}
+
+//-----------------------------------------------------------------------------
+function downloadTriggerLevel (level) {
+    var txtLevel = document.getElementById("txtTriggerLevel");
+    if (txtLevel != null) {
+        var fVal = parseFloat(level);
+        txtLevel.value = fVal * 1e3;
+    }
+}
+
+//-----------------------------------------------------------------------------
+function txtToCombo (txtCombo, txtValue)
+{
+    var combo = document.getElementById(txtCombo);
+    var idx = findOptionByTxt (combo, txtValue);
+    if (idx >= 0)
+        combo.selectedIndex = idx;
+}
+
+//-----------------------------------------------------------------------------
+function IntToCombo (txtCombo, nValue)
+{
+    var combo = document.getElementById(txtCombo);
+    var idx = FindOptionByInt (combo, nValue);
+    if (idx >= 0)
+        combo.selectedIndex = idx;
+}
+
+//-----------------------------------------------------------------------------
+function FindOptionByInt (combo, nVal) {
+    var n, idx=-1;
+
+    for (n=0 ; (n < combo.options.length) && (idx < 0) ; n++) {
+		var opt = combo.options[n].value;
+		if (opt.length > 0)
+        	if (nVal == parseInt(opt))
+            	idx = n;
+	}
+    return (idx);
+}
+
+//-----------------------------------------------------------------------------
+function findOptionByTxt (combo, txtValue) {
+    var n, idx=-1;
+
+    for (n=0 ; (n < combo.options.length) && (idx < 0) ; n++) {
+		var opt = combo.options[n].value;
+		if (opt.length > 0) {
+        	if (txtValue.toLowerCase() == opt.toLowerCase())
+            	idx = n;
+        }
+    }
+    return (idx);
+}
+//-----------------------------------------------------------------------------
+function sendMesssageThroughFlask(message, handler=null) {
     $.ajax({
         url: "/on_red_pitaya_message",
         type: "get",
@@ -32,14 +132,16 @@ function sendMesssageThroughFlask(message) {
                 else
                     reply = response;
                 console.log(JSON.stringify(reply));
-                handle_reply(reply);
+                if (handler != null)
+                    handler(reply);
+                //handle_reply(reply);
             }
             catch (err) {
                 console.log(err);
             }
         },
         error: function(xhr) {
-            alert('error');
+            alert('error:\n' + xhr.toString());
             console.log(xhr.toString());
         }
     });
@@ -108,4 +210,66 @@ function onSendClick() {
     webSocket.send(msg);
 }
 
+//-----------------------------------------------------------------------------
+function onReadSignalClick() {
+    var msg = new Object;
+    var msgBuf = new Object;
+    msg['sampling'] = 'True';
+    msgBuf['buffer_length'] = "5";
+    msg['read_pulse'] = msgBuf;
+    sendMesssageThroughFlask(msg, setupReadSignal);
+}
+
+//-----------------------------------------------------------------------------
+function onReadStatusClick () {
+    var msg = new Object;
+    msg['sampling'] = 'status';
+    sendMesssageThroughFlask(msg, readSamplingStatus);
+}
+
+//-----------------------------------------------------------------------------
+function onSamplingOn() {
+    var msg = new Object;
+    msg['sampling'] = 'true';
+    sendMesssageThroughFlask(msg, readSamplingStatus);
+}
+
+//-----------------------------------------------------------------------------
+function onSamplingOff() {
+    var msg = new Object;
+    msg['sampling'] = 'false';
+    sendMesssageThroughFlask(msg, readSamplingStatus);
+}
+
+//-----------------------------------------------------------------------------
+function setupReadSignal (reply) {
+    var cell = document.getElementById("cellSignal");
+    if (cell != null)
+        cell.innerText = reply;
+}
+
+//-----------------------------------------------------------------------------
+function readSamplingStatus (reply) {
+    //var dv = document.getElementById("dvSampling");
+    var p = document.getElementById("cellStatus");
+    try {
+        var txt, cl, status = JSON.parse(reply).sampling;
+        if (status == true) {
+            cl = 'green';
+            txt = 'On';
+        }
+        else {
+            cl = 'red';
+            txt = 'Off';
+        }
+        p.style.backgroundColor = cl;
+        p.innerText = txt;
+    }
+    catch (exception) {
+		var p = document.getElementById ("txtReply");
+		if (p != null)
+			p.value = reply;
+        console.log(exception);
+    }
+}
 //-----------------------------------------------------------------------------
