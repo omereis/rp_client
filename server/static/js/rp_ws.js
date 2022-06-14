@@ -245,16 +245,34 @@ function onSamplingOff() {
 //-----------------------------------------------------------------------------
 function setupReadSignal (reply) {
     var cell = document.getElementById("cellSignal");
-    if (cell != null)
-        cell.innerText = reply;
+    //if (cell != null)
+        //cell.innerText = reply;
+    try {
+        var txt, n, i, samples = JSON.parse(reply);
+        var nPulses = samples.sampling.pulse_count.toString();
+        var aPulses = samples.pulses;
+        var aKeys = Object.keys(aPulses);
+        for (n=0 ; n < aKeys.length ; n++) {
+            txt = '';
+            var pulse = aPulses[aKeys[n]];
+            for (i=0 ; i < pulse.length ; i++) {
+                txt += parseFloat (pulse[i]).toString();
+                if (i < pulse.length-1)
+                    txt += ",";
+            }
+            cell.innerHTML += txt + "<br>";
+        }
+    }
+    catch (exception) {
+        console.log(exception);
+    }
 }
 
 //-----------------------------------------------------------------------------
 function readSamplingStatus (reply) {
-    //var dv = document.getElementById("dvSampling");
     var p = document.getElementById("cellStatus");
     try {
-		var jReply = JSON.parse(reply);
+		var jReply = JSON.parse(reply).sampling;
         var txt, cl, status = jReply.sampling;
         if (status == true) {
             cl = 'green';
