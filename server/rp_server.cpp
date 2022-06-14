@@ -44,10 +44,14 @@ static const char *g_szMCA       = "MCA";
 static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
-std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
-std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup);
-std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup);
-std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
+Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
+//std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
+Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
+//std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup);
+Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup);
+//std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup);
+Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
+//std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
 void AddPulse ();
 void ExportDebugPulse(TFloatVecQueue &qDebug);
 void SafeStartStop (bool fCommand);
@@ -75,7 +79,7 @@ int main (void)
     void *responder = zmq_socket (context, ZMQ_REP);
     int rc = zmq_bind (responder, "tcp://*:5555");
     assert (rc == 0);
-	Json::Value root;
+	Json::Value root, jReply;
 	Json::Reader reader;
     //json jMessage;
     //json::iterator ij;
@@ -102,20 +106,25 @@ int main (void)
         	printf ("Message parsed\n");
 			strReply  = "";
             if (!root["setup"].isNull())
-                strReply += HandleSetup(root["setup"], rp_setup);
+                jReply["setup"] = HandleSetup(root["setup"], rp_setup);
+                //strReply += HandleSetup(root["setup"], rp_setup);
             if (!root[g_szReadPulse].isNull())
-                strReply += HandleRead(root[g_szReadPulse], rp_setup);
+                jReply["pulses"] = HandleRead(root[g_szReadPulse], rp_setup);
+                //strReply += HandleRead(root[g_szReadPulse], rp_setup);
             if (!root[g_szSampling].isNull())
-                strReply += HandleSampling(root[g_szSampling], rp_setup);
+                jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup);
+                //strReply += HandleSampling(root[g_szSampling], rp_setup);
             if (!root[g_szMCA].isNull())
-                strReply += HandleMCA(root[g_szMCA], rp_setup);
+                jReply[g_szMCA] = HandleMCA(root[g_szMCA], rp_setup);
+                //strReply += HandleMCA(root[g_szMCA], rp_setup);
         }
         else {
             fprintf (stderr, "Parsing error\n");
 			strReply += strJson + "\nParsing Error";
 		}
+        strReply = StringifyJson (jReply);
         if (strReply.length() == 0)
-            strReply += std::string("World");
+            strReply += std::string("{}");
         zmq_send (responder, strReply.c_str(), strReply.length(), 0);
 		printf ("Reply:\n%s\n", strReply.c_str());
     }
@@ -203,7 +212,7 @@ json::iterator jsonKey (json &j, const std::string &strKey)
 */
 //-----------------------------------------------------------------------------
 
-std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
+Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 {
     std::string strReply, strCommand;
     Json::Value jRead, jNew;
@@ -218,7 +227,7 @@ std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
             jNew = rp_setup.UpdateFromJson(jSetup);
             rp_setup.SaveToJson("rp_setup.json");
 		}
-        strReply = StringifyJson(jNew);
+        //strReply = StringifyJson(jNew);
 /*
         else {
             string strCmd = jRead.asString();
@@ -235,24 +244,25 @@ std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 	        strReply = StringifyJson (rp_setup.AsJson());
     }
     catch (std::exception &err) {
-        Json::Value root;
+        //Json::Value root;
 
-        root["error"] = err.what();
-        strReply = StringifyJson (root);
+        jNew["error"] = err.what();
+        //strReply = StringifyJson (root);
     }
-    return (strReply);
+    return (jNew);
+    //return (strReply);
 }
 //-----------------------------------------------------------------------------
 
-std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
+Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 {
     TFloatVec vPulse;
     TFloatVec::iterator i;
 	mutex mtx;
     std::string strReply, strNumber, strPulses, strPulse;
     char szNum[128];
-    Json::Value jAllPulses(Json::arrayValue), jPulse(Json::arrayValue), jPulseData;
-    int n, nPulses;
+    Json::Value jAllPulses, jPulse(Json::arrayValue), jPulseData(Json::arrayValue);
+    int n, nPulses, j;
     
     try {
         strPulses = StringifyJson (jRead);
@@ -264,33 +274,28 @@ std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
         if (nPulses <= 0)
             nPulses = (int) g_qPulses.size();
         fprintf (stderr, "Reading pulse\n");
-        //if (SafeQueueSize () > 0) {
-            for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-                strPulse = "pulse" + to_string(n);
-                jPulseData["title"] = strPulse;
-        	    mtx.lock ();
-        	    vPulse = g_qPulses.back();
-        	    g_qPulses.pop();
-        	    mtx.unlock ();
-                for (i=vPulse.begin() ; i != vPulse.end() ; i++) {
-                    sprintf (szNum, "%.3f", *i);
-                    strNumber = std::string (szNum);
-                    jPulse.append(strNumber.c_str());
-                    //jPulse.append (*i);
-                }
-                jPulseData["values"] = jPulse;
-                jAllPulses.append(jPulseData);
-                jPulse.clear();
-                jPulseData.clear();
+        for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
+            strPulse = "pulse" + to_string(n);
+        	mtx.lock ();
+        	vPulse = g_qPulses.back();
+        	g_qPulses.pop();
+        	mtx.unlock ();
+            for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < 250) ; i++, j++) {
+                sprintf (szNum, "%.3f", *i);
+                strNumber = std::string (szNum);
+                jPulse.append(strNumber.c_str());
             }
-        //}
+            jAllPulses[strPulse]=jPulse;//.append(jPulse);
+        	strReply = StringifyJson(jAllPulses);
+            jPulse.clear();
+        }
         strReply = StringifyJson(jAllPulses);
         ExportDebugPulse(g_qDebug);
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
     }
-    return (strReply);
+    return (jAllPulses);
 }
 //-----------------------------------------------------------------------------
 
@@ -372,7 +377,8 @@ void SafeSetMcaParams (const TMcaParams &params)
 }
 //-----------------------------------------------------------------------------
 
-std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
+//std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
+Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
 {
     std::string strResult;
     Json::Value jResult;
@@ -400,12 +406,14 @@ std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
     catch (std::exception &exp) {
         jResult[g_szSampling] = exp.what();
     }
-    strResult = StringifyJson(jResult);
-    return (strResult);
+    return (jResult);
+    //strResult = StringifyJson(jResult);
+    //return (strResult);
 }
 //-----------------------------------------------------------------------------
 
-std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
+Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
+//std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
 {
     std::string strResult;
     Json::Value jResult;
@@ -437,7 +445,8 @@ std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
     catch (std::exception &exp) {
         jResult[g_szError] = exp.what();
     }
-    return (StringifyJson(jResult));
+    return (jResult);
+    //return (StringifyJson(jResult));
 }
 //-----------------------------------------------------------------------------
 
