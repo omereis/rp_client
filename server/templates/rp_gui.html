@@ -4,6 +4,7 @@
         <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
         <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
         <script src="{{ url_for ('static', filename='js/rp_ws.js') }}" charset="utf-8"></script>
+        <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     </head>
     <body style="background-color: #a4f4e9;">
         
@@ -106,6 +107,7 @@
             </th>
             <td id="cellSignal">
                 chart here
+                <div id="chartSignal" style="height: 300px; width: 100%"></div><div>
             </td>
         </tr>
         <tr>
