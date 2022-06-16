@@ -45,13 +45,9 @@ static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
-//std::string HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
-//std::string HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup);
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup);
-//std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
-//std::string HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
 void AddPulse ();
 void ExportDebugPulse(TFloatVecQueue &qDebug);
 void SafeStartStop (bool fCommand);
@@ -110,7 +106,6 @@ int main (void)
                 //strReply += HandleSetup(root["setup"], rp_setup);
             if (!root[g_szReadPulse].isNull())
                 jReply["pulses"] = HandleRead(root[g_szReadPulse], rp_setup);
-                //strReply += HandleRead(root[g_szReadPulse], rp_setup);
             if (!root[g_szSampling].isNull())
                 jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup);
                 //strReply += HandleSampling(root[g_szSampling], rp_setup);
@@ -126,7 +121,10 @@ int main (void)
         if (strReply.length() == 0)
             strReply += std::string("{}");
         zmq_send (responder, strReply.c_str(), strReply.length(), 0);
-		printf ("Reply:\n%s\n", strReply.c_str());
+        if (strReply.length() < 50)
+		    fprintf (stderr, "Reply:\n%s\n", strReply.c_str());
+        else
+            fprintf (stderr, "Reply length %d\n", (int) strReply.length());
     }
     return 0;
 }
@@ -266,6 +264,10 @@ Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     
     try {
         strPulses = StringifyJson (jRead);
+		double dLen = stod(jRead["buffer_length"].asString());
+		fprintf (stderr, "Length: %g\n", dLen);
+		int nBuffer = int (((1e-6 * dLen)/8e-9) + 0.5);
+		fprintf (stderr, "Buffer (integer): %d\n", nBuffer);
         if (!jRead[g_szBufferLength].isNull())
 			strPulses = jRead[g_szBufferLength].asString();
         else
@@ -275,20 +277,23 @@ Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
             nPulses = (int) g_qPulses.size();
         fprintf (stderr, "Reading pulse\n");
         for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-            strPulse = "pulse" + to_string(n);
+            //strPulse = "pulse" + to_string(n);
         	mtx.lock ();
         	vPulse = g_qPulses.back();
         	g_qPulses.pop();
         	mtx.unlock ();
-            for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < 250) ; i++, j++) {
+            //for (i=vPulse.begin(), j=0 ; i != vPulse.end() ; i++, j++) {
+            for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
                 sprintf (szNum, "%.3f", *i);
                 strNumber = std::string (szNum);
                 jPulse.append(strNumber.c_str());
             }
-            jAllPulses[strPulse]=jPulse;//.append(jPulse);
-        	strReply = StringifyJson(jAllPulses);
-            jPulse.clear();
+            //jAllPulses[strPulse]=jPulse;//.append(jPulse);
+        	//strReply = StringifyJson(jAllPulses);
+            ////jPulse.clear();
         }
+        //jAllPulses[strPulse]=jPulse;//.append(jPulse);
+        jAllPulses["signal"]=jPulse;//.append(jPulse);
         strReply = StringifyJson(jAllPulses);
         ExportDebugPulse(g_qDebug);
     }
@@ -377,7 +382,6 @@ void SafeSetMcaParams (const TMcaParams &params)
 }
 //-----------------------------------------------------------------------------
 
-//std::string HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
 {
     std::string strResult;
