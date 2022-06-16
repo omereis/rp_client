@@ -4,15 +4,21 @@
         <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
         <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
         <script src="{{ url_for ('static', filename='js/rp_ws.js') }}" charset="utf-8"></script>
+
         <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="https://d3js.org/d3.v4.js"></script>
+		<!-- <script src="plotly-2.12.1.min.js"></script> -->
+		<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
     </head>
-    <body style="background-color: #a4f4e9;">
+    <script>
+    </script>
+<body style="background-color: #a4f4e9;">
         
     </body>
 	<h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
     <br>
     <a href="red_pitaya_setup">Setup</a>
-    <br><input type="button" value="Red Pitaya Setup" onclick="onReadRedPitayaSetupClick()"><br>
+    <br><br>
     <br>
 	<br><a href="/websockets">Web Sockets</a>
     <br>
@@ -20,20 +26,34 @@
     <br>
     <table>
         <tr>
-            <th>Setup></th>
+            <th>Setup
+                <br>
+                <input type="button" value="Red Pitaya Setup" onclick="onReadRedPitayaSetupClick()">
+            </th>
             <td>
                 <table>
                     <tr>
+                        <th colspan="2">Trigger</th>
+                        <th colspan="2">Sampling</th>
+                    </tr>
+                    <tr>
                         <td>Rate</td>
                         <td><select id="comboRate">
-                            <option value=""></option>
-                            <option value="125000000">125Msps</option>
-                            <option value="15625000">15.625Msps</option>
-                            <option value="1953000">1.953Msps</option>
-                            <option value="122070">122.070ksps</option>
-                            <option value="15258">15.258ksps</option>
-                            <option value="1907">1.907ksps</option>
-                        </select></td>
+                            	<option value=""></option>
+                            	<option value="125000000">125Msps</option>
+                            	<option value="15625000">15.625Msps</option>
+                            	<option value="1953000">1.953Msps</option>
+                            	<option value="122070">122.070ksps</option>
+                            	<option value="15258">15.258ksps</option>
+                            	<option value="1907">1.907ksps</option>
+                        	</select>
+						</td>
+						<td>
+							Buffer
+						</td>
+						<td>
+							<input type="text" id="txtBuffer" value="100" style="width:75px;text-align: center;"> Microseconds
+						</td>
                     </tr>
                     <tr>
                         <td>Decimation</td>
@@ -46,17 +66,26 @@
                             <option value="8192">8192</option>
                             <option value="65536">65536</option>
                         </select>
-
                         </td>
-                    </tr>
-                </table>
-                <table>
-                    <tr>
-                        <th colspan="2">Trigger</th>
+                        <td colspan="2">
+                            <input type="button" value="on" onclick="onSamplingOn()">
+                            <input type="button" value="off" onclick="onSamplingOff()">
+							<input type="button" id="cellStatus" value="status"  onclick="onReadStatusClick()">
+                        </td>
+                        
+    
                     </tr>
                     <tr>
                         <td>Level</td><td><input type="text" id="txtTriggerLevel"></td>
+					<td>
+						Update Rate
+					</td>
+					<td>
+						<input type="text" id="txtUpdateRate" style="width:75px;text-align: center;" value="0.5"> Seconds
+					</td>
                     </tr>
+                </table>
+                <table>
                     <tr>
                         <td>Direction</td>
                         <td><select id="comboTriggerDir">
@@ -67,20 +96,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Activation</td>
-                        <td><select id="comboTriggerActivation">
-                                <option value=""></option>"
-                                <option value="Level">Level</option>"
-                                <option value="Edge">Edge</option>"
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
                         <td>Input</td>
                         <td><select id="comboTriggerIn">
                                 <option value=""></option>"
-                                <option value="In 1">Level</option>"
-                                <option value="In 2">Edge</option>"
+                                <option value="In1">Input #1</option>"
+                                <option value="In2">Input #2</option>"
                             </select>
                         </td>
                     </tr>
@@ -97,17 +117,12 @@
                     <tr>
                         <th colspan="4">Signal</th>
                     </tr>
-                    <tr>
-                        <td><input type="button" value="Read Status" onclick="onReadStatusClick()"></td>
-                        <td><input type="button" value="on" onclick="onSamplingOn()"></td>
-                        <td><input type="button" value="off" onclick="onSamplingOff()"></td>
-                        <td id="cellStatus">status</td>
-                    </tr>
                 </table>
             </th>
             <td id="cellSignal">
-                chart here
-                <div id="chartSignal" style="height: 300px; width: 100%"></div><div>
+                chart here<br>
+                <div id="chartSignal" style="width:600px;height:250px;"></div>
+                <!-- <div id="chartSignal" style="height: 300px; width: 100%"></div><div> -->
             </td>
         </tr>
         <tr>
@@ -118,6 +133,15 @@
             <th>MCA</th>
             <td>MCA Chart</td>
         </tr>
+        <tr>
+			<th>
+				<input type="button" value="Chart" onclick="onChartClick()">
+			</th>
+            <td colspan="2">
+				<!-- <div id="divChart"></div> -->
+				<div id="divChart" style="width:600px;height:250px;"></div>
+			</td>
+        </tr>
     </table>
     <textarea id="txtReply"  rows="4" cols="50"></textarea>
-</html>
+    </html>
