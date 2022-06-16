@@ -8,8 +8,8 @@
 //-----------------------------------------------------------------------------
 function onReadRedPitayaSetupClick () {
     var msg = new Object;
-    //msg['setup'] = 'read';
-    msg["sampling"] = "true";
+    msg['setup'] = 'read';
+    //msg["sampling"] = "true";
     sendMesssageThroughFlask(msg, setupHandler);
 }
 
@@ -18,6 +18,7 @@ var ws_protocol = null;
 var ws_hostname = null;
 var ws_port     = null;
 var ws_endpoint = null;
+var g_data = null;
 /**
  * Event handler for clicking on button "Connect"
  */
@@ -28,7 +29,7 @@ function setupHandler (reply) {
     if (txt != null)
         txt.value = reply;
     try {
-        dictSetup = JSON.parse(reply);
+        dictSetup = JSON.parse(reply).setup;
         DownloadRate (dictSetup.sampling.rate);
         DownloadDecimation (dictSetup.sampling.decimation);
         downloadTriggerLevel (dictSetup.trigger.level);
@@ -213,10 +214,12 @@ function onSendClick() {
 
 //-----------------------------------------------------------------------------
 function onReadSignalClick() {
+    var txt = document.getElementById("txtBuffer");
     var msg = new Object;
     var msgBuf = new Object;
     msg['sampling'] = 'True';
-    msgBuf['buffer_length'] = "5";
+    msgBuf['buffer_length'] = txt.value;//"100";
+    msgBuf['units'] = "microseconds";
     msg['read_pulse'] = msgBuf;
     sendMesssageThroughFlask(msg, setupReadSignal);
 }
@@ -249,7 +252,18 @@ function setupReadSignal (reply) {
         //cell.innerText = reply;
     try {
         var txt, n, i, samples = JSON.parse(reply);
-        var nPulses = samples.sampling.pulse_count.toString();
+        var yData=[], xData=[], t=0;
+        var nPulses = samples.pulses.signal.length;//samples.sampling.pulse_count.toString();
+        for (var n=0 ; n < nPulses ; n++, t += 8e-9) {
+            yData[n] = parseFloat (samples.pulses.signal[n]);
+            xData[n] = t;
+        }
+        var chart = document.getElementById("chartSignal");
+		Plotly.newPlot(chart, [{
+            x: xData/*[1, 2, 3, 4, 5]*/,
+            y: yData/*[1, 2, 4, 8, 16]*/ }], {
+            margin: { t: 0 } } );
+/*
         var aPulses = samples.pulses;
         var aKeys = Object.keys(aPulses);
         for (n=0 ; n < aKeys.length ; n++) {
@@ -261,9 +275,14 @@ function setupReadSignal (reply) {
                     txt += ",";
             }
             cell.innerHTML += txt + "<br>";
+*/
+            //var chart = document.getElementById("chartSignal");
+			//document.cookie = aPulses[aKeys[0]];
+        	//drawSignal(aPulses[aKeys[0]]);
         }
-    }
     catch (exception) {
+		var txt = cell.innerText;
+		txt = exception;
         console.log(exception);
     }
 }
@@ -294,4 +313,140 @@ function readSamplingStatus (reply) {
         console.log(exception);
     }
 }
+
+//-----------------------------------------------------------------------------
+function drawSignal(data) {
+    var chart = new CanvasJS.Chart("chartContainer", {
+        animationEnabled: true,
+        zoomEnabled: true,
+        title:{
+            text: "Try Zooming and Panning" 
+        },
+        data: data  // random generator below
+    });
+    chart.render();
+}
+
+//-----------------------------------------------------------------------------
+function onChartClick() {
+	try {
+		var chartTESTER = document.getElementById('divChart');
+		Plotly.newPlot( chartTESTER, [{
+						x: [1, 2, 3, 4, 5],
+						y: [1, 2, 4, 8, 16] }], {
+						margin: { t: 0 } } );
+		//drawChart();
+	}
+	catch (exception) {
+		console.log(exception);
+	}
+}
+
+//-----------------------------------------------------------------------------
+function drawChart() {
+    var margin = {top: 10, right: 30, bottom: 30, left: 60},
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+    
+	var data = document.cookie;
+    // append the svg object to the body of the page
+    var svg = d3.select("#divChart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+        var x = d3.scaleTime()
+          .domain(d3.extent(data, function(d) { return d.date; }))
+          .range([ 0, width ]);
+        xAxis = svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x));
+    
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, d3.max(data, function(d) { return +d.value; })])
+          .range([ height, 0 ]);
+        yAxis = svg.append("g")
+          .call(d3.axisLeft(y));
+    
+        // Add a clipPath: everything out of this area won't be drawn.
+        var clip = svg.append("defs").append("svg:clipPath")
+            .attr("id", "clip")
+            .append("svg:rect")
+            .attr("width", width )
+            .attr("height", height )
+            .attr("x", 0)
+            .attr("y", 0);
+    
+        // Add brushing
+        var brush = d3.brushX()                   // Add the brush feature using the d3.brush function
+            .extent( [ [0,0], [width,height] ] )  // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+            .on("end", updateChart)               // Each time the brush selection changes, trigger the 'updateChart' function
+    
+        // Create the line variable: where both the line and the brush take place
+        var line = svg.append('g')
+          .attr("clip-path", "url(#clip)")
+    
+        // Add the line
+        line.append("path")
+          .datum(data)
+          .attr("class", "line")  // I add the class line to be able to modify this line later on.
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr("d", d3.line()
+            .x(function(d) { return x(d.date) })
+            .y(function(d) { return y(d.value) })
+            )
+    
+        // Add the brushing
+        line
+          .append("g")
+            .attr("class", "brush")
+            .call(brush);
+    
+        // A function that set idleTimeOut to null
+        var idleTimeout
+        function idled() { idleTimeout = null; }
+        function updateChart() {
+    
+          // What are the selected boundaries?
+          extent = d3.event.selection
+    
+          // If no selection, back to initial coordinate. Otherwise, update X axis domain
+          if(!extent){
+            if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+            x.domain([ 4,8])
+          }else{
+            x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+            line.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+          }
+    
+          // Update axis and line position
+          xAxis.transition().duration(1000).call(d3.axisBottom(x))
+          line
+              .select('.line')
+              .transition()
+              .duration(1000)
+              .attr("d", d3.line()
+                .x(function(d) { return x(d.date) })
+                .y(function(d) { return y(d.value) })
+              )
+        }
+        svg.on("dblclick",function(){
+          x.domain(d3.extent(data, function(d) { return d.date; }))
+          xAxis.transition().call(d3.axisBottom(x))
+          line
+            .select('.line')
+            .transition()
+            .attr("d", d3.line()
+              .x(function(d) { return x(d.date) })
+              .y(function(d) { return y(d.value) })
+          )
+        });
+
+}
+
 //-----------------------------------------------------------------------------
