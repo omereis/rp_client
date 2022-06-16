@@ -35,8 +35,8 @@ read_json: $(OBJECTS)
 	$(CPP) -g $(OBJECTS) $(LDFLAGS) -o $@
 
 clean:
-	rm *.o
+	rm *.o rp_client rp_server read_json
 
 clean_all:
-	rm *.o rp_client rp_server
+	rm *.o rp_client rp_server read_json
 
