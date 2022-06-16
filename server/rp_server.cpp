@@ -9,13 +9,10 @@
 #include <unistd.h>
 #include <assert.h>
 
-//#include <nlohmann/json.hpp>
-
 #include <mutex>
 #include <thread>
 
 using namespace std;
-//using json = nlohmann::json;
 
 #include "rp_setup.h"
 #include "misc.h"
@@ -26,7 +23,6 @@ using namespace std;
 #include "jsoncpp/json/json.h"
 //-----------------------------------------------------------------------------
 TFloatVecQueue g_qPulses;
-
 TFloatVecQueue g_qDebug;
 
 bool g_fRunning = false;
@@ -61,10 +57,8 @@ void SafeAddToMca (const TFloatVec &vPulse);
 void SafeResetMca();
 void SafeReadMca (Json::Value &jResult);
 void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
-//void parse_json (std::string &strJson);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
-//json::iterator jsonKey (json &j, const std::string &strKey);
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
@@ -77,8 +71,6 @@ int main (void)
     assert (rc == 0);
 	Json::Value root, jReply;
 	Json::Reader reader;
-    //json jMessage;
-    //json::iterator ij;
     TRedPitayaSetup rp_setup;
     string strReply;
     Timer t;
@@ -93,25 +85,19 @@ int main (void)
         zmq_recv (responder, buffer, 1024, 0);
         std::string strJson = ToLower(buffer);
         printf ("Received Message:\n%s\n", strJson.c_str());
-        //parse_json (strJson);
         strJson = ReplaceAll(strJson, "\'", "\"");
 
-        //jMessage = json::parse(strJson);
-        //ij = jsonKey (jMessage, "setup");
         if (reader.parse (strJson, root)) {
         	printf ("Message parsed\n");
 			strReply  = "";
             if (!root["setup"].isNull())
                 jReply["setup"] = HandleSetup(root["setup"], rp_setup);
-                //strReply += HandleSetup(root["setup"], rp_setup);
             if (!root[g_szReadPulse].isNull())
                 jReply["pulses"] = HandleRead(root[g_szReadPulse], rp_setup);
             if (!root[g_szSampling].isNull())
                 jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup);
-                //strReply += HandleSampling(root[g_szSampling], rp_setup);
             if (!root[g_szMCA].isNull())
                 jReply[g_szMCA] = HandleMCA(root[g_szMCA], rp_setup);
-                //strReply += HandleMCA(root[g_szMCA], rp_setup);
         }
         else {
             fprintf (stderr, "Parsing error\n");
@@ -150,64 +136,6 @@ bool CountBraces (std::string &strJson)
     return ((nOpen > 0) && (nOpen == nClose));
 }
 
-/*
-//-----------------------------------------------------------------------------
-void parse_json (std::string &strJson)
-{
-    int n;
-    std::string strErr;
-    bool fInJson=false;
-
-    if (CountBraces (strJson)) {
-        strErr = "Braces Balance OK";
-        int iStart = strJson.find('{');
-        int iValue = get_key (strJson, iStart, strKey);
-    }
-    else
-        strErr = "Braces Balance Err";
-	printf ("%s\n", strErr.c_str());
-}
-
-//-----------------------------------------------------------------------------
-int get_key (const std::string &strJson, int iStart, std::string &strKey)
-{
-    strKey = "";
-    int iClose, iOpen = strJson.find('\'', iStart);
-
-    iOpen = strJson.find(iStart, '\'');
-    if (iOpen == string::npos) {
-        iOpen = strJson.find('\"', iStart);
-        if (iOpen == string::npos) {// open not found
-            return (string::npos);
-        }
-    }
-    else {
-        iClose = strJson.find()
-        if ( == string::npos) {// open not found
-    }
-}
-*/
-
-/*
-//-----------------------------------------------------------------------------
-
-json::iterator jsonKey (json &j, const std::string &strKey)
-{
-    json::iterator i;
-
-    try {
-		json jj = j[strKey];
-		std::cout << jj.begin().key() << "\n";
-		i = j.begin();
-        //i = j.at(strKey);
-    }
-    catch (std::exception &e) {
-		i = j.end();
-        //i = NULL;
-    }
-    return (i);
-}
-*/
 //-----------------------------------------------------------------------------
 
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
@@ -225,30 +153,13 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
             jNew = rp_setup.UpdateFromJson(jSetup);
             rp_setup.SaveToJson("rp_setup.json");
 		}
-        //strReply = StringifyJson(jNew);
-/*
-        else {
-            string strCmd = jRead.asString();
-            strCmd = ToLower(strCmd);
-            if (strCmd == g_szSampling)
-                strReply = StringifyJson (rp_setup.AsJson());
-            else if (strCmd == "applications") {
-                Json::Value j = rp_setup.McaAsJson();
-                strReply = StringifyJson (j);//rp_setup.McaAsJson());
-			}
-        }
-*/
 		if (strReply.length() == 0)
 	        strReply = StringifyJson (rp_setup.AsJson());
     }
     catch (std::exception &err) {
-        //Json::Value root;
-
         jNew["error"] = err.what();
-        //strReply = StringifyJson (root);
     }
     return (jNew);
-    //return (strReply);
 }
 //-----------------------------------------------------------------------------
 
@@ -277,22 +188,16 @@ Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
             nPulses = (int) g_qPulses.size();
         fprintf (stderr, "Reading pulse\n");
         for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-            //strPulse = "pulse" + to_string(n);
         	mtx.lock ();
         	vPulse = g_qPulses.back();
         	g_qPulses.pop();
         	mtx.unlock ();
-            //for (i=vPulse.begin(), j=0 ; i != vPulse.end() ; i++, j++) {
             for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
                 sprintf (szNum, "%.3f", *i);
                 strNumber = std::string (szNum);
                 jPulse.append(strNumber.c_str());
             }
-            //jAllPulses[strPulse]=jPulse;//.append(jPulse);
-        	//strReply = StringifyJson(jAllPulses);
-            ////jPulse.clear();
         }
-        //jAllPulses[strPulse]=jPulse;//.append(jPulse);
         jAllPulses["signal"]=jPulse;//.append(jPulse);
         strReply = StringifyJson(jAllPulses);
         ExportDebugPulse(g_qDebug);

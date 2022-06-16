@@ -115,14 +115,25 @@
             <th>
                 <table>
                     <tr>
-                        <th colspan="4">Signal</th>
+                        <th>Signal</th>
+                    </tr>
+                    <tr>
+						<td>
+							Update Interval<br>
+                        	<input type="text" id="txtInterval" value="100" style="width:75px;text-align: center;"> milliseconds<br>
+                        	<!-- <input type="text" id="txtScanID" value="" style="width:75px;text-align: center;"> -->
+						</td>
+                    </tr>
+                    <tr>
+						<td>
+                        	<input type="button" value="Start" id="btnSignalStartStop" onclick="onSignalStartStopClick(this.id)">
+						</td>
                     </tr>
                 </table>
             </th>
             <td id="cellSignal">
                 chart here<br>
-                <div id="chartSignal" style="width:600px;height:250px;"></div>
-                <!-- <div id="chartSignal" style="height: 300px; width: 100%"></div><div> -->
+                <div id="chartSignal" style="width:800px;height:450px;"></div>
             </td>
         </tr>
         <tr>

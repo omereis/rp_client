@@ -79,7 +79,10 @@ def message_server(dictCommand):
             prcSender.join()
             while qData.qsize() > 0:
                 msg_str += qData.get()
-            print('Message:\n"{}"'.format(msg_str))
+            #if (len(msg_str) <= 10):
+                #print('Message:\n"{}"'.format(msg_str))
+            #else:
+                #print('Message length:\n"{}"'.format(len(msg_str)))
         else:
             prcSender.terminate()
             msg_str = 'timeout'
@@ -87,7 +90,11 @@ def message_server(dictCommand):
         print("Runtime error opening socket:\n%s" % e)
     #finally:
         #socket.close()
-    print('Reply: "{}"'.format(msg_str))
+    if (len(msg_str) <= 20):
+        print('Message:\n"{}"'.format(msg_str))
+    else:
+        print('Message length:\n"{}"'.format(len(msg_str)))
+    #print('Reply: "{}"'.format(msg_str))
     return (msg_str)
 
 #------------------------------------------------------------------------------
@@ -127,7 +134,11 @@ def client_read_signal (dictCommand):
     try:
         #if (dictCommand['setup'] == 'read'):
         txtReply = message_server(dictCommand)
-        print('reading signal\n{}'.format(txtReply))
+        if (len(txtReply) > 20):
+            txtPrintout = txtReply[0:20]
+        else:
+            txtPrintout = txtReply
+        print('reading signal: "{}"'.format(txtPrintout))
     except Exception as e:
         txtReply = "Runtime in client_setup_command:\n{}".format(e)
         print(txtReply)
