@@ -42,7 +42,7 @@ bool g_fMca = false;
 //-----------------------------------------------------------------------------
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
-Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup);
+Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
 void AddPulse ();
 void ExportDebugPulse(TFloatVecQueue &qDebug);
@@ -64,6 +64,7 @@ string SaveMCA ();
 //-----------------------------------------------------------------------------
 int main (void)
 {
+    bool fRun=true;
     //  Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
@@ -80,7 +81,7 @@ int main (void)
     g_mca_calculator.SetParams (rp_setup.GetMcaParams());
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
     t.setInterval (AddPulse, 1000);
-    while (1) {
+    while (fRun) {
         char buffer [1024];
         zmq_recv (responder, buffer, 1024, 0);
         std::string strJson = ToLower(buffer);
@@ -95,7 +96,7 @@ int main (void)
             if (!root[g_szReadPulse].isNull())
                 jReply["pulses"] = HandleRead(root[g_szReadPulse], rp_setup);
             if (!root[g_szSampling].isNull())
-                jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup);
+                jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup, fRun);
             if (!root[g_szMCA].isNull())
                 jReply[g_szMCA] = HandleMCA(root[g_szMCA], rp_setup);
         }
@@ -287,7 +288,7 @@ void SafeSetMcaParams (const TMcaParams &params)
 }
 //-----------------------------------------------------------------------------
 
-Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
+Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun)
 {
     std::string strResult;
     Json::Value jResult;
@@ -302,6 +303,10 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup)
             SafeStartStop (false);
         else if (strCmd == "status")
             fCommandOK = true;
+        else if (strCmd == "quit") {
+            fCommandOK = true;
+            fRun = false;
+        }
         else
             fCommandOK = false;
         if (fCommandOK) {
