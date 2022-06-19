@@ -193,7 +193,8 @@ Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
         	vPulse = g_qPulses.back();
         	g_qPulses.pop();
         	mtx.unlock ();
-            for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
+            //for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
+            for (i=vPulse.begin() ; (i != vPulse.end()) && (jPulse.size() < nBuffer) ; i++) {
                 sprintf (szNum, "%.3f", *i);
                 strNumber = std::string (szNum);
                 jPulse.append(strNumber.c_str());

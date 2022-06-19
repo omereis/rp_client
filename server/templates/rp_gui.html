@@ -12,10 +12,11 @@
     </head>
     <script>
     </script>
-<body style="background-color: #a4f4e9;">
+<body style="background-color: #a3c1fd;">
         
     </body>
-	<h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
+<!--
+    <h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
     <br>
     <a href="red_pitaya_setup">Setup</a>
     <br><br>
@@ -24,11 +25,14 @@
     <br>
     <a href="other_links">other links</a>
     <br>
+-->
     <table>
         <tr>
             <th>Setup
                 <br>
-                <input type="button" value="Red Pitaya Setup" onclick="onReadRedPitayaSetupClick()">
+                <input type="button" value="Read Setup" onclick="onReadRedPitayaSetupClick()">
+                <br>
+                <input type="button" value="Update Setup" onclick="onUpdateRedPitayaSetupClick()">
             </th>
             <td>
                 <table>
@@ -52,10 +56,10 @@
 							Buffer
 						</td>
 						<td>
-							<input type="text" id="txtBuffer" value="100" style="width:75px;text-align: center;"> 
+							<input type="text" id="txtBuffer" value="10" style="width:75px;text-align: center;"> 
                             <select id="comboSignalBufferUnits">
                                 <option>Nano Seconds</option>
-                                <option>&mu; Seconds</option>
+                                <option selected>&mu; Seconds</option>
                                 <option>Milli Seconds</option>
                             </select>Microseconds
 						</td>
@@ -92,30 +96,49 @@
                 </table>
                 <table>
                     <tr>
-                        <td>Direction</td>
-                        <td><select id="comboTriggerDir">
+                        <td>Direction
+                        <select id="comboTriggerDir">
                             <option value=""></option>"
                             <option value="Up">Up</option>"
                             <option value="Down">Down</option>"
                         </select>
                         </td>
+<!--
                     </tr>
                     <tr>
-                        <td>Input</td>
-                        <td><select id="comboTriggerIn">
+-->
+                        <td>Input #
+                        <select id="comboTriggerIn">
                                 <option value=""></option>"
                                 <option value="In1">Input #1</option>"
                                 <option value="In2">Input #2</option>"
                             </select>
                         </td>
                     </tr>
-                </table>
+                <tr>
+                    <td>
+                        Scan Rate: <input type="text" id="txtScanRate" style="width:50px;text-align: center;" value="0.5"> Seconds
+                    </td>
+                    <td>
+                        Smoothing Window: <select id="comboSmoothingWindow">
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="7">7</option>
+                            <option value="9" selected>9</option>
+                            <option value="11">11</option>
+                            <option value="13">13</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
             </td>
         </tr>
+<!--
         <tr>
             <td><input type="button" value="Read from Card"  onclick="onReadSignalClick()"></td>
             <td><a href="/setup.html">Update Card</a></td>
         </tr>
+-->
         <tr>
             <th>
                 <table>
@@ -123,9 +146,12 @@
                         <th>Signal</th>
                     </tr>
                     <tr>
+                        <td><input type="button" value="Read from Card"  onclick="onReadSignalClick()"></td>
+                    </tr>
+                    <tr>
 						<td>
 							Update Interval<br>
-                        	<input type="text" id="txtInterval" value="100" style="width:75px;text-align: center;"> milliseconds<br>
+                        	<input type="text" id="txtInterval" value="1000" style="width:75px;text-align: center;"> milliseconds<br>
 						</td>
                     </tr>
                     <tr>
@@ -144,17 +170,22 @@
                 </table>
             </th>
             <td id="cellSignal">
-                chart here<br>
+<!--                chart here<br>-->
                 <div id="chartSignal" style="width:800px;height:450px;"></div>
             </td>
         </tr>
         <tr>
-            <th>PSD</th>
-            <td>PSD Chart</td>
+            <th>MCA<br>
+                <input type="checkbox" id="cboxShowMca" checked="true"><label for="cboxShowMca">Show MCA</label><br>
+                Channels: <input type="text" style="width:75px;text-align: center;" value="1000">
+                <br>
+                <input type="button" value="Reset" onclick="onMcaResetClick()">
+            </th>
+            <td>MCA Chart</td>
         </tr>
         <tr>
-            <th>MCA</th>
-            <td>MCA Chart</td>
+            <th>PSD</th>
+            <td>PSD Chart</td>
         </tr>
         <tr>
 			<th>

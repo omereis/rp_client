@@ -9,8 +9,12 @@
 function onReadRedPitayaSetupClick () {
     var msg = new Object;
     msg['setup'] = 'read';
-    //msg["sampling"] = "true";
     sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function onUpdateRedPitayaSetupClick () {
+
 }
 
 var webSocket   = null;
@@ -19,9 +23,6 @@ var ws_hostname = null;
 var ws_port     = null;
 var ws_endpoint = null;
 var g_data = null;
-/**
- * Event handler for clicking on button "Connect"
- */
 
 //-----------------------------------------------------------------------------
 function setupHandler (reply) {
@@ -388,21 +389,8 @@ function onQuitSampling() {
     sendSamplingCommand ('quit');
     onReadStatusClick();
 }
+
 //-----------------------------------------------------------------------------
-function onChartingClick() {
-    var trace1 = {
-        x: [1, 2, 3, 4],
-        y: [10, 15, 13, 17],
-        type: 'scatter'
-    };
-  
-    var trace2 = {
-        x: [1, 2, 3, 4],
-        y: [16, 5, 11, 9],
-        type: 'scatter'
-    };
+function onMcaResetClick() {
     
-    var data = [trace1, trace2];
-    var chart = document.getElementById("chartSignal");
-    Plotly.newPlot(chart, data);
 }

@@ -3,10 +3,17 @@
         "buffer_length":"1000",
         "decimation":"1",
         "rate":"125000000",
-        "signal_points":"200"},
+        "signal_points":"200"
+    },
     "trigger":{
         "dir":"up",
         "level":"0.005",
-        "src":"In1"}
+        "src":"In1"
+    },
+    "mca" : {
+        "channels" : "1000",
+        "max_value" : "2",
+        "mca_op" : "start"
+    }
 }
 
