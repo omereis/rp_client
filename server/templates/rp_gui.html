@@ -52,7 +52,12 @@
 							Buffer
 						</td>
 						<td>
-							<input type="text" id="txtBuffer" value="100" style="width:75px;text-align: center;"> Microseconds
+							<input type="text" id="txtBuffer" value="100" style="width:75px;text-align: center;"> 
+                            <select id="comboSignalBufferUnits">
+                                <option>Nano Seconds</option>
+                                <option>&mu; Seconds</option>
+                                <option>Milli Seconds</option>
+                            </select>Microseconds
 						</td>
                     </tr>
                     <tr>
@@ -76,7 +81,7 @@
     
                     </tr>
                     <tr>
-                        <td>Level</td><td><input type="text" id="txtTriggerLevel"></td>
+                        <td>Level</td><td><input type="text" id="txtTriggerLevel" value="0.5"></td>
 					<td>
 						Update Rate
 					</td>
@@ -121,12 +126,19 @@
 						<td>
 							Update Interval<br>
                         	<input type="text" id="txtInterval" value="100" style="width:75px;text-align: center;"> milliseconds<br>
-                        	<!-- <input type="text" id="txtScanID" value="" style="width:75px;text-align: center;"> -->
 						</td>
                     </tr>
                     <tr>
 						<td>
                         	<input type="button" value="Start" id="btnSignalStartStop" onclick="onSignalStartStopClick(this.id)">
+                            <br>
+                            <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
+                            <br>
+                            <input type="checkbox" value="Trigger" id="cboxTrigger" value="Trigger"><label for="cboxTrigger">Trigger</label>
+                            <!--
+                            <br>
+                            <input type="button" value="charting" onclick="onChartingClick()" value="Show Trigger">
+                            -->
 						</td>
                     </tr>
                 </table>

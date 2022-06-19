@@ -226,25 +226,34 @@ function onReadSignalClick() {
 
 //-----------------------------------------------------------------------------
 function onReadStatusClick () {
-    var msg = new Object;
-    msg['sampling'] = 'status';
-    sendMesssageThroughFlask(msg, readSamplingStatus);
+    sendSamplingCommand ('status');
+    //var msg = new Object;
+    //msg['sampling'] = 'status';
+    //sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
 //-----------------------------------------------------------------------------
 function onSamplingOn() {
-    var msg = new Object;
-    msg['sampling'] = 'true';
-    sendMesssageThroughFlask(msg, readSamplingStatus);
+    sendSamplingCommand ('true');
+    //var msg = new Object;
+    //msg['sampling'] = 'true';
+    //sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
 //-----------------------------------------------------------------------------
 function onSamplingOff() {
-    var msg = new Object;
-    msg['sampling'] = 'false';
-    sendMesssageThroughFlask(msg, readSamplingStatus);
+    sendSamplingCommand ('false');
+    //var msg = new Object;
+    //msg['sampling'] = 'false';
+    //sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
+//-----------------------------------------------------------------------------
+function sendSamplingCommand (cmd) {
+    var msg = new Object;
+    msg['sampling'] = cmd;
+    sendMesssageThroughFlask(msg, readSamplingStatus);
+}
 //-----------------------------------------------------------------------------
 function setupReadSignal (reply) {
     var cell = document.getElementById("cellSignal");
@@ -252,7 +261,8 @@ function setupReadSignal (reply) {
         //cell.innerText = reply;
     try {
         var txt, n, i, samples = JSON.parse(reply);
-        var yData=[], xData=[], t=0;
+        var yData=[], xData=[], t=0, yTrigger=[];
+        var dTrigger = uploadTriggerLevel ();//parseFloat(document.getElementById("txtTriggerLevel").value);
         var nPulses = samples.pulses.signal.length;//samples.sampling.pulse_count.toString();
 		var layout = {};
 		layout["title"] = "Signal";
@@ -263,36 +273,36 @@ function setupReadSignal (reply) {
         for (var n=0 ; n < nPulses ; n++, t += 8e-9) {
             yData[n] = parseFloat (samples.pulses.signal[n]);
             xData[n] = t;
+            yTrigger[n] = dTrigger;
         }
+        var cbox = document.getElementById('cboxTrigger');
+        var fShowTrigger=false;
+        if (cbox)
+            fShowTrigger = cbox.checked;
+        //var data = [[{x:xData, y:yData}], [{x:xData, y:yTrigger}]];
+        var dx = {x:xData, y:yData, name: "Signal"};
+        var dy = {x:xData, y:yTrigger, name: "Trigger"};
+        //var data = [[{x:xData, y:yData}]];//, [{x:xData, y:yTrigger}]];
+        var data=[];
+        data[0] = dx;
+        if (fShowTrigger)
+            data[1] = dy;
         var chart = document.getElementById("chartSignal");
-		Plotly.newPlot(chart, [{
-            x: xData/*[1, 2, 3, 4, 5]*/,
-            y: yData/*[1, 2, 4, 8, 16]*/ }],
-			layout
-			//{margin: { t: 0 } } 
-		);
-/*
-        var aPulses = samples.pulses;
-        var aKeys = Object.keys(aPulses);
-        for (n=0 ; n < aKeys.length ; n++) {
-            txt = '';
-            var pulse = aPulses[aKeys[n]];
-            for (i=0 ; i < pulse.length ; i++) {
-                txt += parseFloat (pulse[i]).toString();
-                if (i < pulse.length-1)
-                    txt += ",";
-            }
-            cell.innerHTML += txt + "<br>";
-*/
-            //var chart = document.getElementById("chartSignal");
-			//document.cookie = aPulses[aKeys[0]];
-        	//drawSignal(aPulses[aKeys[0]]);
+        Plotly.newPlot(chart, data, layout);
         }
     catch (exception) {
 		var txt = cell.innerText;
 		txt = exception;
         console.log(exception);
     }
+}
+
+//-----------------------------------------------------------------------------
+function uploadTriggerLevel () {
+    var dTrigger = parseFloat(document.getElementById("txtTriggerLevel").value);
+    if (isNaN(dTrigger))
+        dTrigger = 0;
+    return (dTrigger);
 }
 
 //-----------------------------------------------------------------------------
@@ -360,7 +370,6 @@ function onSignalStartStopClick(id) {
                 btn.value = "Stop";
                 var id = setInterval (onReadSignalClick, interval);
                 localStorage.setItem("SignalInterval", id);
-				//document.getElementById ("txtScanID").value = id;
             }
             else {
                 btn.value = "Start";
@@ -375,3 +384,25 @@ function onSignalStartStopClick(id) {
 }
 
 //-----------------------------------------------------------------------------
+function onQuitSampling() {
+    sendSamplingCommand ('quit');
+    onReadStatusClick();
+}
+//-----------------------------------------------------------------------------
+function onChartingClick() {
+    var trace1 = {
+        x: [1, 2, 3, 4],
+        y: [10, 15, 13, 17],
+        type: 'scatter'
+    };
+  
+    var trace2 = {
+        x: [1, 2, 3, 4],
+        y: [16, 5, 11, 9],
+        type: 'scatter'
+    };
+    
+    var data = [trace1, trace2];
+    var chart = document.getElementById("chartSignal");
+    Plotly.newPlot(chart, data);
+}
