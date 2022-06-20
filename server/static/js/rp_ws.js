@@ -215,28 +215,14 @@ function onSendClick() {
 
 //-----------------------------------------------------------------------------
 function onReadSignalClick() {
-    var txt = document.getElementById("txtBuffer");
     var msg = new Object, msgSignal = new Object, msgRead = new Object;
-    if (uploadSignalRead()) {
+    if (uploadSignalRead())
         msgSignal['signal'] = uploadSignalLength();
-    }
-    if (uploadMcaRead()) {
+    if (uploadMcaRead())
         msgSignal['mca'] = uploadMcaRead();
-    }
-    if (uploadPsdRead()) {
+    if (uploadPsdRead())
         msgSignal['psd'] = uploadPsdRead();
-    }
-    //msgRead['mca'] = uploadMcaRead();
-    //msgRead['psd'] = uploadPsdRead();
-    //msgSignal['buffer_length'] = txt.value;//"100";
-    //msgSignal['units'] = "microseconds";
-    //msgSignal['signal'] = uploadSignalRead();
-    //msg['signal'] = msgSignal
     msg['read_data'] = msgSignal;
-    //msg['read_pulse'] = msgBuf;
-    //var msg_mca = new Object;
-    //msg_mca['mca_op'] = uploadMcaOp();
-    //msg['mca'] = msg_mca;
     if (Object.keys(msgSignal).length > 0)
         sendMesssageThroughFlask(msg, setupReadSignal);
 }

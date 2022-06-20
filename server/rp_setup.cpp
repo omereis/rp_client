@@ -6,6 +6,7 @@
 #include "bd_types.h"
 #include "misc.h"
 
+#include <mutex>
 //
 // TRedPitayaSampling
 //-----------------------------------------------------------------------------
@@ -461,36 +462,63 @@ bool TRedPitayaSetup::SaveToJson (const std::string &strFile)
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetSamplingOnOff (bool fSampling)
 {
+    mutex mtx;
+
+    mtx.lock();
     m_fSamplingOnOff = fSampling;
+    mtx.unlock();
 }
 
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::GetSamplingOnOff () const
 {
-    return (m_fSamplingOnOff);
+    mutex mtx;
+
+    mtx.lock();
+    bool f = m_fSamplingOnOff;
+    mtx.unlock();
+    return (f);
 }
 
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaOnOff (bool fMca)
 {
+    mutex mtx;
+
+    mtx.lock();
     m_fMcaOnOff = fMca;
+    mtx.unlock();
 }
 
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::GetMcaOnOff () const
 {
-    return (m_fMcaOnOff);
+    mutex mtx;
+
+    mtx.lock();
+    bool f = m_fMcaOnOff;
+    mtx.unlock();
+    return (f);
 }
 
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetPsdOnOff (bool fPsd)
 {
+    mutex mtx;
+
+    mtx.lock();
     m_fPsdOnOff = fPsd;
+    mtx.unlock();
 }
 
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::GetPsdOnOff () const
 {
-    return (m_fPsdOnOff);
+    mutex mtx;
+
+    mtx.lock();
+    bool f = m_fPsdOnOff;
+    mtx.unlock();
+    return (f);
 }
 //-----------------------------------------------------------------------------

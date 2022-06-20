@@ -40,6 +40,8 @@ static const char *g_szMCA       = "MCA";
 static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
+TRedPitayaSetup g_rp_setup;
+//-----------------------------------------------------------------------------
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
@@ -73,13 +75,13 @@ int main (void)
     assert (rc == 0);
 	Json::Value root, jReply;
 	Json::Reader reader;
-    TRedPitayaSetup rp_setup;
+    //TRedPitayaSetup rp_setup;
     string strReply;
     Timer t;
 
-    Json::Value jSetup = rp_setup.AsJson();
-    rp_setup.LoadFromJson("rp_setup.json");
-    g_mca_calculator.SetParams (rp_setup.GetMcaParams());
+    Json::Value jSetup = g_rp_setup.AsJson();
+    g_rp_setup.LoadFromJson("rp_setup.json");
+    g_mca_calculator.SetParams (g_rp_setup.GetMcaParams());
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
     t.setInterval (AddPulse, 1000);
     while (fRun) {
@@ -93,13 +95,13 @@ int main (void)
         	printf ("Message parsed\n");
 			strReply  = "";
             if (!root["setup"].isNull())
-                jReply["setup"] = HandleSetup(root["setup"], rp_setup);
+                jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
             if (!root[g_szReadData].isNull())
-                jReply["pulses"] = HandleReadData(root[g_szReadData], rp_setup);
+                jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup);
             if (!root[g_szSampling].isNull())
-                jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup, fRun);
+                jReply[g_szSampling] = HandleSampling(root[g_szSampling], g_rp_setup, fRun);
             if (!root[g_szMCA].isNull())
-                jReply[g_szMCA] = HandleMCA(root[g_szMCA], rp_setup);
+                jReply[g_szMCA] = HandleMCA(root[g_szMCA], g_rp_setup);
         }
         else {
             fprintf (stderr, "Parsing error\n");
@@ -252,6 +254,8 @@ void SafeStartStop (bool fCommand)
 
 bool SafeGetStatus ()
 {
+    return (g_rp_setup.GetSamplingOnOff ());
+/*
 	mutex mtx;
     bool fRunning;
 
@@ -259,16 +263,20 @@ bool SafeGetStatus ()
     fRunning = g_fRunning;
     mtx.unlock();
     return (fRunning);
+*/
 }
 //-----------------------------------------------------------------------------
 
 void SafeSetMca (bool fOnOff)
 {
+    g_rp_setup.SetSamplingOnOff (fOnOff);
+/*
 	mutex mtx;
 
     mtx.lock();
     g_fMca = fOnOff;
     mtx.unlock();
+*/
 }
 //-----------------------------------------------------------------------------
 
@@ -329,9 +337,6 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
         fCommandOK = true;
 		strResult = StringifyJson(jSampling);
 		if (!jSampling["signal"].isNull()) {
-			//string s = ToLower (jSampling["signal"].asString());
-			//bool f = str_to_bool (s);
-			//rp_setup.SetSamplingOnOff (f);
 			rp_setup.SetSamplingOnOff (str_to_bool (ToLower (jSampling["signal"].asString())));
 		}
 		if (!jSampling["mca"].isNull()) {
