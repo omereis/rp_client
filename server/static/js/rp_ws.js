@@ -303,34 +303,55 @@ function uploadMcaOp() {
 
 //-----------------------------------------------------------------------------
 function onReadStatusClick () {
-    sendSamplingCommand ('status');
-    //var msg = new Object;
-    //msg['sampling'] = 'status';
-    //sendMesssageThroughFlask(msg, readSamplingStatus);
+    var msgStatus = new Object;
+    msgStatus['op'] = 'status';
+    sendSamplingCommand (msgStatus);
 }
 
 //-----------------------------------------------------------------------------
 function onSamplingOn() {
     sendSamplingCommand ('true');
-    //var msg = new Object;
-    //msg['sampling'] = 'true';
-    //sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
 //-----------------------------------------------------------------------------
 function onSamplingOff() {
     sendSamplingCommand ('false');
-    //var msg = new Object;
-    //msg['sampling'] = 'false';
-    //sendMesssageThroughFlask(msg, readSamplingStatus);
+}
+
+//-----------------------------------------------------------------------------
+function onSamplingUpdate () {
+    var msgSignal = new Object;
+    msgSignal['signal'] = uploadSignalOnOff ();
+    msgSignal['mca'] = uploadMcaOnOff ();
+    msgSignal['psd'] = uploadPsdOnOff ();
+    sendSamplingCommand (msgSignal);
+}
+
+//-----------------------------------------------------------------------------
+function uploadSignalOnOff () {
+    return (uploadCheckBox ("cboxStartSignal"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaOnOff () {
+    return (uploadCheckBox ("cboxStartMCA"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadPsdOnOff () {
+    return (uploadCheckBox ("cboxStartPSD"));
 }
 
 //-----------------------------------------------------------------------------
 function sendSamplingCommand (cmd) {
     var msg = new Object;
+    var msgSignal = new Object;
+    msgSignal['signal'] = cmd;
     msg['sampling'] = cmd;
     sendMesssageThroughFlask(msg, readSamplingStatus);
 }
+/*
+*/
 //-----------------------------------------------------------------------------
 function setupReadSignal (reply) {
     var cell = document.getElementById("cellSignal");
@@ -386,20 +407,21 @@ function uploadTriggerLevel () {
 function readSamplingStatus (reply) {
     var p = document.getElementById("cellStatus");
     try {
-		var jReply = JSON.parse(reply).sampling;
-        var txt, cl, status = jReply.sampling;
+		var jReply = JSON.parse(reply);//.sampling;
+		downloadCheckBox (jReply.sampling.status.signal, "cboxStartSignal");
+		downloadCheckBox (jReply.sampling.status.mca, "cboxStartMCA");
+		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
+        var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
-            txt = 'On';
         }
         else {
             cl = 'red';
-            txt = 'Off';
         }
         p.style.backgroundColor = cl;
-		if (jReply.hasOwnProperty("pulse_count"))
-			txt += " (" + jReply.pulse_count.toString() + ")";
-        p.innerText = txt;
+		//if (jReply.hasOwnProperty("pulse_count"))
+			//txt += " (" + jReply.pulse_count.toString() + ")";
+        //p.innerText = txt;
     }
     catch (exception) {
 		var p = document.getElementById ("txtReply");
@@ -407,6 +429,13 @@ function readSamplingStatus (reply) {
 			p.value = reply;
         console.log(exception);
     }
+}
+
+//-----------------------------------------------------------------------------
+function downloadCheckBox (fStatus, txtId) {
+	var combo = document.getElementById (txtId);
+	if (combo != null)
+		combo.checked = fStatus;
 }
 
 //-----------------------------------------------------------------------------
@@ -462,7 +491,8 @@ function onSignalStartStopClick(id) {
 
 //-----------------------------------------------------------------------------
 function onQuitSampling() {
-    sendSamplingCommand ('quit');
+    var msgStatus = new Object;
+    msgStatus['op'] = 'quit';
     onReadStatusClick();
 }
 

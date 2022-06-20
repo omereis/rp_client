@@ -332,6 +332,9 @@ void TRedPitayaSetup::Clear ()
     m_trigger.Clear();
     m_sampling.Clear ();
     m_mca_params.Clear();
+    SetSamplingOnOff (false);
+    SetMcaOnOff (false);
+    SetPsdOnOff (false);
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
@@ -339,6 +342,9 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetTrigger (other.GetTrigger());
     SetSampling (other.GetSampling());
     m_mca_params = other.m_mca_params;
+    SetSamplingOnOff (other.GetSamplingOnOff ());
+    SetMcaOnOff (other.GetMcaOnOff ());
+    SetPsdOnOff (other.GetPsdOnOff ());
 }
 //-----------------------------------------------------------------------------
 TRedPitayaTrigger TRedPitayaSetup::GetTrigger() const
@@ -450,5 +456,41 @@ bool TRedPitayaSetup::SaveToJson (const std::string &strFile)
         fLoad = false;
     }
     return (fLoad);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetSamplingOnOff (bool fSampling)
+{
+    m_fSamplingOnOff = fSampling;
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::GetSamplingOnOff () const
+{
+    return (m_fSamplingOnOff);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaOnOff (bool fMca)
+{
+    m_fMcaOnOff = fMca;
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::GetMcaOnOff () const
+{
+    return (m_fMcaOnOff);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetPsdOnOff (bool fPsd)
+{
+    m_fPsdOnOff = fPsd;
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::GetPsdOnOff () const
+{
+    return (m_fPsdOnOff);
 }
 //-----------------------------------------------------------------------------

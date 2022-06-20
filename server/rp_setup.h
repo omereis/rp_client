@@ -98,12 +98,22 @@ public:
     void SetMcaParams (const TMcaParams &mca_params);
     Json::Value McaAsJson();
     Json::Value AppsAsJson();
+
+    void SetSamplingOnOff (bool fSampling);
+    bool GetSamplingOnOff () const;
+    void SetMcaOnOff (bool fMca);
+    bool GetMcaOnOff () const;
+    void SetPsdOnOff (bool fPsd);
+    bool GetPsdOnOff () const;
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
     TRedPitayaTrigger m_trigger;
     TRedPitayaSampling m_sampling;
     TMcaParams m_mca_params;
+    bool m_fSamplingOnOff;
+    bool m_fMcaOnOff;
+    bool m_fPsdOnOff;
 };
 //-----------------------------------------------------------------------------
 #define  __RP_SETUP_H

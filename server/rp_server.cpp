@@ -185,39 +185,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
             	strReply = StringifyJson(jAllPulses);
             	ExportDebugPulse(g_qDebug);
             }
-/*
-			int nBuffer = int ((dLen / 8e-9) + 0.5);
-			fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nBuffer);
-        	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-			while ((jPulse.size() < nBuffer) && (SafeQueueSize() > 0)) {
-        	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-        		mtx.lock ();
-        		vPulse = g_qPulses.back();
-        		g_qPulses.pop();
-        		mtx.unlock ();
-            	//for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
-            	for (i=vPulse.begin() ; (i != vPulse.end()) && (jPulse.size() < nBuffer) ; i++) {
-                	sprintf (szNum, "%.3f", *i);
-                	strNumber = std::string (szNum);
-                	jPulse.append(strNumber.c_str());
-            	}
-        	}
-*/
 		}
-/*
-        strPulses = StringifyJson (jRead);
-		double dLen = stod(jRead["buffer_length"].asString());
-		fprintf (stderr, "Length: %g\n", dLen);
-		fprintf (stderr, "Buffer (integer): %d\n", nBuffer);
-        if (!jRead[g_szBufferLength].isNull())
-			strPulses = jRead[g_szBufferLength].asString();
-        else
-            strPulses = "0";
-        nPulses = std::stoi(strPulses);
-        if (nPulses <= 0)
-            nPulses = (int) g_qPulses.size();
-        fprintf (stderr, "Reading pulse\n");
-*/
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
@@ -338,14 +306,50 @@ void SafeSetMcaParams (const TMcaParams &params)
 }
 //-----------------------------------------------------------------------------
 
+bool str_to_bool (const std::string &sSource)
+{
+	bool f  = false;
+	std::string str = ToLower(sSource);
+
+	if (str == "false")
+		f = false;
+	else if (str == "true")
+		f = true;
+	return (f);
+}
+//-----------------------------------------------------------------------------
+
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun)
 {
     std::string strResult;
-    Json::Value jResult;
+    Json::Value jResult, jStatus;
     bool fCommandOK;
 
     try {
         fCommandOK = true;
+		strResult = StringifyJson(jSampling);
+		if (!jSampling["signal"].isNull()) {
+			//string s = ToLower (jSampling["signal"].asString());
+			//bool f = str_to_bool (s);
+			//rp_setup.SetSamplingOnOff (f);
+			rp_setup.SetSamplingOnOff (str_to_bool (ToLower (jSampling["signal"].asString())));
+		}
+		if (!jSampling["mca"].isNull()) {
+			rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));
+		}
+		if (!jSampling["psd"].isNull()) {
+			rp_setup.SetPsdOnOff (str_to_bool (ToLower (jSampling["psd"].asString())));
+		}
+		if (!jSampling["op"].isNull()) {
+			std:string strOp = ToLower(jSampling["op"].asString());
+			if (strOp == "quit")
+				fRun = false;
+		}
+		jStatus["signal"] = rp_setup.GetSamplingOnOff ();
+		jStatus["mca"] = rp_setup.GetMcaOnOff ();
+		jStatus["psd"] = rp_setup.GetPsdOnOff ();
+		jResult["status"] = jStatus;
+/*
         string strCmd = ToLower (jSampling.asString());
         if (strCmd == "true")
             SafeStartStop (true);
@@ -366,8 +370,10 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
             //jResult["sampling"] = (SafeGetStatus () ? "Running" : "stopped");
         else
             jResult[g_szSampling] = "Command Unknown";
+*/
     }
     catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error in 'HandleSampling':\n%s\n", exp.what());
         jResult[g_szSampling] = exp.what();
     }
     return (jResult);
