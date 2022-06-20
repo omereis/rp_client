@@ -7,25 +7,13 @@
 
         <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
         <script src="https://d3js.org/d3.v4.js"></script>
-		<!-- <script src="plotly-2.12.1.min.js"></script> -->
 		<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
     </head>
     <script>
     </script>
-<body style="background-color: #a3c1fd;">
+<body style="background-color: #82f59b;">
         
     </body>
-<!--
-    <h1 style="text-align: center;"><a href="https://redpitaya.com/"  target="_blank">Red Pitaya</a> Nuclear Signal Analysis</h1>
-    <br>
-    <a href="red_pitaya_setup">Setup</a>
-    <br><br>
-    <br>
-	<br><a href="/websockets">Web Sockets</a>
-    <br>
-    <a href="other_links">other links</a>
-    <br>
--->
     <table>
         <tr>
             <th>Setup
@@ -58,10 +46,10 @@
 						<td>
 							<input type="text" id="txtBuffer" value="10" style="width:75px;text-align: center;"> 
                             <select id="comboSignalBufferUnits">
-                                <option>Nano Seconds</option>
-                                <option selected>&mu; Seconds</option>
-                                <option>Milli Seconds</option>
-                            </select>Microseconds
+                                <option value="1e-9">Nano Seconds</option>
+                                <option value="1e-6" selected>&mu; Seconds</option>
+                                <option value="1e-3">Milli Seconds</option>
+                            </select> Seconds
 						</td>
                     </tr>
                     <tr>
@@ -103,10 +91,6 @@
                             <option value="Down">Down</option>"
                         </select>
                         </td>
-<!--
-                    </tr>
-                    <tr>
--->
                         <td>Input #
                         <select id="comboTriggerIn">
                                 <option value=""></option>"
@@ -133,12 +117,6 @@
             </table>
             </td>
         </tr>
-<!--
-        <tr>
-            <td><input type="button" value="Read from Card"  onclick="onReadSignalClick()"></td>
-            <td><a href="/setup.html">Update Card</a></td>
-        </tr>
--->
         <tr>
             <th>
                 <table>
@@ -146,7 +124,12 @@
                         <th>Signal</th>
                     </tr>
                     <tr>
-                        <td><input type="button" value="Read from Card"  onclick="onReadSignalClick()"></td>
+                        <td><input type="button" value="Read from Card" onclick="onReadSignalClick()">
+                            <br>
+                            <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal<br>
+                            <input type="checkbox" id="cboxReadMCA" value="MCA" checked="true">MCA<br>
+                            <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true">PSD
+                        </td>
                     </tr>
                     <tr>
 						<td>
@@ -161,16 +144,11 @@
                             <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
                             <br>
                             <input type="checkbox" value="Trigger" id="cboxTrigger" value="Trigger"><label for="cboxTrigger">Trigger</label>
-                            <!--
-                            <br>
-                            <input type="button" value="charting" onclick="onChartingClick()" value="Show Trigger">
-                            -->
 						</td>
                     </tr>
                 </table>
             </th>
             <td id="cellSignal">
-<!--                chart here<br>-->
                 <div id="chartSignal" style="width:800px;height:450px;"></div>
             </td>
         </tr>
@@ -192,7 +170,6 @@
 				<input type="button" value="Chart" onclick="onChartClick()">
 			</th>
             <td colspan="2">
-				<!-- <div id="divChart"></div> -->
 				<div id="divChart" style="width:600px;height:250px;"></div>
 			</td>
         </tr>

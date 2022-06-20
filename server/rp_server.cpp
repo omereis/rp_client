@@ -28,7 +28,7 @@ TFloatVecQueue g_qDebug;
 bool g_fRunning = false;
 TMcaParams g_mca_params;
 TCalcMca g_mca_calculator;
-static const char *g_szReadPulse = "read_pulse";
+static const char *g_szReadData = "read_data";
 static const char *g_szBufferLength = "buffer_length";
 static const char *g_szReadMca   = "rea_dmca";
 static const char *g_szSampling  = "sampling";
@@ -41,7 +41,7 @@ static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
-Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
+Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
 void AddPulse ();
@@ -59,6 +59,7 @@ void SafeReadMca (Json::Value &jResult);
 void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
+Json::Value ReadSignal (double dLen);
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
@@ -93,8 +94,8 @@ int main (void)
 			strReply  = "";
             if (!root["setup"].isNull())
                 jReply["setup"] = HandleSetup(root["setup"], rp_setup);
-            if (!root[g_szReadPulse].isNull())
-                jReply["pulses"] = HandleRead(root[g_szReadPulse], rp_setup);
+            if (!root[g_szReadData].isNull())
+                jReply["pulses"] = HandleReadData(root[g_szReadData], rp_setup);
             if (!root[g_szSampling].isNull())
                 jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup, fRun);
             if (!root[g_szMCA].isNull())
@@ -164,7 +165,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 }
 //-----------------------------------------------------------------------------
 
-Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
+Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 {
     TFloatVec vPulse;
     TFloatVec::iterator i;
@@ -175,10 +176,38 @@ Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     int n, nPulses, j;
     
     try {
+        Json::Value jMca = jRead["mca"];
+		if (jRead["signal"].isNull() == false) {
+			string strSignalLength = jRead["signal"].asString();
+			double dLen = stod (strSignalLength);
+            if (dLen > 0) {
+            	jAllPulses["signal"] = ReadSignal (dLen);
+            	strReply = StringifyJson(jAllPulses);
+            	ExportDebugPulse(g_qDebug);
+            }
+/*
+			int nBuffer = int ((dLen / 8e-9) + 0.5);
+			fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nBuffer);
+        	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
+			while ((jPulse.size() < nBuffer) && (SafeQueueSize() > 0)) {
+        	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
+        		mtx.lock ();
+        		vPulse = g_qPulses.back();
+        		g_qPulses.pop();
+        		mtx.unlock ();
+            	//for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
+            	for (i=vPulse.begin() ; (i != vPulse.end()) && (jPulse.size() < nBuffer) ; i++) {
+                	sprintf (szNum, "%.3f", *i);
+                	strNumber = std::string (szNum);
+                	jPulse.append(strNumber.c_str());
+            	}
+        	}
+*/
+		}
+/*
         strPulses = StringifyJson (jRead);
 		double dLen = stod(jRead["buffer_length"].asString());
 		fprintf (stderr, "Length: %g\n", dLen);
-		int nBuffer = int (((1e-6 * dLen)/8e-9) + 0.5);
 		fprintf (stderr, "Buffer (integer): %d\n", nBuffer);
         if (!jRead[g_szBufferLength].isNull())
 			strPulses = jRead[g_szBufferLength].asString();
@@ -188,26 +217,46 @@ Json::Value HandleRead(Json::Value &jRead, TRedPitayaSetup &rp_setup)
         if (nPulses <= 0)
             nPulses = (int) g_qPulses.size();
         fprintf (stderr, "Reading pulse\n");
-        for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-        	mtx.lock ();
-        	vPulse = g_qPulses.back();
-        	g_qPulses.pop();
-        	mtx.unlock ();
-            //for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
-            for (i=vPulse.begin() ; (i != vPulse.end()) && (jPulse.size() < nBuffer) ; i++) {
-                sprintf (szNum, "%.3f", *i);
-                strNumber = std::string (szNum);
-                jPulse.append(strNumber.c_str());
-            }
-        }
-        jAllPulses["signal"]=jPulse;//.append(jPulse);
-        strReply = StringifyJson(jAllPulses);
-        ExportDebugPulse(g_qDebug);
+*/
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
     }
     return (jAllPulses);
+}
+
+//-----------------------------------------------------------------------------
+Json::Value ReadSignal (double dLen)
+{
+    Json::Value jSignal(Json::arrayValue);
+	mutex mtx;
+	TFloatVec vPulse;
+	TFloatVec::iterator i;
+	char szNum[128];
+	std::string strNumber;
+
+    try {
+		int nBuffer = int ((dLen / 8e-9) + 0.5);
+		fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nBuffer);
+        	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
+		while ((jSignal.size() < nBuffer) && (SafeQueueSize() > 0)) {
+        	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
+        	mtx.lock ();
+        	vPulse = g_qPulses.back();
+        	g_qPulses.pop();
+        	mtx.unlock ();
+            	//for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
+            for (i=vPulse.begin() ; (i != vPulse.end()) && (jSignal.size() < nBuffer) ; i++) {
+                sprintf (szNum, "%.3f", *i);
+                strNumber = std::string (szNum);
+                jSignal.append(strNumber.c_str());
+            }
+        }
+    }
+    catch (std::exception &exp) {
+        fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
+    }
+    return (jSignal);
 }
 //-----------------------------------------------------------------------------
 

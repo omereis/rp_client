@@ -121,7 +121,7 @@ def OnRedPitayaMessage():
         dictCommand = json.loads(res)
         if 'setup' in dictCommand:
             txtReply = client_setup_command (dictCommand)
-        if 'sampling' in dictCommand:
+        else:
             txtReply = client_read_signal (dictCommand)
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)

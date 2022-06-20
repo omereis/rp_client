@@ -216,13 +216,89 @@ function onSendClick() {
 //-----------------------------------------------------------------------------
 function onReadSignalClick() {
     var txt = document.getElementById("txtBuffer");
-    var msg = new Object;
-    var msgBuf = new Object;
-    msg['sampling'] = 'True';
-    msgBuf['buffer_length'] = txt.value;//"100";
-    msgBuf['units'] = "microseconds";
-    msg['read_pulse'] = msgBuf;
-    sendMesssageThroughFlask(msg, setupReadSignal);
+    var msg = new Object, msgSignal = new Object, msgRead = new Object;
+    if (uploadSignalRead()) {
+        msgSignal['signal'] = uploadSignalLength();
+    }
+    if (uploadMcaRead()) {
+        msgSignal['mca'] = uploadMcaRead();
+    }
+    if (uploadPsdRead()) {
+        msgSignal['psd'] = uploadPsdRead();
+    }
+    //msgRead['mca'] = uploadMcaRead();
+    //msgRead['psd'] = uploadPsdRead();
+    //msgSignal['buffer_length'] = txt.value;//"100";
+    //msgSignal['units'] = "microseconds";
+    //msgSignal['signal'] = uploadSignalRead();
+    //msg['signal'] = msgSignal
+    msg['read_data'] = msgSignal;
+    //msg['read_pulse'] = msgBuf;
+    //var msg_mca = new Object;
+    //msg_mca['mca_op'] = uploadMcaOp();
+    //msg['mca'] = msg_mca;
+    if (Object.keys(msgSignal).length > 0)
+        sendMesssageThroughFlask(msg, setupReadSignal);
+}
+
+//-----------------------------------------------------------------------------
+function uploadSignalLength() {
+    var dBufLen=100e-6;
+
+    try {
+        var dLen = parseFloat(document.getElementById("txtBuffer").value);
+        var combo = document.getElementById("comboSignalBufferUnits");
+        var dCoef = parseFloat(combo.item(combo.selectedIndex).value);
+        dBufLen = dLen * dCoef;
+    }
+    catch (exception) {
+        console.log(exception);
+    }
+    return (dBufLen);
+}
+
+//-----------------------------------------------------------------------------
+function uploadSignalRead() {
+    return (uploadCheckBox ("cboxReadSignal"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaRead() {
+    return (uploadCheckBox ("cboxReadMCA"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadPsdRead() {
+    return (uploadCheckBox ("cboxReadPSD"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadCheckBox (txtCbox) {
+    var fSignal=false;
+    try {
+        fSignal = document.getElementById(txtCbox).checked;
+    }
+    catch (exception) {
+        console.log(exception);
+    }
+    return (fSignal);
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaOp() {
+    var mca_op='';
+    try {
+        var cbox = document.getElementById(cboxShowMca);
+        if (cbox != null)
+            mca_op = cbox.checked ? 'start' : 'stop';
+        else
+            mca_op = 'stop';
+    }
+    catch (exception) {
+        console.log(exception);
+        mca_op = "stop";
+    }
+    return (mca_op);
 }
 
 //-----------------------------------------------------------------------------
@@ -392,5 +468,5 @@ function onQuitSampling() {
 
 //-----------------------------------------------------------------------------
 function onMcaResetClick() {
-    
+
 }
