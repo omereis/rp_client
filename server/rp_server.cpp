@@ -19,12 +19,14 @@ using namespace std;
 #include "timer.h"
 #include "bd_types.h"
 #include "calc_mca.h"
+#include "pulse_info.h"
 
 #include "jsoncpp/json/json.h"
 //-----------------------------------------------------------------------------
 TFloatVecQueue g_qPulses;
 TFloatVecQueue g_qDebug;
 
+TPulseInfoVec g_vPulsesInfo;
 bool g_fRunning = false;
 TMcaParams g_mca_params;
 TCalcMca g_mca_calculator;
@@ -42,6 +44,7 @@ bool g_fMca = false;
 //-----------------------------------------------------------------------------
 TRedPitayaSetup g_rp_setup;
 //-----------------------------------------------------------------------------
+
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
@@ -62,6 +65,11 @@ void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
 Json::Value ReadSignal (double dLen);
+bool GetNextPulse (TFloatVec &vPulse);
+bool GetPulseParams (TFloatVec vRawPulse, TPulseInfo &pi);
+TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
+float VectorAverage (const TFloatVec &vec);
+
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
@@ -255,28 +263,12 @@ void SafeStartStop (bool fCommand)
 bool SafeGetStatus ()
 {
     return (g_rp_setup.GetSamplingOnOff ());
-/*
-	mutex mtx;
-    bool fRunning;
-
-    mtx.lock();
-    fRunning = g_fRunning;
-    mtx.unlock();
-    return (fRunning);
-*/
 }
 //-----------------------------------------------------------------------------
 
 void SafeSetMca (bool fOnOff)
 {
     g_rp_setup.SetSamplingOnOff (fOnOff);
-/*
-	mutex mtx;
-
-    mtx.lock();
-    g_fMca = fOnOff;
-    mtx.unlock();
-*/
 }
 //-----------------------------------------------------------------------------
 
@@ -479,8 +471,14 @@ void AddPulse ()
     TFloatVec::iterator i;
 	mutex mtx;
     float fDelta;
+    TPulseInfo pi;
 
     if ((SafeGetStatus ())) {
+        if (GetNextPulse (vPulse)) {
+            if (GetPulseParams (vPulse, pi))
+                g_vPulsesInfo.push_back (pi);
+        }
+/*
         if (ReadVectorFromFile ("pulse.csv", vPulse)) {
             float f, fMax = VectorMax (vPulse) * 0.1, r, rMax, noise;
 
@@ -504,7 +502,75 @@ void AddPulse ()
             if (SafeGetMca ())
                 SafeAddToMca (vPulse);
         }
+*/
     }
+}
+
+//-----------------------------------------------------------------------------
+bool GetPulseParams (TFloatVec vRawPulse, TPulseInfo &pi)
+{
+    bool fExtractParams=false;
+    TFloatVec vPulse;
+
+    try {
+        pi.Clear ();
+        pi.SetRawPulse (vRawPulse);
+        pi.SetPulse (SmoothPulse (vRawPulse));
+        fExtractParams = true;
+    }
+    catch (std::exception &err) {
+        fprintf (stderr, "Runtime error in 'GetPulseParams':\n%s\n", err.what());
+    }
+    return (fExtractParams);
+}
+
+//-----------------------------------------------------------------------------
+float VectorAverage (const TFloatVec &vec)
+{
+    TFloatVec::const_iterator i;
+    double dAverage=0;
+
+	if (vec.size() > 0) {
+    	for (i=vec.begin() ; i != vec.end() ; i++)
+       		dAverage += (double) *i;
+    	dAverage /= (double) vec.size();
+	}
+    return (dAverage);
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
+{
+    TFloatVec vSmooth, vWin;
+
+    if (vRawPulse.size() > 0) {
+        TFloatVec::const_iterator iRaw;
+        TFloatVec::iterator iSmooth, iWin;
+        size_t n;
+        vSmooth.resize(vRawPulse.size());
+        int nSmoothWindow=7;
+        for (iRaw=vRawPulse.begin(), iSmooth=vSmooth.begin() ; iRaw != vRawPulse.end() ; iRaw++, iSmooth++) {
+			for (n=0 ; n < (vWin.size() - 1) ; n++)
+				vWin[n] = vWin[n + 1];
+            if (vWin.size() >= nSmoothWindow)
+				vWin[nSmoothWindow - 1] = *iRaw;
+			else
+            	vWin.push_back (*iRaw);
+            float f = VectorAverage (vWin);
+            *iSmooth = f;//VectorAverage (vWin);
+        }
+    }
+    return (vSmooth);
+}
+
+//-----------------------------------------------------------------------------
+
+bool GetNextPulse (TFloatVec &vPulse)
+{
+    bool fPulse = false;
+
+    fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
+    return (fPulse);
 }
 //-----------------------------------------------------------------------------
 
