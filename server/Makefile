@@ -11,13 +11,13 @@ CPP = gcc
 CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o
-INCLUDES = rp_setup.h misc.h timer.h
+INCLUDES = rp_setup.h misc.h timer.h pulse_info.h
 SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp
 
-RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o calc_mca.o
+RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o calc_mca.o pulse_info.o
 RP_CLIENTS = rp_client.o
-RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp calc_mca.cpp
+RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp calc_mca.cpp pulse_info.cpp
 RP_INC = 
 
 all: read_json rp_server rp_client
