@@ -12,7 +12,8 @@
     },
     "mca" : {
         "channels" : "1000",
-        "max_value" : "2",
+        "max_voltage" : "2",
+        "min_voltage" : "0",
         "mca_op" : "start"
     }
 }
