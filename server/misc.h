@@ -17,4 +17,5 @@ std::string ReadFileAsString (const std::string &strFile);
 std::string ToLower (const std::string &str);
 bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vDate);
 std::string ReplaceAll(const std::string &strSrc, const std::string& from, const std::string& to);
+float VectorAverage (const TFloatVec &vec);
 #endif

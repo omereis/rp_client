@@ -130,4 +130,20 @@ std::string ReplaceAll(const std::string &strSrc, const std::string& from, const
 		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
 	}
 	return (str);
-}//---------------------------------------------------------------------------
+}
+
+
+//-----------------------------------------------------------------------------
+float VectorAverage (const TFloatVec &vec)
+{
+    TFloatVec::const_iterator i;
+    double dAverage=0;
+
+	if (vec.size() > 0) {
+    	for (i=vec.begin() ; i != vec.end() ; i++)
+       		dAverage += (double) *i;
+    	dAverage /= (double) vec.size();
+	}
+    return (dAverage);
+}
+//---------------------------------------------------------------------------
