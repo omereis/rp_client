@@ -64,6 +64,7 @@ void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
         fMax = max (fMax, *i);
     }
 }
+
 //-----------------------------------------------------------------------------
 void TCalcMca::NewPulse (const TFloatVec &vPulse)
 {
@@ -76,6 +77,26 @@ void TCalcMca::NewPulse (const TFloatVec &vPulse)
         m_vSpectrum[idx] = (n + 1);
 	}
 }
+
+//-----------------------------------------------------------------------------
+void TCalcMca::NewPulse (const TPulseInfo &pulse_info)
+{
+    int idx = HeightIndex (0, pulse_info.GetMaxVal ());
+    if (idx >= 0) {
+        int n = m_vSpectrum[idx];
+        m_vSpectrum[idx] = (n + 1);
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TCalcMca::NewPulse (const TPulseInfoVec &piVec)
+{
+	TPulseInfoVec::const_iterator i;
+
+	for (i=piVec.begin() ; i != piVec.end() ; i++)
+		NewPulse (*i);
+}
+
 //-----------------------------------------------------------------------------
 void TCalcMca::ResetSpectrum ()
 {

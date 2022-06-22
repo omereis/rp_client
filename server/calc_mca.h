@@ -3,6 +3,7 @@
 \******************************************************************************/
 //-----------------------------------------------------------------------------
 #include "mca_params.h"
+#include "pulse_info.h"
 //-----------------------------------------------------------------------------
 class TCalcMca {
 public:
@@ -12,6 +13,8 @@ public:
     void SetParams (const TMcaParams &params);
     TMcaParams GetParams () const;
     void NewPulse (const TFloatVec &vPulse);
+    void NewPulse (const TPulseInfo &pulse_info);
+	void NewPulse (const TPulseInfoVec &piVec);
     void ResetSpectrum ();
     void GetSpectrum (TFloatVec &vSpectrum);
     int HeightIndex (float fSignalMin, float fSignafMax);
