@@ -345,8 +345,8 @@ function setupReadSignal (reply) {
         var txt, n, i, samples = JSON.parse(reply);
         var yData=[], yRaw=[], xData=[], t=0, yTrigger=[];
         var dTrigger = uploadTriggerLevel ();
-		var aPulseData = samples.pulses.signal.pulse;
-        var aPulseRaw = samples.pulses.signal.raw;
+		var aPulseData = samples.pulses.signal;//.pulse;
+        //var aPulseRaw = samples.pulses.signal.raw;
 		var layout = {};
 		layout["title"] = "Signal";
 		layout["xaxis"] = {};
@@ -354,10 +354,8 @@ function setupReadSignal (reply) {
 		layout.xaxis["title"] = "Time [uSec]";
 		layout.yaxis["title"] = "Voltage";
         for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
-        //for (var n=0 ; n < nPulses ; n++, t += 8e-9) {
             yData[n] = parseFloat (aPulseData[n]);
-            yRaw[n] = parseFloat (aPulseRaw[n]);
-            //yData[n] = parseFloat (samples.pulses.signal[n]);
+            //yRaw[n] = parseFloat (aPulseRaw[n]);
             xData[n] = t;
             yTrigger[n] = dTrigger;
         }
@@ -365,18 +363,15 @@ function setupReadSignal (reply) {
         var fShowTrigger=false;
         if (cbox)
             fShowTrigger = cbox.checked;
-        //var data = [[{x:xData, y:yData}], [{x:xData, y:yTrigger}]];
         var dataPulse = {x:xData, y:yData, name: "Filtered"};
-        var dataRaw = {x:xData, y:yRaw, name: "Raw"};
+        //var dataRaw = {x:xData, y:yRaw, name: "Raw"};
         var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
-        //var data = [[{x:xData, y:yData}]];//, [{x:xData, y:yTrigger}]];
         var data=[];
-        data[0] = dataRaw;//dataPulse;
-		data.push(dataPulse);
-        //data[1] = dataRaw;
+        //data[0] = dataRaw;//dataPulse;
+        data[0] = dataPulse;
+		//data.push(dataPulse);
         if (fShowTrigger)
             data.push(dataTrigger);
-            //data[2] = dataTrigger;
         var chart = document.getElementById("chartSignal");
         Plotly.newPlot(chart, data, layout);
         }
@@ -403,6 +398,8 @@ function readSamplingStatus (reply) {
 		downloadCheckBox (jReply.sampling.status.signal, "cboxStartSignal");
 		downloadCheckBox (jReply.sampling.status.mca, "cboxStartMCA");
 		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
+		var t=document.getElementById("txtBufferLength");
+		t.value = jReply.sampling.buffer;
         var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
