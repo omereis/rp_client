@@ -521,4 +521,20 @@ bool TRedPitayaSetup::GetPsdOnOff () const
     mtx.unlock();
     return (f);
 }
+
+//-----------------------------------------------------------------------------
+float TRedPitayaSetup::GetTriggerLevel ()
+{
+    std::string strTrigger = GetTrigger().GetLevel();
+    float fLevel;
+
+    try {
+        fLevel = (float) stod (strTrigger);
+    }
+    catch (std::exception &exp) {
+        fLevel = -1;
+        fprintf (stderr, "Runtime error in 'GetTriggerLevel':\n%s\n", exp.what());
+    }
+    return (fLevel);
+}
 //-----------------------------------------------------------------------------

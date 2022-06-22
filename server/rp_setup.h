@@ -99,6 +99,7 @@ public:
     Json::Value McaAsJson();
     Json::Value AppsAsJson();
 
+    float GetTriggerLevel ();
     void SetSamplingOnOff (bool fSampling);
     bool GetSamplingOnOff () const;
     void SetMcaOnOff (bool fMca);
