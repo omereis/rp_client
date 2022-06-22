@@ -13,7 +13,7 @@ function onReadRedPitayaSetupClick () {
 }
 
 //-----------------------------------------------------------------------------
-function onUpdateRedPitayaSetupClick () {
+function onUpdateRedPitayaSetupClick() {
 
 }
 
@@ -73,8 +73,25 @@ function downloadTriggerLevel (level) {
     var txtLevel = document.getElementById("txtTriggerLevel");
     if (txtLevel != null) {
         var fVal = parseFloat(level);
-        txtLevel.value = fVal * 1e3;
+		var factor=1;
+		if (fVal < 1) {
+			factor=1e-3;
+			fVal *= 1e3;
+		}
+		selectTriggerVoltageCombo (factor);
+        txtLevel.value = fVal;
     }
+}
+
+//-----------------------------------------------------------------------------
+function selectTriggerVoltageCombo (factor) {
+	var combo = document.getElementById('comboTriggerVoltage');
+	if (combo != null) {
+		if (factor == 1)
+			combo.selectedIndex = 1;
+		else
+			combo.selectedIndex = 0;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -343,8 +360,8 @@ function setupReadSignal (reply) {
     var cell = document.getElementById("cellSignal");
     try {
         var txt, n, i, samples = JSON.parse(reply);
-        var yData=[], yRaw=[], xData=[], t=0, yTrigger=[];
-        var dTrigger = uploadTriggerLevel ();
+        var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
+        var dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
 		var aPulseData = samples.pulses.signal;//.pulse;
         //var aPulseRaw = samples.pulses.signal.raw;
 		var layout = {};
@@ -358,20 +375,26 @@ function setupReadSignal (reply) {
             //yRaw[n] = parseFloat (aPulseRaw[n]);
             xData[n] = t;
             yTrigger[n] = dTrigger;
+			yBackground[n] = dBackground;
         }
-        var cbox = document.getElementById('cboxTrigger');
-        var fShowTrigger=false;
-        if (cbox)
-            fShowTrigger = cbox.checked;
+        //var cbox = document.getElementById('cboxTrigger');
+        //var fShowTrigger=false;
+		var fShowTrigger = uploadCheckbox ('cboxTrigger');
+		var fShowBackground = uploadCheckbox ('cboxBackground');
+        //if (cbox)
+            //fShowTrigger = cbox.checked;
         var dataPulse = {x:xData, y:yData, name: "Filtered"};
         //var dataRaw = {x:xData, y:yRaw, name: "Raw"};
         var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
+        var dataBackground = {x:xData, y:yBackground, name: "Background"};
         var data=[];
         //data[0] = dataRaw;//dataPulse;
         data[0] = dataPulse;
 		//data.push(dataPulse);
         if (fShowTrigger)
             data.push(dataTrigger);
+        if (fShowBackground)
+            data.push(dataBackground);
         var chart = document.getElementById("chartSignal");
         Plotly.newPlot(chart, data, layout);
         }
@@ -383,10 +406,29 @@ function setupReadSignal (reply) {
 }
 
 //-----------------------------------------------------------------------------
+function uploadBackground() {
+	var txt = document.getElementById ('txtBackground');
+	return (parseFloat(txt.value));
+}
+
+//-----------------------------------------------------------------------------
+function uploadCheckbox (cboxId) {
+	var f = false;
+	var cbox = document.getElementById (cboxId);
+	if (cbox != null)
+		f = cbox.checked;
+	return (f);
+}
+
+//-----------------------------------------------------------------------------
 function uploadTriggerLevel () {
     var dTrigger = parseFloat(document.getElementById("txtTriggerLevel").value);
+	var combo = document.getElementById ('comboTriggerVoltage');
+	var factor = parseFloat(combo.item(combo.selectedIndex).value);
     if (isNaN(dTrigger))
         dTrigger = 0;
+	else
+		dTrigger *= factor;
     return (dTrigger);
 }
 

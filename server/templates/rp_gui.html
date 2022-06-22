@@ -46,9 +46,9 @@
 						<td>
 							<input type="text" id="txtBuffer" value="10" style="width:75px;text-align: center;"> 
                             <select id="comboSignalBufferUnits">
-                                <option value="1e-9">Nano Seconds</option>
-                                <option value="1e-6" selected>&mu; Seconds</option>
-                                <option value="1e-3">Milli Seconds</option>
+                                <option value="1e-9">Nano</option>
+                                <option value="1e-6" selected>&mu;</option>
+                                <option value="1e-3">Milli</option>
                             </select> Seconds
 						</td>
                     </tr>
@@ -76,12 +76,23 @@
     
                     </tr>
                     <tr>
-                        <td>Level</td><td><input type="text" id="txtTriggerLevel" value="0.5"></td>
+                        <td>
+							Level
+						</td>
+						<td>
+							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;">
+							<select id="comboTriggerVoltage">
+								<option id="optTrgMilli" value="1e-3">Millivolts</option>
+								<option id="optTrgVolt" value="1">Volts</option>
+							</select>
+						</td>
 					<td>
 						Update Rate
+						<input type="text" id="txtUpdateRate" style="width:75px;text-align: center;" value="0.5"> Seconds
 					</td>
 					<td>
-						<input type="text" id="txtUpdateRate" style="width:75px;text-align: center;" value="0.5"> Seconds
+						Background
+						<input type="text" id="txtBackground" style="width:75px;text-align: center;" value="0.1">
 					</td>
                     </tr>
                 </table>
@@ -146,7 +157,9 @@
                             <br>
                             <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
                             <br>
-                            <input type="checkbox" value="Trigger" id="cboxTrigger" value="Trigger"><label for="cboxTrigger">Trigger</label>
+                            <input type="checkbox" value="Trigger" id="cboxTrigger"><label for="cboxTrigger">Trigger</label>
+                            <br>
+                            <input type="checkbox" value="Background" id="cboxBackground"><label for="cboxBackgriound">Background</label>
 						</td>
                     </tr>
                 </table>

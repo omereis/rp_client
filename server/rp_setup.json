@@ -7,7 +7,7 @@
     },
     "trigger":{
         "dir":"up",
-        "level":"0.005",
+        "level":"0.2",
         "src":"In1"
     },
     "mca" : {
