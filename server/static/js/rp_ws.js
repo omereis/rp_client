@@ -341,21 +341,23 @@ function sendSamplingCommand (cmd) {
 //-----------------------------------------------------------------------------
 function setupReadSignal (reply) {
     var cell = document.getElementById("cellSignal");
-    //if (cell != null)
-        //cell.innerText = reply;
     try {
         var txt, n, i, samples = JSON.parse(reply);
-        var yData=[], xData=[], t=0, yTrigger=[];
-        var dTrigger = uploadTriggerLevel ();//parseFloat(document.getElementById("txtTriggerLevel").value);
-        var nPulses = samples.pulses.signal.length;//samples.sampling.pulse_count.toString();
+        var yData=[], yRaw=[], xData=[], t=0, yTrigger=[];
+        var dTrigger = uploadTriggerLevel ();
+		var aPulseData = samples.pulses.signal.pulse;
+        var aPulseRaw = samples.pulses.signal.raw;
 		var layout = {};
 		layout["title"] = "Signal";
 		layout["xaxis"] = {};
 		layout["yaxis"] = {};
 		layout.xaxis["title"] = "Time [uSec]";
 		layout.yaxis["title"] = "Voltage";
-        for (var n=0 ; n < nPulses ; n++, t += 8e-9) {
-            yData[n] = parseFloat (samples.pulses.signal[n]);
+        for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
+        //for (var n=0 ; n < nPulses ; n++, t += 8e-9) {
+            yData[n] = parseFloat (aPulseData[n]);
+            yRaw[n] = parseFloat (aPulseRaw[n]);
+            //yData[n] = parseFloat (samples.pulses.signal[n]);
             xData[n] = t;
             yTrigger[n] = dTrigger;
         }
@@ -364,13 +366,17 @@ function setupReadSignal (reply) {
         if (cbox)
             fShowTrigger = cbox.checked;
         //var data = [[{x:xData, y:yData}], [{x:xData, y:yTrigger}]];
-        var dx = {x:xData, y:yData, name: "Signal"};
-        var dy = {x:xData, y:yTrigger, name: "Trigger"};
+        var dataPulse = {x:xData, y:yData, name: "Filtered"};
+        var dataRaw = {x:xData, y:yRaw, name: "Raw"};
+        var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
         //var data = [[{x:xData, y:yData}]];//, [{x:xData, y:yTrigger}]];
         var data=[];
-        data[0] = dx;
+        data[0] = dataRaw;//dataPulse;
+		data.push(dataPulse);
+        //data[1] = dataRaw;
         if (fShowTrigger)
-            data[1] = dy;
+            data.push(dataTrigger);
+            //data[2] = dataTrigger;
         var chart = document.getElementById("chartSignal");
         Plotly.newPlot(chart, data, layout);
         }

@@ -30,12 +30,12 @@ void TPulseInfo::Clear ()
 void TPulseInfo::AssignAll (const TPulseInfo &other)
 {
 	SetPulse (other.GetPulse ());
+    SetRawPulse (other.GetRawPulse());
     SetArea (other.GetArea ());
     SetMaxVal (other.GetMaxVal ());
     SetLength (other.GetLength ());
     SetPrompt (other.GetPrompt ());
     SetDelayed (other.GetDelayed ());
-    SetRawPulse (GetRawPulse());
 }
 
 //-----------------------------------------------------------------------------
@@ -113,12 +113,36 @@ TFloatVec TPulseInfo::GetRawPulse() const
 //-----------------------------------------------------------------------------
 void TPulseInfo::SetPulse (const TFloatVec &vPulse)
 {
-    m_vPulse = m_vPulse;
+    m_vPulse = vPulse;
 }
 
 //-----------------------------------------------------------------------------
 TFloatVec TPulseInfo::GetPulse() const
 {
     return (m_vPulse);
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec::const_iterator TPulseInfo::GetPulseBegin() const
+{
+    return (m_vPulse.begin());
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec::const_iterator TPulseInfo::GetPulseEnd() const
+{
+    return (m_vPulse.end());
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec::const_iterator TPulseInfo::GetRawPulseBegin() const
+{
+    return (m_vRawPulse.begin());
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec::const_iterator TPulseInfo::GetRawPulseEnd() const
+{
+    return (m_vRawPulse.end());
 }
 //-----------------------------------------------------------------------------

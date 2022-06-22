@@ -206,30 +206,43 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 //-----------------------------------------------------------------------------
 Json::Value ReadSignal (double dLen)
 {
-    Json::Value jSignal(Json::arrayValue);
+    Json::Value jSignal, jPulse(Json::arrayValue), jRaw(Json::arrayValue);
 	mutex mtx;
 	TFloatVec vPulse;
-	TFloatVec::iterator i;
+	TFloatVec::const_iterator i, iRaw;
 	char szNum[128];
 	std::string strNumber;
+	TPulseInfoVec::iterator pi;
 
     try {
 		int nBuffer = int ((dLen / 8e-9) + 0.5);
 		fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nBuffer);
         	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
-		while ((jSignal.size() < nBuffer) && (SafeQueueSize() > 0)) {
+		while ((jPulse.size() < nBuffer) && (SafeQueueSize() > 0)) {
+		//while ((jSignal.size() < nBuffer) && (SafeQueueSize() > 0)) {
         	//for (n=0 ; (n < nPulses) && (SafeQueueSize () > 0) ; n++) {
         	mtx.lock ();
-        	vPulse = g_qPulses.back();
-        	g_qPulses.pop();
-        	mtx.unlock ();
+			pi = g_vPulsesInfo.begin();
+        	//vPulse = g_qPulses.back();
+			//vPulse = pi->GetPulse ();
+        	//g_qPulses.pop();
             	//for (i=vPulse.begin(), j=0 ; (i != vPulse.end()) && (j < nBuffer) ; i++, j++) {
-            for (i=vPulse.begin() ; (i != vPulse.end()) && (jSignal.size() < nBuffer) ; i++) {
+            //for (i=vPulse.begin() ; (i != vPulse.end()) && (jSignal.size() < nBuffer) ; i++) {
+            //for (i=pi->GetPulseBegin() ; (i != pi->GetPulseEnd()) && (jSignal.size() < nBuffer) ; i++) {
+            iRaw = pi->GetRawPulseBegin();
+            for (i=pi->GetPulseBegin() ; (i != pi->GetPulseEnd()) && (jPulse.size() < nBuffer) ; i++, iRaw++) {
                 sprintf (szNum, "%.3f", *i);
                 strNumber = std::string (szNum);
-                jSignal.append(strNumber.c_str());
+                //jSignal.append(strNumber.c_str());
+                jPulse.append(strNumber.c_str());
+                sprintf (szNum, "%.3f", *iRaw);
+                jRaw.append(szNum);
             }
+			g_vPulsesInfo.erase (g_vPulsesInfo.begin());
+        	mtx.unlock ();
         }
+		jSignal["pulse"] = jPulse;
+        jSignal["raw"] = jRaw;
     }
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
@@ -244,7 +257,8 @@ size_t SafeQueueSize ()
     mutex mtx;
 
     mtx.lock ();
-    s = g_qPulses.size();
+    //s = g_qPulses.size();
+	s = g_vPulsesInfo.size();
     mtx.unlock ();
     return (s);
 }
@@ -550,7 +564,7 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
         vSmooth.resize(vRawPulse.size());
         int nSmoothWindow=7;
         for (iRaw=vRawPulse.begin(), iSmooth=vSmooth.begin() ; iRaw != vRawPulse.end() ; iRaw++, iSmooth++) {
-			for (n=0 ; n < (vWin.size() - 1) ; n++)
+			for (n=0 ; (vWin.size() > 0) && (n < (vWin.size() - 1)) ; n++)
 				vWin[n] = vWin[n + 1];
             if (vWin.size() >= nSmoothWindow)
 				vWin[nSmoothWindow - 1] = *iRaw;

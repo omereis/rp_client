@@ -172,6 +172,7 @@ if (__name__ == '__main__'):
     app.run (host=txtHostName, port=5005, debug=True)
     #app.run (host='0.0.0.0', port=5005, debug=True)
     if (socket != None):
-        socket.close()
+        if (hasattr(socket,'close')):
+            socket.close()
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------

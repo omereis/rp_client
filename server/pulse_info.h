@@ -30,6 +30,11 @@ public:
     TFloatVec GetPulse() const;
     void SetRawPulse (const TFloatVec &vRawPulse);
     TFloatVec GetRawPulse() const;
+
+    TFloatVec::const_iterator GetPulseBegin() const;
+    TFloatVec::const_iterator GetPulseEnd() const;
+    TFloatVec::const_iterator GetRawPulseBegin() const;
+    TFloatVec::const_iterator GetRawPulseEnd() const;
 protected:
     void AssignAll (const TPulseInfo &other);
 private:
