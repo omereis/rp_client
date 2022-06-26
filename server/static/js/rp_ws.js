@@ -14,9 +14,17 @@ function onReadRedPitayaSetupClick () {
 
 //-----------------------------------------------------------------------------
 function onUpdateRedPitayaSetupClick() {
-
+    var msg = new Object, msgTrigger=new Object;
+    msg['setup'] = 'read';
+    msgTrigger = uploadTriggerSetup ();
+    msg['trigger'] = msgTrigger;
+    sendMesssageThroughFlask(msg, setupHandler);
 }
 
+//-----------------------------------------------------------------------------
+function uploadTriggerSetup () {
+    var msg=new Object;
+}
 var webSocket   = null;
 var ws_protocol = null;
 var ws_hostname = null;
