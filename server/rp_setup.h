@@ -2,76 +2,17 @@
 |                                 rp_setup.h                                   |
 \******************************************************************************/
 #ifndef  __RP_SETUP_H
+#define	__RP_SETUP_H
 //-----------------------------------------------------------------------------
 
 #include "jsoncpp/json/json.h"
+#include "RedPitayaTrigger.h"
+#include "RedPitayaSampling.h"
 
 #include <string>
 #include "mca_params.h"
 using namespace std;
 
-class TRedPitayaSampling {
-public:
-    TRedPitayaSampling ();
-    TRedPitayaSampling (const TRedPitayaSampling &other);
-
-    TRedPitayaSampling operator= (const TRedPitayaSampling &other);
-    bool operator== (const TRedPitayaSampling &other) const;
-    bool operator!= (const TRedPitayaSampling &other) const;
-    void Clear ();
-
-    Json::Value LoadFromJson (Json::Value jSampling);
-    Json::Value AsJson();
-    Json::Value UpdateFromJson(Json::Value &jSetup);
-
-    string GetRate () const;
-    void SetRate (const string &strRate);
-    string GetDecimation () const;
-    void  SetDecimation (const string &str);
-    int GetBufferSize () const;
-    void SetBufferSize (int nSize);
-    void SetBufferSize (const std::string &strSize);
-    int GetSignalPoints () const;
-    void SetSignalPoints (int nPoints);
-    void SetSignalPoints (const std::string &strPoints);
-protected:
-    void AssignAll (const TRedPitayaSampling &other);
-private:
-    string m_strRate;
-    string m_strDecimation;
-    int m_nBufferSize;
-    int m_nSignalPoints;
-};
-//-----------------------------------------------------------------------------
-
-class TRedPitayaTrigger {
-public:
-    TRedPitayaTrigger ();
-    TRedPitayaTrigger (const TRedPitayaTrigger &other);
-
-    TRedPitayaTrigger operator= (const TRedPitayaTrigger &other);
-    bool operator== (const TRedPitayaTrigger &other) const;
-    bool operator!= (const TRedPitayaTrigger &other) const;
-    void Clear ();
-
-    Json::Value LoadFromJson (Json::Value &jTrigger);
-	Json::Value AsJson();
-    Json::Value UpdateFromJson(Json::Value &jSetup);
-
-    string GetLevel () const;
-    void SetLevel (const string &strLevel);
-    string GetDir () const;
-    void SetDir (const string &strDir);
-    string GetSrc () const;
-    void SetSrc (const string &strSrc);
-protected:
-    void AssignAll (const TRedPitayaTrigger &other);
-private:
-    string m_strLevel;
-    string m_strDir;
-    string m_strSrc;
-
-};
 //-----------------------------------------------------------------------------
 
 class TRedPitayaSetup {
@@ -106,16 +47,19 @@ public:
     bool GetMcaOnOff () const;
     void SetPsdOnOff (bool fPsd);
     bool GetPsdOnOff () const;
+
+    double GetBackground() const;
+    void SetBackground (double dBackground);
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
     TRedPitayaTrigger m_trigger;
     TRedPitayaSampling m_sampling;
     TMcaParams m_mca_params;
+    double m_dBackground;
     bool m_fSamplingOnOff;
     bool m_fMcaOnOff;
     bool m_fPsdOnOff;
 };
 //-----------------------------------------------------------------------------
-#define  __RP_SETUP_H
 #endif
