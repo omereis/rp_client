@@ -1,20 +1,2 @@
-{
-    "sampling": {
-        "buffer_length":"1000",
-        "decimation":"1",
-        "rate":"125000000",
-        "signal_points":"200"
-    },
-    "trigger":{
-        "dir":"up",
-        "level":"0.2",
-        "src":"In1"
-    },
-    "mca" : {
-        "channels" : "1000",
-        "max_voltage" : "2",
-        "min_voltage" : "0",
-        "mca_op" : "start"
-    }
-}
+{"background":"0.100","sampling":{"buffer_length":"1000","decimation":"","rate":"","signal_points":"200"},"trigger":{"dir":"up","level":"0.20000000000000001","src":"in1"}}
 

@@ -126,6 +126,7 @@ Json::Value TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
     Json::Value jNew;
 
     try {
+		fprintf (stderr, "Setup Json:\n%s\n", StringifyJson(jSetup).c_str());
         SetLevel (jSetup["level"].asString());
         SetDir (jSetup["dir"].asString());
         SetSrc (jSetup["src"].asString());

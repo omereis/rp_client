@@ -7,24 +7,59 @@
 
 //-----------------------------------------------------------------------------
 function onReadRedPitayaSetupClick () {
-    var msg = new Object;
-    msg['setup'] = 'read';
+    var msg = new Object, msgCommand = new Object;
+	msgCommand['command'] = 'read';
+    msg['setup'] = msgCommand;
     sendMesssageThroughFlask(msg, setupHandler);
 }
 
 //-----------------------------------------------------------------------------
 function onUpdateRedPitayaSetupClick() {
-    var msg = new Object, msgTrigger=new Object;
-    msg['setup'] = 'read';
+    var msg = new Object, msgTrigger=new Object, msgCmd = new Object;
+    msgCmd['command'] = 'update';
     msgTrigger = uploadTriggerSetup ();
-    msg['trigger'] = msgTrigger;
+    msgCmd['trigger'] = msgTrigger;
+    msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
 
 //-----------------------------------------------------------------------------
 function uploadTriggerSetup () {
     var msg=new Object;
+	msg['dir'] = uploadTriggerDir ();
+	msg['level'] = uploadTriggerLevel ();
+	msg['src'] = uploadTriggerSrc ();
+	return (msg);
 }
+
+//-----------------------------------------------------------------------------
+function uploadTriggerLevel () {
+	var dRes;
+	try {
+		var txt = document.getElementById ('txtTriggerLevel');
+		var combo = document.getElementById ('comboTriggerVoltage');
+		dRes = parseFloat (txt.value.value) * parseFloat (combo.value);
+	}
+	catch (exception) {
+		alert ('Runtime error in uploadTriggerLevel ' + exception);
+		dRed = "";
+	}
+	return (dLevel);
+}
+
+//-----------------------------------------------------------------------------
+function uploadTriggerDir () {
+	var combo = document.getElementById ('comboTriggerDir');
+	return (combo.value);
+}
+
+//-----------------------------------------------------------------------------
+function uploadTriggerSrc () {
+	var combo = document.getElementById ('comboTriggerIn');
+	return (combo.value);
+}
+
+
 var webSocket   = null;
 var ws_protocol = null;
 var ws_hostname = null;
@@ -44,6 +79,7 @@ function setupHandler (reply) {
         downloadTriggerLevel (dictSetup.trigger.level);
         downloadTriggerDir (dictSetup.trigger.dir);
         downloadTriggerSrc (dictSetup.trigger.src);
+		downloadBackground (dictSetup.background);
     }
     catch (err) {
         console.log(err);
@@ -69,6 +105,13 @@ function downloadTriggerDir (dir) {
 //-----------------------------------------------------------------------------
 function downloadTriggerSrc (src) {
     txtToCombo ("comboTriggerActivation", src);
+}
+
+//-----------------------------------------------------------------------------
+function downloadBackground (dBackground) {
+	var txt = document.getElementById ('txtBackground');
+	if (txt != null)
+		txt.value = dBackground;
 }
 
 //-----------------------------------------------------------------------------
@@ -162,7 +205,6 @@ function sendMesssageThroughFlask(message, handler=null) {
                 console.log(JSON.stringify(reply));
                 if (handler != null)
                     handler(reply);
-                //handle_reply(reply);
             }
             catch (err) {
                 console.log(err);

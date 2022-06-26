@@ -124,10 +124,23 @@ bool TRedPitayaSetup::LoadFromJson(const string &strFile)
             m_trigger.LoadFromJson (jTrigger);
         if (!jMCA.isNull())
             m_mca_params.LoadFromJson (jMCA);
+        if (!root["background"].isNull())
+            SetBackgroundFromJson (root["background"]);
     }
 
     return (true);
 }
+
+//-----------------------------------------------------------------------------
+std::string DoubleAsString (double dValue)
+{
+    char sz[20];
+
+    sprintf (sz, "%.3f", dValue);
+    std::string str = std::string(sz);
+    return (str);
+}
+
 //-----------------------------------------------------------------------------
 Json::Value TRedPitayaSetup::AsJson()
 {
@@ -135,6 +148,7 @@ Json::Value TRedPitayaSetup::AsJson()
 
     jSetup["sampling"] = m_sampling.AsJson();
     jSetup["trigger"] = m_trigger.AsJson();
+    jSetup["background"] = DoubleAsString (GetBackground());
     return (jSetup);
 }
 //-----------------------------------------------------------------------------
@@ -263,4 +277,14 @@ void TRedPitayaSetup::SetBackground (double dBackground)
 }
     
 //-----------------------------------------------------------------------------
-
+void TRedPitayaSetup::SetBackgroundFromJson (Json::Value jBkgnd)
+{
+    try {
+        string str = jBkgnd.asString();
+        SetBackground (stod(str));
+    }
+    catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error on 'TRedPitayaSetup::SetBackgroundFromJson'\n%s\n", exp.what());
+    }
+}
+//-----------------------------------------------------------------------------

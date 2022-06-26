@@ -101,8 +101,8 @@ def message_server(dictCommand):
 def client_setup_command (dictCommand):
     txtReply = ''
     try:
-        if (dictCommand['setup'] == 'read'):
-            txtReply = message_server(dictCommand)
+        #if (dictCommand['setup'] == 'read'):
+        txtReply = message_server(dictCommand)
     except Exception as e:
         txtReply = "Runtime in client_setup_command:\n{}".format(e)
         print(txtReply)
@@ -117,15 +117,20 @@ def OnRedPitayaMessage():
     print('type(res): {}'.format(type(res)))
     try:
         res = request.args['message'].lower()
+        print('+++++++++++++++++++++++++++++++++++++++++++++')
+        print('on_red_pitaya_message')
         print(res)
         dictCommand = json.loads(res)
-        if 'setup' in dictCommand:
-            txtReply = client_setup_command (dictCommand)
-        else:
-            txtReply = client_read_signal (dictCommand)
+        txtReply = message_server(dictCommand)
+        #if 'setup' in dictCommand:
+            #print('calling client_setup_command')
+            #txtReply = client_setup_command (dictCommand)
+        #else:
+            #txtReply = client_read_signal (dictCommand)
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
         print(txtReply)
+    print('----------------------------------------------')
     return (txtReply)
 
 #------------------------------------------------------------------------------
@@ -133,6 +138,7 @@ def client_read_signal (dictCommand):
     txtReply = ''
     try:
         #if (dictCommand['setup'] == 'read'):
+        print('client_read_signal')
         txtReply = message_server(dictCommand)
         if (len(txtReply) > 20):
             txtPrintout = txtReply[0:20]
@@ -140,7 +146,7 @@ def client_read_signal (dictCommand):
             txtPrintout = txtReply
         print('reading signal: "{}"'.format(txtPrintout))
     except Exception as e:
-        txtReply = "Runtime in client_setup_command:\n{}".format(e)
+        txtReply = "Runtime in client_read_signal :\n{}".format(e)
         print(txtReply)
     return (txtReply)
 

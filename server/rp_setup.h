@@ -50,6 +50,7 @@ public:
 
     double GetBackground() const;
     void SetBackground (double dBackground);
+    void SetBackgroundFromJson (Json::Value jBkgnd);
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:

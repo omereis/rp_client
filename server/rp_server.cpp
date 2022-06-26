@@ -159,21 +159,23 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
     Json::Value jRead, jNew;
 
     try {
-        if (jSetup.isString())
-            strCommand = ToLower(jSetup.asString());
-        if (strCommand == "read") {
-            jNew = rp_setup.AsJson();
-        }
-        else {
-            jNew = rp_setup.UpdateFromJson(jSetup);
-            rp_setup.SaveToJson("rp_setup.json");
+		std::string strSetup = StringifyJson (jSetup);
+        strCommand = ToLower(jSetup["command"].asString());
+		if (strCommand == "update") {
+			if (!jSetup["trigger"].isNull()) {
+            	jNew = rp_setup.UpdateFromJson(jSetup);
+            	rp_setup.SaveToJson("rp_setup.json");
+			}
 		}
-		if (strReply.length() == 0)
-	        strReply = StringifyJson (rp_setup.AsJson());
+        jNew = rp_setup.AsJson();
+		strReply = StringifyJson (jNew);
+		//fprintf (stderr, "\nSetup reply JSON:\n%s\n\n", strReply.c_str());
     }
     catch (std::exception &err) {
+        jNew = rp_setup.AsJson();
         jNew["error"] = err.what();
     }
+	strReply = StringifyJson (jNew);
     return (jNew);
 }
 //-----------------------------------------------------------------------------
