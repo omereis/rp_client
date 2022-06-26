@@ -10,12 +10,12 @@
 CPP = gcc
 CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
 
-OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o
-INCLUDES = rp_setup.h misc.h timer.h pulse_info.h
-SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp
+OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o RedPitayaTrigger.o RedPitayaSampling.o
+INCLUDES = rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h
+SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp RedPitayaTrigger.cpp RedPitayaSampling.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp
 
-RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o calc_mca.o pulse_info.o
+RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o calc_mca.o pulse_info.o RedPitayaTrigger.o RedPitayaSampling.o
 RP_CLIENTS = rp_client.o
 RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp calc_mca.cpp pulse_info.cpp
 RP_INC = 
