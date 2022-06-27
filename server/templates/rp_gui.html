@@ -170,10 +170,44 @@
         </tr>
         <tr>
             <th>MCA<br>
+                <table>
+                    <tr>
+                        <td colspan="2">
+                            <input type="checkbox" id="cboxShowMca" checked="true"><label for="cboxShowMca">Show MCA</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Channels: <input type="text" style="width:50px;text-align: center;" value="1000" id="txtMcaChannels">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Max. Voltage: <input type="text" style="width:50px;text-align: center;" value="1" id="txtMcaMax">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            Min. Voltage: <input type="text" style="width:50px;text-align: center;" value="0" id="txtMcaMin">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="button" value="Reset" onclick="onMcaResetClick()">
+                        </td>
+                        <td>
+                            <input type="button" value="Update" onclick="onMcaUpdateClick()">
+                        </td>
+                    </tr>
+                </table>
+<!--
                 <input type="checkbox" id="cboxShowMca" checked="true"><label for="cboxShowMca">Show MCA</label><br>
-                Channels: <input type="text" style="width:75px;text-align: center;" value="1000">
+                Channels: <input type="text" style="width:75px;text-align: center;" value="1000" id="txtMcaChannels">
+                <br>
+                Min. Vl
                 <br>
                 <input type="button" value="Reset" onclick="onMcaResetClick()">
+-->
             </th>
             <td>MCA Chart</td>
         </tr>

@@ -85,6 +85,8 @@ Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
 
     try {
         if (!jMCA.isNull()) {
+			//std::string strMca = StringifyJson (jMCA);
+			//fprintf (stderr, "Required MCA:\n%s\n", strMca.c_str());
             Json::Value jChannels=jMCA["channels"], jMinVoltage=jMCA["min_voltage"], jMaxVoltage=jMCA["max_voltage"];
             if (!jChannels.isNull())
                 SetChannels ((uint)std::stoi(jChannels.asString()));
@@ -109,6 +111,8 @@ Json::Value TMcaParams::AsJson () const
         jMCA["channels"] = GetChannels();
         jMCA["min_voltage"] = GetMinVoltage();
         jMCA["max_voltage"] = GetMaxVoltage();
+		//std::string strMca = StringifyJson (jMCA);
+		//fprintf (stderr, "MCA setup:\n%s\n", strMca.c_str());
     }
     catch (std::exception &exp) {
         jMCA["error"] = exp.what();

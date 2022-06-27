@@ -83,6 +83,8 @@ function setupHandler (reply) {
         downloadTriggerDir (dictSetup.trigger.dir);
         downloadTriggerSrc (dictSetup.trigger.src);
 		downloadBackground (dictSetup.background);
+		if (dictSetup.hasOwnProperty('mca'))
+			downloadMca (dictSetup.mca);
     }
     catch (err) {
         console.log(err);
@@ -611,4 +613,81 @@ function uploadRate()
 //-----------------------------------------------------------------------------
 function uploadDecimation() {
     return (uploadCombo('comboDecimation'))
+}
+
+//-----------------------------------------------------------------------------
+function onMcaUpdateClick() {
+    var msg = new Object, msgMca = new Object, msgCmd = new Object;
+    //msgCmd['command'] = 'update';
+    msgCmd['mca'] = uploadMcaParams ();
+    msgCmd['command'] = 'update';
+    msg['setup'] = msgCmd;//'update';
+	console.log(JSON.stringify(msg));
+    sendMesssageThroughFlask(msg, mcaSetupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaParams () {
+    var msgMca = new Object;
+    msgMca['channels'] = uploadMcaChannels();
+    msgMca['min_voltage'] = uploadMcaMinVoltage();
+    msgMca['max_voltage'] = uploadMcaMaxVoltage();
+    return (msgMca);
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaChannels() {
+    return (uploadTextReal ('txtMcaChannels'));
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaMinVoltage() {
+    return (uploadTextReal ('txtMcaMin'));
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaMaxVoltage() {
+    return (uploadTextReal ('txtMcaMax'));
+}
+
+//-----------------------------------------------------------------------------
+function uploadTextReal (txtId) {
+    var val = null;
+    var txt = document.getElementById (txtId);
+    if (txt != null)
+        val = txt.value;
+    return (val);
+}
+
+//-----------------------------------------------------------------------------
+function mcaSetupHandler (reply) {
+    var txt = document.getElementById("txtReply");
+    if (txt != null)
+        txt.value = reply;
+    try {
+        dictSetup = JSON.parse(reply).setup.mca;
+		downloadMca (dictSetup.mca);
+    }
+    catch (err) {
+        console.log(err);
+    }
+}
+
+//-----------------------------------------------------------------------------
+function downloadMca (dictMca) {
+	try {
+        donwloadText ('txtMcaChannels', dictMca.channels);
+        donwloadText ('txtMcaMin', dictMca.min_voltage);
+        donwloadText ('txtMcaMax', dictMca.max_voltage);
+	}
+	catch (exception) {
+		console.log(exception);
+	}
+}
+
+//-----------------------------------------------------------------------------
+function donwloadText (txtId, val) {
+    var txt = document.getElementById (txtId);
+    if (txt != null)
+        txt.value = val;
 }

@@ -30,7 +30,7 @@ TFloatVec g_vRawSignal;
 
 TPulseInfoVec g_vPulsesInfo;
 bool g_fRunning = false;
-TMcaParams g_mca_params;
+//TMcaParams g_mca_params;
 TCalcMca g_mca_calculator;
 static const char *g_szReadData = "read_data";
 static const char *g_szBufferLength = "buffer_length";
@@ -47,7 +47,8 @@ bool g_fMca = false;
 TRedPitayaSetup g_rp_setup;
 //-----------------------------------------------------------------------------
 
-Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
+Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);//, TMcaParams &mca_params);
+//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TMcaParams &mca_params);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
@@ -106,7 +107,8 @@ int main (void)
         	printf ("Message parsed\n");
 			strReply  = "";
             if (!root["setup"].isNull())
-                jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
+                jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);//, g_mca_params);
+                //jReply["setup"] = HandleSetup(root["setup"], g_rp_setup, g_mca_params);
             if (!root[g_szReadData].isNull())
                 jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup);
             if (!root[g_szSampling].isNull())
@@ -152,8 +154,8 @@ bool CountBraces (std::string &strJson)
 }
 
 //-----------------------------------------------------------------------------
-
-Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
+Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaParams &mca_params)
+//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TMcaParams &mca_params)
 {
     std::string strReply, strCommand;
     Json::Value jRead, jNew;
@@ -162,14 +164,14 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 		std::string strSetup = StringifyJson (jSetup);
         strCommand = ToLower(jSetup["command"].asString());
 		if (strCommand == "update") {
-			//if (!jSetup["trigger"].isNull()) {
-            	jNew = rp_setup.UpdateFromJson(jSetup);
-            	rp_setup.SaveToJson("rp_setup.json");
-			//}
+            jNew = rp_setup.UpdateFromJson(jSetup);
+            rp_setup.SaveToJson("rp_setup.json");
 		}
         jNew = rp_setup.AsJson();
+        //if (!jSetup["mca"].isNull())
+            //jNew["mca"] = mca_params.LoadFromJson (jSetup["mca"]);
 		strReply = StringifyJson (jNew);
-		//fprintf (stderr, "\nSetup reply JSON:\n%s\n\n", strReply.c_str());
+		fprintf (stderr, "\nSetup reply JSON:\n%s\n\n", strReply.c_str());
     }
     catch (std::exception &err) {
         jNew = rp_setup.AsJson();
@@ -280,6 +282,7 @@ bool SafeGetMca ()
     mtx.unlock();
     return (fRunning);
 }
+/*
 //-----------------------------------------------------------------------------
 
 TMcaParams SafeGetMcaParams ()
@@ -303,6 +306,7 @@ void SafeSetMcaParams (const TMcaParams &params)
     mtx.unlock();
 }
 //-----------------------------------------------------------------------------
+*/
 
 bool str_to_bool (const std::string &sSource)
 {

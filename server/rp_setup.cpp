@@ -150,6 +150,7 @@ Json::Value TRedPitayaSetup::AsJson()
 
     jSetup["sampling"] = m_sampling.AsJson();
     jSetup["trigger"] = m_trigger.AsJson();
+    jSetup["mca"] = m_mca_params.AsJson();
     jSetup["background"] = DoubleAsString (GetBackground());
     return (jSetup);
 }
