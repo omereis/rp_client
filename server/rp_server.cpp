@@ -162,10 +162,10 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 		std::string strSetup = StringifyJson (jSetup);
         strCommand = ToLower(jSetup["command"].asString());
 		if (strCommand == "update") {
-			if (!jSetup["trigger"].isNull()) {
+			//if (!jSetup["trigger"].isNull()) {
             	jNew = rp_setup.UpdateFromJson(jSetup);
             	rp_setup.SaveToJson("rp_setup.json");
-			}
+			//}
 		}
         jNew = rp_setup.AsJson();
 		strReply = StringifyJson (jNew);

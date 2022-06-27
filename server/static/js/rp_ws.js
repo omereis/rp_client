@@ -19,6 +19,9 @@ function onUpdateRedPitayaSetupClick() {
     msgCmd['command'] = 'update';
     msgTrigger = uploadTriggerSetup ();
     msgCmd['trigger'] = msgTrigger;
+    msgCmd['sampling'] = uploadSampling();
+	msgCmd['background'] = uploadBackground();
+	//msgCmd['background'] = parseFloat(uploadBackground());
     msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
@@ -580,4 +583,32 @@ function onQuitSampling() {
 //-----------------------------------------------------------------------------
 function onMcaResetClick() {
 
+}
+
+//-----------------------------------------------------------------------------
+function uploadSampling() {
+    var msgSampling = new Object;
+    msgSampling["rate"] = uploadRate();
+    msgSampling["decimation"] = uploadDecimation();
+    return (msgSampling);
+}
+
+//-----------------------------------------------------------------------------
+function uploadCombo(txtComboId) {
+    var val='';
+    var combo = document.getElementById(txtComboId);
+    if (combo != null)
+        val = combo.value;
+    return (val);
+}
+
+//-----------------------------------------------------------------------------
+function uploadRate()
+{
+    return (uploadCombo('comboRate'));
+}
+
+//-----------------------------------------------------------------------------
+function uploadDecimation() {
+    return (uploadCombo('comboDecimation'))
 }

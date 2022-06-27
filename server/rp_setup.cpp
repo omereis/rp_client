@@ -109,12 +109,14 @@ Json::Value TRedPitayaSetup::McaAsJson()
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::LoadFromJson(const string &strFile)
 {
-	Json::Value root, jSampling, jTrigger;
+	Json::Value root, jResult;//, jSampling, jTrigger;
 	Json::Reader reader;
     string strJson = ReadFileAsString (strFile);
 
     Clear ();
     if (reader.parse (strJson, root)) {
+        jResult = UpdateFromJson(root);
+/*
         jSampling = root["sampling"];
         jTrigger = root["trigger"];
 		Json::Value jMCA = root["mca"];
@@ -126,8 +128,8 @@ bool TRedPitayaSetup::LoadFromJson(const string &strFile)
             m_mca_params.LoadFromJson (jMCA);
         if (!root["background"].isNull())
             SetBackgroundFromJson (root["background"]);
+*/
     }
-
     return (true);
 }
 
@@ -157,9 +159,16 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
     Json::Value jNewSetup;
 
     try {
+		std::string str = StringifyJson (jSetup);
         jNewSetup["sampling"] = m_sampling.UpdateFromJson(jSetup["sampling"]);
         jNewSetup["trigger"] = m_trigger.UpdateFromJson(jSetup["trigger"]);
         jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
+		if (!jSetup["background"].isNull()) {
+			std::string strBkgnd = jSetup["background"].asString();
+			double d = stod (strBkgnd);
+			SetBackground (d);
+			fprintf (stderr, "New Background: %g\n", GetBackground());
+		}
     }
     catch (std::exception &exp) {
 		jNewSetup["error"] = exp.what();
