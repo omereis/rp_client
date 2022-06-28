@@ -26,11 +26,9 @@ using namespace std;
 TFloatVecQueue g_qPulses;
 TFloatVecQueue g_qDebug;
 TFloatVec g_vRawSignal;
-//TFloatQueue g_qRawSignal;
 
 TPulseInfoVec g_vPulsesInfo;
 bool g_fRunning = false;
-//TMcaParams g_mca_params;
 TCalcMca g_mca_calculator;
 static const char *g_szReadData = "read_data";
 static const char *g_szBufferLength = "buffer_length";
@@ -48,7 +46,6 @@ TRedPitayaSetup g_rp_setup;
 //-----------------------------------------------------------------------------
 
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);//, TMcaParams &mca_params);
-//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TMcaParams &mca_params);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
@@ -87,7 +84,6 @@ int main (void)
     assert (rc == 0);
 	Json::Value root, jReply;
 	Json::Reader reader;
-    //TRedPitayaSetup rp_setup;
     string strReply;
     Timer t;
 
@@ -108,7 +104,6 @@ int main (void)
 			strReply  = "";
             if (!root["setup"].isNull())
                 jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);//, g_mca_params);
-                //jReply["setup"] = HandleSetup(root["setup"], g_rp_setup, g_mca_params);
             if (!root[g_szReadData].isNull())
                 jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup);
             if (!root[g_szSampling].isNull())
@@ -124,10 +119,6 @@ int main (void)
         if (strReply.length() == 0)
             strReply += std::string("{}");
         zmq_send (responder, strReply.c_str(), strReply.length(), 0);
-        //if (strReply.length() < 50)
-		    //fprintf (stderr, "Reply:\n%s\n", strReply.c_str());
-        //else
-            //fprintf (stderr, "Reply length %d\n", (int) strReply.length());
     }
     return 0;
 }
@@ -155,7 +146,6 @@ bool CountBraces (std::string &strJson)
 
 //-----------------------------------------------------------------------------
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaParams &mca_params)
-//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TMcaParams &mca_params)
 {
     std::string strReply, strCommand;
     Json::Value jRead, jNew;
@@ -168,8 +158,6 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaP
             rp_setup.SaveToJson("rp_setup.json");
 		}
         jNew = rp_setup.AsJson();
-        //if (!jSetup["mca"].isNull())
-            //jNew["mca"] = mca_params.LoadFromJson (jSetup["mca"]);
 		strReply = StringifyJson (jNew);
 		fprintf (stderr, "\nSetup reply JSON:\n%s\n\n", strReply.c_str());
     }
@@ -193,7 +181,6 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     int n, nPulses, j;
     
     try {
-        //Json::Value jMca = jRead["mca"];
 		if (jRead["signal"].isNull() == false) {
 			string strSignalLength = jRead["signal"].asString();
 			double dLen = stod (strSignalLength);
@@ -282,31 +269,7 @@ bool SafeGetMca ()
     mtx.unlock();
     return (fRunning);
 }
-/*
 //-----------------------------------------------------------------------------
-
-TMcaParams SafeGetMcaParams ()
-{
-	mutex mtx;
-    TMcaParams params;
-
-    mtx.lock();
-    params = g_mca_params;
-    mtx.unlock();
-    return (params);
-}
-//-----------------------------------------------------------------------------
-
-void SafeSetMcaParams (const TMcaParams &params)
-{
-	mutex mtx;
-
-    mtx.lock();
-    g_mca_params = params;
-    mtx.unlock();
-}
-//-----------------------------------------------------------------------------
-*/
 
 bool str_to_bool (const std::string &sSource)
 {
@@ -441,12 +404,8 @@ void OnTimerTick ()
 {
     TFloatVec vPulse;
     TFloatVec::iterator i;
-	//mutex mtx;
-    //float fDelta;
     TPulseInfoVec piVec;
 
-	//g_vRawSignal.clear();
-	//g_vRawSignal.push(back(17);
     if (g_rp_setup.GetSamplingOnOff ()) {
         if (GetNextPulse (vPulse)) {
             if (GetPulseParams (vPulse, piVec)) {
@@ -468,41 +427,62 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
     TPulseInfo piNew;
     TFloatVec vRawPulse, vPulse;
     bool fInPulse;
-    int i, iStart;
+    int n, iStart;
     float fMax, fArea;
+	double dBackground;
+	TFloatVec::const_iterator it;
 
     try {
+/*
 		FILE *file = fopen ("buf.csv", "w+");
-		TFloatVec::iterator it;
 		for (it=vBuffer.begin() ; it != vBuffer.end() ; it++)
 			fprintf (file, "%g\n", *it);
 		fclose (file);
+*/
 
         piVec.clear();
+		n = 0;
         TFloatVec::const_iterator i=vBuffer.begin();
-        for (fInPulse=false ; i != vBuffer.end() ; i++) {
+		dBackground = g_rp_setup.GetBackground (); 
+        for (fInPulse=false, it=vBuffer.begin(); it != vBuffer.end() ; it++) {
+			n++;
+			//fprintf (stderr, "Item %d: %g\n", n, *it);
             if (!fInPulse) {
-                if (*i > g_rp_setup.GetTriggerLevel ()) { // pulse start
-                    fMax = fArea = *i;
+                if (*it > dBackground) { // pulse start
+                //if (*it > g_rp_setup.GetTriggerLevel ()) { // pulse start
+                    //fMax = fArea = *i;
                     fInPulse = true;
-                    vPulse.push_back (*i);
+                    //vRawPulse.push_back (*i);
                 }
             }
-            else { // in pulse
-                fMax = max (fMax, *i);
-                fArea += *i;
-                vPulse.push_back (*i);
-                if (*i < g_rp_setup.GetTriggerLevel ()) {
+            if (fInPulse) { // in pulse
+                fMax = max (fMax, *it);
+                fArea += *it;
+                vRawPulse.push_back (*it);
+                if (*it < dBackground) {
+                //if (*i < g_rp_setup.GetTriggerLevel ()) {
                     piNew.SetRawPulse (vRawPulse);
                     piNew.SetPulse (SmoothPulse (vRawPulse));
                     piNew.SetMaxVal (fMax);
                     piNew.SetLength (fArea);
                     piVec.push_back (piNew);
                     fInPulse = false;
+                    vRawPulse.clear();
+					fMax = fArea = 0;
                 }
             }
         }
+		//fprintf (stderr, "Pulse Points: %d\n", n);
         fExtractParams = true;
+/*
+        TPulseInfoVec::iterator iPulse;
+        file = fopen ("pulse_info.csv", "w+");
+        for (iPulse=piVec.begin() ; iPulse != piVec.end() ; iPulse++) {
+            for (it=iPulse->GetRawPulseBegin() ; it != iPulse->GetRawPulseEnd() ; it++)
+                fprintf (file, "%g\n", *it);
+        }
+        fclose (file);
+*/
     }
     catch (std::exception &err) {
         fprintf (stderr, "Runtime error in 'GetPulseParams':\n%s\n", err.what());
