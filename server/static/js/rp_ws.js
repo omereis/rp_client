@@ -418,6 +418,7 @@ function setupReadSignal (reply) {
         var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
         var dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
 		var aPulseData = samples.pulses.signal;//.pulse;
+/**/
         //var aPulseRaw = samples.pulses.signal.raw;
 		var layout = {};
 		layout["title"] = "Signal";
@@ -452,7 +453,10 @@ function setupReadSignal (reply) {
             data.push(dataBackground);
         var chart = document.getElementById("chartSignal");
         Plotly.newPlot(chart, data, layout);
-        }
+/**/
+        var aMca = samples.pulses.mca;//.pulse;
+        plotMca (aMca);
+    }
     catch (exception) {
 		var txt = cell.innerText;
 		txt = exception;
@@ -690,4 +694,38 @@ function donwloadText (txtId, val) {
     var txt = document.getElementById (txtId);
     if (txt != null)
         txt.value = val;
+}
+
+//-----------------------------------------------------------------------------
+function plotMca (aMca) {
+	try {
+    	var xData=[], yData=[]
+		//var fMax=-1, iMax;
+    	for (var n=0 ; n < aMca.length ; n++) {
+        	xData[n] = n + 1;
+        	yData[n] = aMca[n];
+/*
+			if (yData[n] > fMax) {
+				fMax = yData[n];
+				iMax = n;
+			}
+*/
+    	}
+		//console.log('Maximum: ' + fMax + ', at ' + iMax);
+    	var dataMca = {x:xData, y:yData, type: 'bar'};
+		var layout = {};
+        var data=[];
+        data[0] = dataMca;
+    	layout["title"] = "MCA";
+    	layout["xaxis"] = {};
+    	layout["yaxis"] = {};
+    	layout.xaxis["title"] = "Energy";
+    	layout.yaxis["title"] = "Count";
+    	var chart = document.getElementById("chartMca");
+    	Plotly.newPlot(chart, data, layout);
+	}
+	catch (exception) {
+		console.log(exception);
+		console.log(aMca.length);
+	}
 }
