@@ -1,2 +1,19 @@
-{"background":"0.100","mca":{"channels":1000,"max_voltage":1,"min_voltage":0},"sampling":{"buffer_length":"200","decimation":"1","rate":"125000000","signal_points":"200"},"trigger":{"dir":"up","level":"0.20000000000000001","src":"in1"}}
-
+{
+    "background":"0.100",
+    "mca":{
+        "channels":1000,
+        "max_voltage":1,
+        "min_voltage":0
+    },
+    "sampling":{
+        "buffer_length":"200",
+        "decimation":"1",
+        "rate":"125000000",
+        "signal_points":"200"
+    },
+    "trigger":{
+        "dir":"up",
+        "level":"0.20000000000000001",
+        "src":"in1"
+    }
+}
