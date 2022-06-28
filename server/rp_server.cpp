@@ -45,7 +45,8 @@ bool g_fMca = false;
 TRedPitayaSetup g_rp_setup;
 //-----------------------------------------------------------------------------
 
-Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);//, TMcaParams &mca_params);
+//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
+Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
@@ -103,7 +104,8 @@ int main (void)
         	printf ("Message parsed\n");
 			strReply  = "";
             if (!root["setup"].isNull())
-                jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);//, g_mca_params);
+                //jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);//, g_mca_params);
+                jReply["setup"] = HandleSetup(root["setup"], g_rp_setup, g_mca_calculator);
             if (!root[g_szReadData].isNull())
                 jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup);
             if (!root[g_szSampling].isNull())
@@ -145,7 +147,8 @@ bool CountBraces (std::string &strJson)
 }
 
 //-----------------------------------------------------------------------------
-Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaParams &mca_params)
+//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaParams &mca_params)
+Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator)
 {
     std::string strReply, strCommand;
     Json::Value jRead, jNew;
@@ -155,6 +158,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaP
         strCommand = ToLower(jSetup["command"].asString());
 		if (strCommand == "update") {
             jNew = rp_setup.UpdateFromJson(jSetup);
+			mca_calculator.SetParams (rp_setup.GetMcaParams());
             rp_setup.SaveToJson("rp_setup.json");
 		}
         jNew = rp_setup.AsJson();
@@ -445,6 +449,8 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
         TFloatVec::const_iterator i=vBuffer.begin();
 		dBackground = g_rp_setup.GetBackground (); 
         for (fInPulse=false, it=vBuffer.begin(); it != vBuffer.end() ; it++) {
+			if (it == vBuffer.begin())
+				fMax = *it;
 			n++;
 			//fprintf (stderr, "Item %d: %g\n", n, *it);
             if (!fInPulse) {
@@ -464,7 +470,7 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
                     piNew.SetRawPulse (vRawPulse);
                     piNew.SetPulse (SmoothPulse (vRawPulse));
                     piNew.SetMaxVal (fMax);
-                    piNew.SetLength (fArea);
+                    piNew.SetArea (fArea);
                     piVec.push_back (piNew);
                     fInPulse = false;
                     vRawPulse.clear();
