@@ -47,6 +47,8 @@ int TCalcMca::HeightIndex (float fSignalMin, float fSignalMax)
     if ((m_params.GetMaxVoltage() > m_params.GetMinVoltage()) && (fSignalMax > fSignalMin)) {
         float fIndex = (fSignalMax - fSignalMin) / (m_params.GetMaxVoltage() - m_params.GetMinVoltage());
         idx = (int) (fIndex * m_params.GetChannels());
+		if (idx >= m_params.GetChannels())
+			idx >= m_params.GetChannels();
     }
     else
         idx = -1;
@@ -73,6 +75,8 @@ void TCalcMca::NewPulse (const TFloatVec &vPulse)
     GetVectorMinMax (vPulse, fMin, fMax);
     int idx = HeightIndex (fMin, fMax);
     if (idx >= 0) {
+		if (idx >= m_vSpectrum.size())
+			idx = m_vSpectrum.size() - 1;
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
 	}
@@ -83,6 +87,8 @@ void TCalcMca::NewPulse (const TPulseInfo &pulse_info)
 {
     int idx = HeightIndex (0, pulse_info.GetMaxVal ());
     if (idx >= 0) {
+		if (idx >= m_vSpectrum.size())
+			idx = m_vSpectrum.size() - 1;
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
 	}
