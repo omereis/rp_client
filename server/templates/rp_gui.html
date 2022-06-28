@@ -16,11 +16,12 @@
     </body>
     <table>
         <tr>
-            <th>Setup
-                <br>
-                <input type="button" value="Read Setup" onclick="onReadRedPitayaSetupClick()">
-                <br>
-                <input type="button" value="Update Setup" onclick="onUpdateRedPitayaSetupClick()">
+			<th>
+				<table style="border:none;">
+					<tr>Setup</tr>
+                	<tr><td style="border:none;"><input type="button" value="Read Setup" onclick="onReadRedPitayaSetupClick()"></td></tr>
+                	<tr><td style="border:none;"><input type="button" value="Update Setup" onclick="onUpdateRedPitayaSetupClick()"></td></tr>
+				</table>
             </th>
             <td>
                 <table>
@@ -133,12 +134,12 @@
         </tr>
         <tr>
             <th>
-                <table>
-                    <tr>
-                        <th>Signal</th>
+                <table style="border:none;">
+                    <tr style="border:none;">
+                        <th style="border:none;">Signal</th>
                     </tr>
                     <tr>
-                        <td><input type="button" value="Read from Card" onclick="onReadSignalClick()">
+                        <td style="border:none;"><input type="button" value="Read from Card" onclick="onReadSignalClick()">
                             <br>
                             <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal<br>
                             <input type="checkbox" id="cboxReadMCA" value="MCA" checked="true">MCA<br>
@@ -165,49 +166,41 @@
                 </table>
             </th>
             <td id="cellSignal">
-                <div id="chartSignal" style="width:800px;height:450px;"></div>
+                <div id="chartSignal" style="width:600px;height:250px;"></div>
             </td>
         </tr>
         <tr>
             <th>MCA<br>
-                <table>
+                <table style="border:none;">
                     <tr>
-                        <td colspan="2">
+                        <td colspan="2" style="border:none;">
                             <input type="checkbox" id="cboxShowMca" checked="true"><label for="cboxShowMca">Show MCA</label>
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2">
+                        <td colspan="2" style="border:none;">
                             Channels: <input type="text" style="width:50px;text-align: center;" value="1000" id="txtMcaChannels">
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2">
+                        <td style="border:none;" colspan="2">
                             Max. Voltage: <input type="text" style="width:50px;text-align: center;" value="1" id="txtMcaMax">
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2">
+                        <td style="border:none;" colspan="2">
                             Min. Voltage: <input type="text" style="width:50px;text-align: center;" value="0" id="txtMcaMin">
                         </td>
                     </tr>
                     <tr>
-                        <td>
+                        <td style="border:none;">
                             <input type="button" value="Reset" onclick="onMcaResetClick()">
                         </td>
-                        <td>
+                        <td style="border:none;">
                             <input type="button" value="Update" onclick="onMcaUpdateClick()">
                         </td>
                     </tr>
                 </table>
-<!--
-                <input type="checkbox" id="cboxShowMca" checked="true"><label for="cboxShowMca">Show MCA</label><br>
-                Channels: <input type="text" style="width:75px;text-align: center;" value="1000" id="txtMcaChannels">
-                <br>
-                Min. Vl
-                <br>
-                <input type="button" value="Reset" onclick="onMcaResetClick()">
--->
             </th>
             <td>MCA Chart<br>
                 <div id="chartMca" style="width:800px;height:450px;"></div>

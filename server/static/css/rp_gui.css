@@ -1,6 +1,7 @@
 table {
     border: 1px solid black;
     width: 100%;
+	border-collapse: collapse;
   }
 
   td {
