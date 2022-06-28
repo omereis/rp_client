@@ -71,7 +71,7 @@ double TPulseInfo::GetLength () const
 //-----------------------------------------------------------------------------
 void TPulseInfo::SetLength (double dLength)
 {
-    m_dLength = m_dLength;
+    m_dLength = dLength;
 }
 
 //-----------------------------------------------------------------------------
