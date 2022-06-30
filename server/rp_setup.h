@@ -25,6 +25,9 @@ public:
     bool operator!= (const TRedPitayaSetup &other) const;
     void Clear ();
 
+#ifdef	_RED_PITAYA_HW
+	bool LoadFromHardware (bool fInit=true);
+#endif
     bool LoadFromJson(const string &strFile);
     bool SaveToJson (const std::string &strFile);
     Json::Value AsJson();

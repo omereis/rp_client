@@ -8,12 +8,13 @@
 #		add rule for file.o that depends on file.cpp AND all includes
 #*****************************************************************************/
 CPP = gcc
-CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
+#CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
+CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o RedPitayaTrigger.o RedPitayaSampling.o
 INCLUDES = rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h
 SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp RedPitayaTrigger.cpp RedPitayaSampling.cpp
-LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp
+LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp  -L/opt/redpitaya/lib -lrp
 
 RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o calc_mca.o pulse_info.o RedPitayaTrigger.o RedPitayaSampling.o
 RP_CLIENTS = rp_client.o

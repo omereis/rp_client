@@ -2,11 +2,6 @@
 |                               rp_server.cpp                                  |
 \******************************************************************************/
 
-/*
-Update notes
-============
-*/
-
 #include <zmq.h>
 #include <string.h>
 #include <stdio.h>
@@ -80,7 +75,7 @@ Json::Value ReadMca ();
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
-int main (void)
+int main (int argc, char *argv[])
 {
     bool fRun=true;
     //  Socket to talk to clients
@@ -94,7 +89,11 @@ int main (void)
     Timer t;
 
     Json::Value jSetup = g_rp_setup.AsJson();
+#ifdef	_RED_PITAYA_HW
+	g_rp_setup.LoadFromHardware (true);
+#else
     g_rp_setup.LoadFromJson("rp_setup.json");
+#endif
     g_mca_calculator.SetParams (g_rp_setup.GetMcaParams());
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
     t.setInterval (OnTimerTick, 1000);

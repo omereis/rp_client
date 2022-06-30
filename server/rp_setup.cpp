@@ -297,4 +297,14 @@ void TRedPitayaSetup::SetBackgroundFromJson (Json::Value jBkgnd)
 		fprintf (stderr, "Runtime error on 'TRedPitayaSetup::SetBackgroundFromJson'\n%s\n", exp.what());
     }
 }
+
+//-----------------------------------------------------------------------------
+#ifdef	_RED_PITAYA_HW
+bool TRedPitayaSetup::LoadFromHardware (bool fInit)
+{
+	if (fInit)
+		rp_Init();
+    m_trigger.LoadFromHardware();
+}
+#endif
 //-----------------------------------------------------------------------------

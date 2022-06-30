@@ -8,7 +8,29 @@
 #		add rule for file.o that depends on file.cpp AND all includes
 #*****************************************************************************/
 CPP = gcc
-CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
+CPP_DEF = 'docker'
+TARGET = 'docker'
+DEFAULT_TARGET='RED_PITAYA_HW'
+
+OS = 'linux'
+myOS = 'docker'
+
+ifeq ($(OS),$(myOS))
+	message = 'Linux'
+else
+	message = 'Docker'
+endif
+
+BASIC_CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
+CFLAGS = $(BASIC_CFLAGS)
+#ifeq ($(TARGET),'RED_PITAYA_HW'))
+ifeq ($(TARGET),$(DEFAULT_TARGET))
+	CPP_DEF = '_RED_PITAYA_HW'
+	CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW
+else
+	CPP_DEF = 'docker'
+	#CFLAGS = $(BASIC_CFLAGS)
+endif
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o RedPitayaTrigger.o RedPitayaSampling.o
 INCLUDES = rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h
