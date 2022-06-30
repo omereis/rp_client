@@ -2,6 +2,11 @@
 |                               rp_server.cpp                                  |
 \******************************************************************************/
 
+/*
+Update notes
+============
+*/
+
 #include <zmq.h>
 #include <string.h>
 #include <stdio.h>
