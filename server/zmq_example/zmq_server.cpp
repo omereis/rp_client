@@ -10,11 +10,13 @@ int main (void)
     //  Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
-    int rc = zmq_bind (responder, "tcp://*:5555");
+    //int rc = zmq_bind (responder, "tcp://*:5555");
+    int rc = zmq_bind (responder, "tcp://*:5009");
     assert (rc == 0);
 
     while (1) {
         char buffer [10];
+		fprintf (stderr, "Waiting...");
         zmq_recv (responder, buffer, 10, 0);
         printf ("Received Hello\n");
         sleep (1);          //  Do some 'work'

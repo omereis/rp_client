@@ -9,7 +9,11 @@
 #*****************************************************************************/
 CPP = gcc
 #CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
-CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
+#CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
+CFLAGS = -std=c++14 -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
+#CFLAGS +=  -std=c++14
+CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) 
+
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o RedPitayaTrigger.o RedPitayaSampling.o
 INCLUDES = rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h

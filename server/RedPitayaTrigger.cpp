@@ -7,6 +7,7 @@
 #include "misc.h"
 
 #include <mutex>
+#include <string>
 //
 // TRedPitayaSampling
 //-----------------------------------------------------------------------------
@@ -47,6 +48,7 @@ bool TRedPitayaTrigger::operator!= (const TRedPitayaTrigger &other) const
 //-----------------------------------------------------------------------------
 void TRedPitayaTrigger::Clear ()
 {
+	rp_Init();
     SetLevel ("0.005");
     SetDir ("up");
     SetSrc ("in1");
@@ -67,8 +69,10 @@ string TRedPitayaTrigger::GetLevel () const
 //-----------------------------------------------------------------------------
 void TRedPitayaTrigger::SetLevel (float fLevel)
 {
+/*
+*/
 	try {
-		std::string strLevel = to_string (fLevel);
+		std::string strLevel = std::to_string (fLevel);
 		SetLevel (strLevel);
 	}
 	catch (std::exception &e) {
@@ -76,10 +80,39 @@ void TRedPitayaTrigger::SetLevel (float fLevel)
 	}
 }
 
+std::string TriggerChannelName (rp_channel_trigger_t channel)
+{
+	std::string str;
+
+    if (channel == RP_T_CH_1)
+    	str = "RP_T_CH_1";
+    else if (channel == RP_T_CH_2)
+    	str = "RP_T_CH_2";
+    else if (channel == RP_T_CH_EXT)
+    	str = "RP_T_CH_EXT";  
+    else
+    	str = "RP_T_CH_1";
+	return (str);
+}
+
 //-----------------------------------------------------------------------------
 void TRedPitayaTrigger::SetLevel (const string &strLevel)
 {
     m_strLevel = strLevel;
+/*
+*/
+#ifdef  _RED_PITAYA_HW
+	try {
+		float fLevel = stof (strLevel);
+		rp_channel_trigger_t channel = GetChannel (GetSrc());
+		//fprintf (stderr, "Trigger level: %g\n", fLevel);
+		//fprintf (stderr, "Trigger Channel: %s\n", TriggerChannelName (channel).c_str());
+		rp_AcqSetTriggerLevel (channel, fLevel);
+	}
+	catch (std::exception &exp) {
+		PrintRuntimeError (exp, "TRedPitayaTrigger::SetLevel");
+	}
+#endif
 }
 //-----------------------------------------------------------------------------
 string TRedPitayaTrigger::GetDir () const
@@ -231,11 +264,117 @@ bool TRedPitayaTrigger::LoadFromHardware ()
 		if (rp_AcqGetTriggerSrc(&dir) == RP_OK)
 			SetDir (dir);
 		fLoad = true;
+		fprintf (stderr, "Trigger loaded: %s, %s\n", GetSrc().c_str(), GetDir().c_str());
 	}
 	catch (std::exception &e) {
 		fprintf (stderr, "Runtime error in 'TRedPitayaTrigger::LoadFromHardware':\n%s\n", e.what());
 		fLoad = false;
 	}
 }
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaTrigger::SetHardwareTrigger(const TRedPitayaTrigger &trigger)
+{
+	bool fSet;
+
+	try {
+		rp_acq_trig_src_t trigger_src;
+
+		if (GetTriggerSource (GetSrc (), GetDir (), trigger_src)) {
+			SetDir (trigger_src);
+			SetSrc (trigger_src);
+		}
+		fSet = true;
+	}
+	catch (std::exception &e) {
+		fSet = false;
+		PrintRuntimeError (e, "TRedPitayaTrigger::SetHardwareTrigger");
+	}
+}
+
+//-----------------------------------------------------------------------------
+rp_channel_trigger_t TRedPitayaTrigger::GetChannel (const std::string &strDirSrc)
+{
+	std::string strDir = ToLower(strDirSrc);
+	rp_channel_trigger_t channel;
+
+	if (strDir == "in1")
+		channel = RP_T_CH_1;
+	else if (strDir == "in2")
+		channel = RP_T_CH_2;
+	else if (strDir == "ext")
+		channel = RP_T_CH_EXT;
+	else
+		channel = RP_T_CH_1;
+	return (channel);
+}
+
+//-----------------------------------------------------------------------------
+std::string TRedPitayaTrigger::GetHardwareTriggerSource ()
+{
+	rp_acq_trig_src_t trigger_src;
+	std::string strSource;
+
+	rp_AcqGetTriggerSrc(&trigger_src);
+    if (trigger_src == RP_TRIG_SRC_DISABLED)
+		strSource = "RP_TRIG_SRC_DISABLED";
+    else if (trigger_src == RP_TRIG_SRC_NOW)
+		strSource = "RP_TRIG_SRC_NOW";
+    else if (trigger_src == RP_TRIG_SRC_CHA_PE)
+		strSource = "RP_TRIG_SRC_CHA_PE";
+    else if (trigger_src == RP_TRIG_SRC_CHA_NE)
+		strSource = "RP_TRIG_SRC_CHA_NE";
+    else if (trigger_src == RP_TRIG_SRC_CHB_PE)
+		strSource = "RP_TRIG_SRC_CHB_PE";
+    else if (trigger_src == RP_TRIG_SRC_CHB_NE)
+		strSource = "RP_TRIG_SRC_CHB_NE";
+    else if (trigger_src == RP_TRIG_SRC_EXT_PE)
+		strSource = "RP_TRIG_SRC_EXT_PE";
+    else if (trigger_src == RP_TRIG_SRC_EXT_NE)
+		strSource = "RP_TRIG_SRC_EXT_NE";
+    else if (trigger_src == RP_TRIG_SRC_AWG_PE)
+		strSource = "RP_TRIG_SRC_AWG_PE";
+    else if (trigger_src == RP_TRIG_SRC_AWG_NE)
+		strSource = "RP_TRIG_SRC_AWG_NE";
+	else
+		strSource = "";
+	return (strSource);
+}
+
+//-----------------------------------------------------------------------------
+float TRedPitayaTrigger::GetHardwareTriggerLevel ()
+{
+	rp_channel_trigger_t channel = GetHardwareTriggerChannel ();
+	float fLevel = 0;
+	rp_AcqGetTriggerLevel(channel, &fLevel);
+	return (fLevel);
+}
+
+//-----------------------------------------------------------------------------
+rp_channel_trigger_t TRedPitayaTrigger::GetHardwareTriggerChannel ()
+{
+	rp_channel_trigger_t trigger_channel;
+	rp_acq_trig_src_t trigger_src;
+
+	rp_AcqGetTriggerSrc(&trigger_src);
+	if ((trigger_src == RP_TRIG_SRC_CHA_PE) || (trigger_src == RP_TRIG_SRC_CHA_NE))
+		trigger_channel = RP_T_CH_1;
+	else if ((trigger_src == RP_TRIG_SRC_CHB_PE) || (trigger_src == RP_TRIG_SRC_CHB_NE))
+		trigger_channel = RP_T_CH_2;
+	if ((trigger_src == RP_TRIG_SRC_EXT_PE) || (trigger_src == RP_TRIG_SRC_EXT_NE))
+		trigger_channel = RP_T_CH_EXT;
+	else
+		trigger_channel = RP_T_CH_1;
+	return (trigger_channel);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaTrigger::PrintHardwareSetup (FILE *file)
+{
+	fprintf (file, "Trigger:\n");
+	fprintf (file, "    Level: %g\n", GetHardwareTriggerLevel ());
+	fprintf (file, "    Source: %s\n", GetHardwareTriggerSource ().c_str());
+}
+//-----------------------------------------------------------------------------
 #endif
 //-----------------------------------------------------------------------------

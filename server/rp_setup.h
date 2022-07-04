@@ -27,6 +27,9 @@ public:
 
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware (bool fInit=true);
+	bool SetHardwareTrigger();
+	bool SetHardwareTrigger(const TRedPitayaTrigger &trigger);
+	bool PrintHardwareSetup (FILE *file=stderr);
 #endif
     bool LoadFromJson(const string &strFile);
     bool SaveToJson (const std::string &strFile);
@@ -57,6 +60,8 @@ public:
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
+/*
+*/
     TRedPitayaTrigger m_trigger;
     TRedPitayaSampling m_sampling;
     TMcaParams m_mca_params;

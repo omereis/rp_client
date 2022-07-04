@@ -132,7 +132,6 @@ std::string ReplaceAll(const std::string &strSrc, const std::string& from, const
 	return (str);
 }
 
-
 //-----------------------------------------------------------------------------
 float VectorAverage (const TFloatVec &vec)
 {
@@ -145,5 +144,17 @@ float VectorAverage (const TFloatVec &vec)
     	dAverage /= (double) vec.size();
 	}
     return (dAverage);
+}
+
+//-----------------------------------------------------------------------------
+void PrintRuntimeError (std::exception &exp, const std::string &strProcedure, FILE *file)
+{
+	PrintRuntimeError (exp, strProcedure.c_str(), file);
+}
+
+//-----------------------------------------------------------------------------
+void PrintRuntimeError (std::exception &exp, const char szProcedure[], FILE *file)
+{
+	fprintf (file, "Runtime error in %s:\n%s", szProcedure, exp.what());
 }
 //---------------------------------------------------------------------------

@@ -39,6 +39,7 @@ bool TRedPitayaSetup::operator!= (const TRedPitayaSetup &other) const
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::Clear ()
 {
+	rp_Init();
     m_trigger.Clear();
     m_sampling.Clear ();
     m_mca_params.Clear();
@@ -46,7 +47,6 @@ void TRedPitayaSetup::Clear ()
     SetMcaOnOff (false);
     SetPsdOnOff (false);
     SetBackground (0.1);
-
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
@@ -116,19 +116,6 @@ bool TRedPitayaSetup::LoadFromJson(const string &strFile)
     Clear ();
     if (reader.parse (strJson, root)) {
         jResult = UpdateFromJson(root);
-/*
-        jSampling = root["sampling"];
-        jTrigger = root["trigger"];
-		Json::Value jMCA = root["mca"];
-        if (!jSampling.isNull())
-            m_sampling.LoadFromJson (jSampling);
-        if (!jTrigger.isNull())
-            m_trigger.LoadFromJson (jTrigger);
-        if (!jMCA.isNull())
-            m_mca_params.LoadFromJson (jMCA);
-        if (!root["background"].isNull())
-            SetBackgroundFromJson (root["background"]);
-*/
     }
     return (true);
 }
@@ -306,5 +293,25 @@ bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 		rp_Init();
     m_trigger.LoadFromHardware();
 }
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::SetHardwareTrigger()
+{
+	return (SetHardwareTrigger(m_trigger));
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::SetHardwareTrigger(const TRedPitayaTrigger &trigger)
+{
+	m_trigger.SetHardwareTrigger (trigger);
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::PrintHardwareSetup (FILE *file)
+{
+	m_trigger.PrintHardwareSetup (file);
+}
+
+//-----------------------------------------------------------------------------
 #endif
 //-----------------------------------------------------------------------------

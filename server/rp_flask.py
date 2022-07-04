@@ -29,7 +29,8 @@ def open_socket(port=5555):
         try:
             strAddress = "tcp://localhost:" % port#5555"
         except Exception as e:
-            strAddress = "tcp://localhost:5555"
+            strAddress = "tcp://127.0.0.1:5555"
+            #strAddress = "tcp://localhost:5555"
         #socket.connect("tcp://localhost:5555")
         socket.connect(strAddress)
     except Exception as e:

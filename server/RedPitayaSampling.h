@@ -5,6 +5,10 @@
 #define	__RP_SAMPLING_H
 //-----------------------------------------------------------------------------
 
+#ifdef	_RED_PITAYA_HW
+#include "rp.h"
+#endif
+
 #include <string>
 using namespace std;
 #include "jsoncpp/json/json.h"

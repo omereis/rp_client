@@ -729,3 +729,13 @@ function plotMca (aMca) {
 		console.log(aMca.length);
 	}
 }
+
+//-----------------------------------------------------------------------------
+function onReadCardTriggerClick () {
+
+}
+
+//-----------------------------------------------------------------------------
+function onUpdateCardTriggerClick () {
+    
+}

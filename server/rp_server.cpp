@@ -23,6 +23,8 @@ using namespace std;
 
 #include "jsoncpp/json/json.h"
 //-----------------------------------------------------------------------------
+#ifdef	__HARDWARE
+#endif
 TFloatVecQueue g_qPulses;
 TFloatVecQueue g_qDebug;
 TFloatVec g_vRawSignal;
@@ -42,7 +44,11 @@ static const char *g_szMCA       = "MCA";
 static const char *g_szSaveMCA   = "SaveMca";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
+//#ifdef	__HARDWARE
 TRedPitayaSetup g_rp_setup;
+//TRedPitayaSampling rps;
+//TRedPitayaTrigger rpt;
+//#endif
 //-----------------------------------------------------------------------------
 
 //Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
@@ -75,12 +81,22 @@ Json::Value ReadMca ();
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
-int main (int argc, char *argv[])
+int main1 ()
+{
+	fprintf (stderr, "running\n");
+}
+#ifdef	__HARDWARE
+#endif
+int main ()
+//int main (int argc, char *argv[])
 {
     bool fRun=true;
+	//fprintf (stderr, "running\n");
     //  Socket to talk to clients
     void *context = zmq_ctx_new ();
+	//fprintf (stderr, "context crearted\n");
     void *responder = zmq_socket (context, ZMQ_REP);
+	//fprintf (stderr, "responder crearted\n");
     int rc = zmq_bind (responder, "tcp://*:5555");
     assert (rc == 0);
 	Json::Value root, jReply;
@@ -90,6 +106,7 @@ int main (int argc, char *argv[])
 
     Json::Value jSetup = g_rp_setup.AsJson();
 #ifdef	_RED_PITAYA_HW
+	fprintf (stderr, "Loading Hardware Setup\n");
 	g_rp_setup.LoadFromHardware (true);
 #else
     g_rp_setup.LoadFromJson("rp_setup.json");
@@ -167,6 +184,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca
 		}
         jNew = rp_setup.AsJson();
 		strReply = StringifyJson (jNew);
+		rp_setup.PrintHardwareSetup ();
 		fprintf (stderr, "\nSetup reply JSON:\n%s\n\n", strReply.c_str());
     }
     catch (std::exception &err) {

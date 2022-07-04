@@ -18,4 +18,6 @@ std::string ToLower (const std::string &str);
 bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vDate);
 std::string ReplaceAll(const std::string &strSrc, const std::string& from, const std::string& to);
 float VectorAverage (const TFloatVec &vec);
+void PrintRuntimeError (std::exception &exp, const char szChar[], FILE *file=stderr);
+void PrintRuntimeError (std::exception &exp, const std::string &strProcedure, FILE *file=stderr);
 #endif

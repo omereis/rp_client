@@ -24,6 +24,16 @@ public:
 
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware ();
+	void SetDir (rp_acq_trig_src_t dir);
+	void SetSrc (rp_acq_trig_src_t src);
+	bool GetTriggerSource (const std::string &strSrcSrc, const std::string &strDirSrc, rp_acq_trig_src_t &trigger_src);
+	void SetTrigger (const std::string &strSrcSrc, const std::string &strDirSrc);
+	bool SetHardwareTrigger(const TRedPitayaTrigger &trigger);
+	rp_channel_trigger_t GetChannel (const std::string &strDirSrc);
+	void PrintHardwareSetup (FILE *file=stderr);
+	std::string GetHardwareTriggerSource ();
+	float GetHardwareTriggerLevel ();
+	rp_channel_trigger_t GetHardwareTriggerChannel ();
 #endif
     TRedPitayaTrigger operator= (const TRedPitayaTrigger &other);
     bool operator== (const TRedPitayaTrigger &other) const;
@@ -39,12 +49,6 @@ public:
     void SetLevel (const string &strLevel);
     string GetDir () const;
     void SetDir (const string &strDir);
-#ifdef	_RED_PITAYA_HW
-	void SetDir (rp_acq_trig_src_t dir);
-	void SetSrc (rp_acq_trig_src_t src);
-	bool GetTriggerSource (const std::string &strSrcSrc, const std::string &strDirSrc, rp_acq_trig_src_t &trigger_src);
-	void SetTrigger (const std::string &strSrcSrc, const std::string &strDirSrc);
-#endif
     string GetSrc () const;
     void SetSrc (const string &strSrc);
 protected:
