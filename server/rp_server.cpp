@@ -610,8 +610,10 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
 bool GetNextPulse (TFloatVec &vPulse)
 {
     bool fPulse = false;
-
+#ifdef  _RED_PITAYA_HW
+#else
     fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
+#endif
     return (fPulse);
 }
 //-----------------------------------------------------------------------------
