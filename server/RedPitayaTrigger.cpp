@@ -377,17 +377,12 @@ bool TRedPitayaTrigger::LoadFromHardware ()
 		float f=0;
 		rp_acq_trig_src_t dir;
 
-		if (rp_AcqGetTriggerSrc(&dir) == RP_OK) {
-			//fprintf (stderr, "'TRedPitayaTrigger::LoadFromHardware', after calling 'rp_AcqGetTriggerSrc', trigger source: %s\n", GetHardwareTriggerSource (dir).c_str());
+		if (rp_AcqGetTriggerSrc(&dir) == RP_OK)
 			SetDir (dir);
-		}
 		fprintf (stderr, "RedPitayaTrigger.cpp:389, Trigger level: %s\n", GetLevel().c_str());
-		if (rp_AcqGetTriggerLevel(RP_T_CH_1, &f) == RP_OK) {
-			fprintf (stderr, "RedPitayaTrigger.cpp:391, Trigger level: %g\n", f);
-    		SetLevel (f);
-		}
+		f = TRedPitayaTrigger::GetHardwareTriggerLevel ();
+    	SetLevel (f);
 		fLoad = true;
-		//fprintf (stderr, "Trigger loaded: %s, %s\n", GetSrc().c_str(), GetDir().c_str());
 	}
 	catch (std::exception &e) {
 		fprintf (stderr, "Runtime error in 'TRedPitayaTrigger::LoadFromHardware':\n%s\n", e.what());
@@ -626,6 +621,10 @@ float TRedPitayaTrigger::GetHardwareTriggerLevel ()
 	rp_channel_trigger_t channel = GetHardwareTriggerChannel ();
 	float fLevel = 0;
 	rp_AcqGetTriggerLevel(channel, &fLevel);
+	char *sz = new char[30];
+	sprintf (sz, "%.3f", fLevel);
+	fLevel = std::stof(sz);
+	delete[] sz;
 	return (fLevel);
 }
 
