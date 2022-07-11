@@ -7,17 +7,37 @@ from multiprocessing import Process, Queue
 
 app = Flask(__name__)
 txtHostName = None
+g_txtTarget = 'Red Pitaya'
+g_fIsRedPitaya = True
+g_fIsontainer = False
 
 #------------------------------------------------------------------------------
 @app.route("/")
 def index():
-    return render_template ("rp_gui.html")
+    #if (txtHostName != None):
+    print('g_fIsontainer : {}'.format(g_fIsontainer ))
+    if (g_fIsontainer == True):
+        print("Running in a container");
+        g_txtTarget = 'Docker Container'
+        g_fIsRedPitaya = "false"
+    else:
+        g_txtTarget = 'Red Pitaya Hardware'
+        g_fIsRedPitaya = "true"
+        print("Running on a card");
+    print ('hostname: {}'.format(txtHostName))
+    #print ('Target: {}'.format(g_txtTarget ))
+    print('g_fIsRedPitaya: {}'.format(g_fIsRedPitaya))
+    print('g_txtTarget: {}'.format(g_txtTarget))
+    return render_template ("rp_gui.html", target=g_txtTarget, is_red_pitaya=g_fIsRedPitaya )
    
 #------------------------------------------------------------------------------
 @app.route("/red_pitaya_setup")
 def red_pitaya_setup():
     read_card_setup()
-    return render_template ("rp_setup.html")
+    if (txtHostName == None):
+        g_txtTarget = 'Docker Container'
+    print ('Target: {}'.format(g_txtTarget ))
+    return render_template ("rp_setup.html", target=g_txtTarget)
    
 #------------------------------------------------------------------------------
 def open_socket(port=5555):
@@ -175,6 +195,7 @@ if (__name__ == '__main__'):
     if (len(sys.argv) > 1):
         if (sys.argv[1].lower() == 'docker'):
             txtHostName = '0.0.0.0'
+            g_fIsontainer = True
     print('Host Name {}'.format(txtHostName));
     app.run (host=txtHostName, port=5005, debug=True)
     #app.run (host='0.0.0.0', port=5005, debug=True)

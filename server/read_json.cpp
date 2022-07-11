@@ -164,7 +164,7 @@ void write_setup(TRedPitayaSetup &rp_setup)
 
         if (reader.parse (strJson, root)) {
             if (!root.isNull()) {
-                rp_setup.UpdateFromJson(root);
+                rp_setup.UpdateFromJson(root, false);
 				printf ("\nWritten setup:\n'%s'\n", StringifyJson (rp_setup.AsJson()).c_str());
             }
         }

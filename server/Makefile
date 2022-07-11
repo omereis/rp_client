@@ -10,7 +10,7 @@
 CPP = gcc
 #CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
 #CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
-CFLAGS = -std=c++14 -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
+CFLAGS = -std=c++14 -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/ -O0 -g
 #CFLAGS +=  -std=c++14
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) 
 
@@ -25,7 +25,7 @@ RP_CLIENTS = rp_client.o
 RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp calc_mca.cpp pulse_info.cpp
 RP_INC = 
 
-all: read_json rp_server rp_client
+#all: read_json rp_server rp_client
 
 .cpp.o:
 	$(CPP) -c $(CFLAGS) $< -o $@
@@ -33,11 +33,11 @@ all: read_json rp_server rp_client
 rp_server: $(RP_OBJ)
 	$(CPP) -g $(RP_OBJ) $(LDFLAGS) -o $@
 
-rp_client: $(RP_CLIENTS)
-	$(CPP) -g $(RP_OBJ) $(LDFLAGS) -o $@
+#rp_client: $(RP_CLIENTS)
+	#$(CPP) -g $(RP_OBJ) $(LDFLAGS) -o $@
 
-read_json: $(OBJECTS)
-	$(CPP) -g $(OBJECTS) $(LDFLAGS) -o $@
+#read_json: $(OBJECTS)
+	#$(CPP) -g $(OBJECTS) $(LDFLAGS) -o $@
 
 clean:
 	rm *.o rp_client rp_server read_json

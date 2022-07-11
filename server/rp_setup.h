@@ -25,6 +25,7 @@ public:
     bool operator!= (const TRedPitayaSetup &other) const;
     void Clear ();
 
+	void TriggerNow ();
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware (bool fInit=true);
 	bool SetHardwareTrigger();
@@ -34,7 +35,8 @@ public:
     bool LoadFromJson(const string &strFile);
     bool SaveToJson (const std::string &strFile);
     Json::Value AsJson();
-    Json::Value UpdateFromJson(Json::Value &jSetup);
+	Json::Value TriggerAsJson();
+    Json::Value UpdateFromJson(Json::Value &jSetup, bool fUpdateHardware=false);
 
     TRedPitayaTrigger GetTrigger() const;
     void SetTrigger (const TRedPitayaTrigger &trigger);

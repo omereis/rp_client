@@ -23,8 +23,6 @@ using namespace std;
 
 #include "jsoncpp/json/json.h"
 //-----------------------------------------------------------------------------
-#ifdef	__HARDWARE
-#endif
 TFloatVecQueue g_qPulses;
 TFloatVecQueue g_qDebug;
 TFloatVec g_vRawSignal;
@@ -51,7 +49,6 @@ TRedPitayaSetup g_rp_setup;
 //#endif
 //-----------------------------------------------------------------------------
 
-//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
@@ -79,24 +76,42 @@ float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
 
 //-----------------------------------------------------------------------------
+std::string ret_str()
+{
+	std::string s = "this is a string";
+	fprintf (stderr, "ret_str, s-'%s'\n", s.c_str());
+	return (s);
+}
+//-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
 int main1 ()
 {
-	fprintf (stderr, "running\n");
-}
-#ifdef	__HARDWARE
+#ifdef  _RED_PITAYA_HW
+	rp_Init();
 #endif
+				PrintTriggerSource ("rp_server.cpp:139");
+	fprintf (stderr, "running\n");
+	std::string str = ret_str();
+	fprintf (stderr, "main, str: '%s'\n", str.c_str());
+	std::string strSrc = GetHardwareTriggerName (RP_TRIG_SRC_DISABLED);
+	fprintf (stderr, "main, strSrc: '%s'\n", strSrc.c_str());
+#ifdef  _RED_PITAYA_HW
+	rp_Release();
+#endif
+}
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 int main ()
 //int main (int argc, char *argv[])
 {
+#ifdef  _RED_PITAYA_HW
+	rp_Init();
+#endif
     bool fRun=true;
-	//fprintf (stderr, "running\n");
     //  Socket to talk to clients
     void *context = zmq_ctx_new ();
-	//fprintf (stderr, "context crearted\n");
     void *responder = zmq_socket (context, ZMQ_REP);
-	//fprintf (stderr, "responder crearted\n");
     int rc = zmq_bind (responder, "tcp://*:5555");
     assert (rc == 0);
 	Json::Value root, jReply;
@@ -124,9 +139,10 @@ int main ()
         if (reader.parse (strJson, root)) {
         	printf ("Message parsed\n");
 			strReply  = "";
-            if (!root["setup"].isNull())
-                //jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);//, g_mca_params);
+            if (!root["setup"].isNull()) {
+				//PrintTriggerSource ("rp_server.cpp:139");
                 jReply["setup"] = HandleSetup(root["setup"], g_rp_setup, g_mca_calculator);
+			}
             if (!root[g_szReadData].isNull())
                 jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup);
             if (!root[g_szSampling].isNull())
@@ -168,24 +184,70 @@ bool CountBraces (std::string &strJson)
 }
 
 //-----------------------------------------------------------------------------
-//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)//, TMcaParams &mca_params)
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator)
 {
     std::string strReply, strCommand;
     Json::Value jRead, jNew;
 
     try {
+		//fprintf (stderr, "\n----------------------------------------------------------\n");
+		bool fUpdateHardware = false;
+#ifdef	_RED_PITAYA_HW
+		fUpdateHardware = true;
+#endif
 		std::string strSetup = StringifyJson (jSetup);
         strCommand = ToLower(jSetup["command"].asString());
+		fprintf (stderr, "Command: %s\n", strCommand.c_str());
 		if (strCommand == "update") {
-            jNew = rp_setup.UpdateFromJson(jSetup);
+            jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
+#ifdef	_RED_PITAYA_HW
+			//PrintTriggerSource ("rp_server.cpp:196, AFTER iLoadFromJson");
+#endif
+/*
 			mca_calculator.SetParams (rp_setup.GetMcaParams());
             rp_setup.SaveToJson("rp_setup.json");
+*/
 		}
-        jNew = rp_setup.AsJson();
+		else if (strCommand == "trigger_now") {
+			rp_setup.TriggerNow ();
+			jNew = rp_setup.TriggerAsJson();
+		}
+#ifdef	_RED_PITAYA_HW
+		fprintf (stderr, "\nLoading from hardware\n");
+		//PrintTriggerSource ("rp_server.cpp:193, before LoadFromHardware");
+// DEBUG
+		//jNew["test"] = "fail";
+		//return (jNew);
+
+		//rp_setup.PrintHardwareSetup ();
+/*
+// DEBUG
+		jNew["test"] = "fail";
+		fprintf (stderr, "In HandleSetup\n");
+		return (jNew);
+*/
+		rp_setup.LoadFromHardware (true);
+		//PrintTriggerSource ("rp_server.cpp:196, AFTER LoadFromHardware");
+		//fprintf (stderr, "Hardware setup loaded\n");
+		//rp_setup.PrintHardwareSetup ();
+#endif
+		if (strCommand == "read_trigger") {
+			fprintf (stderr, "Writing trigger\n");
+			jNew = rp_setup.TriggerAsJson();
+		}
+		else if (strCommand == "update_trigger")
+            jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
+        	//jNew = rp_setup.AsJson();
+			//jNew = rp_setup.UpdateTrigger(jSetup);
+		else
+        	jNew = rp_setup.AsJson();
 		strReply = StringifyJson (jNew);
-		rp_setup.PrintHardwareSetup ();
-		fprintf (stderr, "\nSetup reply JSON:\n%s\n\n", strReply.c_str());
+#ifdef  _RED_PITAYA_HW
+		//fprintf (stderr, "printing Hardware setup\n");
+		//rp_setup.PrintHardwareSetup ();
+#endif
+		fprintf (stderr, "Setup reply JSON:\n%s\n\n", strReply.c_str());
+		//fprintf (stderr, "----------------------------------------------------------\n");
     }
     catch (std::exception &err) {
         jNew = rp_setup.AsJson();

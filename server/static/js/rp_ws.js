@@ -21,8 +21,17 @@ function onUpdateRedPitayaSetupClick() {
     msgCmd['trigger'] = msgTrigger;
     msgCmd['sampling'] = uploadSampling();
 	msgCmd['background'] = uploadBackground();
-	//msgCmd['background'] = parseFloat(uploadBackground());
     msg['setup'] = msgCmd;//'update';
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function onUpdateCardTriggerClick () {
+    var msg = new Object, msgTrigger=new Object, msgCmd = new Object;
+    msgCmd['command'] = 'update_trigger';
+    msgTrigger = uploadTriggerSetup ();
+    msgCmd['trigger'] = msgTrigger;
+    msg['setup'] = msgCmd;
     sendMesssageThroughFlask(msg, setupHandler);
 }
 
@@ -32,6 +41,8 @@ function uploadTriggerSetup () {
 	msg['dir'] = uploadTriggerDir ();
 	msg['level'] = uploadTriggerLevel ();
 	msg['src'] = uploadTriggerSrc ();
+	msg['type'] = uploadTriggerType ();
+	msg['enabled'] = uploadTriggerOnOff();
 	return (msg);
 }
 
@@ -62,6 +73,18 @@ function uploadTriggerSrc () {
 	return (combo.value);
 }
 
+//-----------------------------------------------------------------------------
+function downloadTriggerOnOff (fOnOff) {
+	var cbox = document.getElementById ('cboxTriggerEnabled');
+	if (cbox != null)
+		cbox.checked = fOnOff;
+}
+
+//-----------------------------------------------------------------------------
+function uploadTriggerType () {
+	var combo = document.getElementById ('comboTriggerType');
+	return (combo.value);
+}
 
 var webSocket   = null;
 var ws_protocol = null;
@@ -77,12 +100,14 @@ function setupHandler (reply) {
         txt.value = reply;
     try {
         dictSetup = JSON.parse(reply).setup;
-        DownloadRate (dictSetup.sampling.rate);
-        DownloadDecimation (dictSetup.sampling.decimation);
-        downloadTriggerLevel (dictSetup.trigger.level);
-        downloadTriggerDir (dictSetup.trigger.dir);
-        downloadTriggerSrc (dictSetup.trigger.src);
-		downloadBackground (dictSetup.background);
+		if (dictSetup.hasOwnProperty('trigger'))
+			downloadTrigger(dictSetup.trigger);
+		if (dictSetup.hasOwnProperty('sampling')) {
+        	DownloadRate (dictSetup.sampling.rate);
+        	DownloadDecimation (dictSetup.sampling.decimation);
+		}
+		if (dictSetup.hasOwnProperty('background'))
+			downloadBackground (dictSetup.background);
 		if (dictSetup.hasOwnProperty('mca'))
 			downloadMca (dictSetup.mca);
     }
@@ -731,11 +756,80 @@ function plotMca (aMca) {
 }
 
 //-----------------------------------------------------------------------------
-function onReadCardTriggerClick () {
-
+function uploadTriggerOnOff() {
+    return (uploadCheckBox ("cboxTriggerEnabled"));
 }
 
 //-----------------------------------------------------------------------------
-function onUpdateCardTriggerClick () {
-    
+function onTriggerEnabledClick() {
+	try {
+    var fTriggerEnabled = uploadCheckBox ("cboxTriggerEnabled");
+	enableItemsByTrigger(fTriggerEnabled);
+/*
+		enableItem ("comboTriggerDir", fTriggerEnabled);
+		enableItem ("comboTriggerIn", fTriggerEnabled);
+		enableItem ("comboTriggerType", fTriggerEnabled);
+		enableItem ("txtTriggerLevel", fTriggerEnabled);
+		enableItem ("comboTriggerVoltage", fTriggerEnabled);
+		enableItem ("btnUpdateTrigger", fTriggerEnabled);
+		enableItem ("btnTriggerNow", fTriggerEnabled);
+*/
+	}
+	catch (exception) {
+		console.log(exception);
+	}
 }
+
+//-----------------------------------------------------------------------------
+function enableItemsByTrigger(fTriggerEnabled) {
+	try {
+		enableItem ("comboTriggerDir", fTriggerEnabled);
+		enableItem ("comboTriggerIn", fTriggerEnabled);
+		enableItem ("comboTriggerType", fTriggerEnabled);
+		enableItem ("txtTriggerLevel", fTriggerEnabled);
+		enableItem ("comboTriggerVoltage", fTriggerEnabled);
+		enableItem ("btnUpdateTrigger", fTriggerEnabled);
+		enableItem ("btnTriggerNow", fTriggerEnabled);
+	}
+	catch (exception) {
+		console.log(exception);
+	}
+}
+
+//-----------------------------------------------------------------------------
+function enableItem (txtItem, fEnabled) {
+	var item = document.getElementById (txtItem);
+	item.disabled = fEnabled ? false : true;
+}
+
+//-----------------------------------------------------------------------------
+function onReadCardTriggerClick () {
+    var msg = new Object, msgTrigger=new Object, msgCmd = new Object;
+    msgCmd['command'] = 'read_trigger';
+    msg['setup'] = msgCmd;
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function downloadTrigger(dictTriggerSetup) {
+	try {
+        downloadTriggerLevel (dictTriggerSetup.level);
+        downloadTriggerDir (dictTriggerSetup.dir);
+        downloadTriggerSrc (dictTriggerSetup.src);
+		downloadTriggerOnOff (dictTriggerSetup.enabled);
+		enableItemsByTrigger(dictTriggerSetup.enabled);
+	}
+	catch (exception) {
+		console.log(exception);
+	}
+}
+
+//-----------------------------------------------------------------------------
+function onTriggerNowClick () {
+    var msg = new Object, msgTrigger=new Object, msgCmd = new Object;
+    msgCmd['command'] = 'trigger_now';
+    msg['setup'] = msgCmd;
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------

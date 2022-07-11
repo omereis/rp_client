@@ -212,6 +212,7 @@ function uploadTrigger() {
      msg["level"] = uploadLevel ();
      msg["dir"] = uploadTriggerDir ();
      msg["src"] = uploadTriggerSrc ();
+     msg["type"] = uploadTriggerType ();
      return (msg);
 }
 //-----------------------------------------------------------------------------
@@ -263,6 +264,11 @@ function uploadTriggerSrc () {
         src = "in1";
     return (src);
 }
+
+//-----------------------------------------------------------------------------
+function uploadTriggerType () {
+}
+
 //-----------------------------------------------------------------------------
 function onUpdateSamplingClick () {
     var crOld = document.body.style.cursor;

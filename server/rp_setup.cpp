@@ -39,7 +39,9 @@ bool TRedPitayaSetup::operator!= (const TRedPitayaSetup &other) const
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::Clear ()
 {
+/*
 	rp_Init();
+*/
     m_trigger.Clear();
     m_sampling.Clear ();
     m_mca_params.Clear();
@@ -117,6 +119,8 @@ bool TRedPitayaSetup::LoadFromJson(const string &strFile)
     if (reader.parse (strJson, root)) {
         jResult = UpdateFromJson(root);
     }
+	fprintf (stderr, "'TRedPitayaSetup::LoadFromJson' end:\n");
+    //m_trigger.Print("Called from rp_setup.cpp:123");
     return (true);
 }
 
@@ -131,6 +135,15 @@ std::string DoubleAsString (double dValue)
 }
 
 //-----------------------------------------------------------------------------
+Json::Value TRedPitayaSetup::TriggerAsJson()
+{
+    Json::Value jSetup;
+
+    jSetup["trigger"] = m_trigger.AsJson();
+    return (jSetup);
+}
+
+//-----------------------------------------------------------------------------
 Json::Value TRedPitayaSetup::AsJson()
 {
     Json::Value jSetup;
@@ -141,8 +154,9 @@ Json::Value TRedPitayaSetup::AsJson()
     jSetup["background"] = DoubleAsString (GetBackground());
     return (jSetup);
 }
+
 //-----------------------------------------------------------------------------
-Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
+Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHardware)
 {
     Json::Value jNewSetup;
 
@@ -150,6 +164,7 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
 		std::string str = StringifyJson (jSetup);
         jNewSetup["sampling"] = m_sampling.UpdateFromJson(jSetup["sampling"]);
         jNewSetup["trigger"] = m_trigger.UpdateFromJson(jSetup["trigger"]);
+        //m_trigger.Print("Called from UpdateFromJson #165");
         jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
 		if (!jSetup["background"].isNull()) {
 			std::string strBkgnd = jSetup["background"].asString();
@@ -157,12 +172,26 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup)
 			SetBackground (d);
 			fprintf (stderr, "New Background: %g\n", GetBackground());
 		}
+/*
+*/
+		if (fUpdateHardware) {
+#ifdef	_RED_PITAYA_HW
+			//fprintf (stderr, "=================++++++++++++++++++++==================\n");
+			//fprintf (stderr, "rp_setup.cpp:178\n");
+			//fprintf (stderr, "=================++++++++++++++++++++==================\n");
+			m_trigger.SetHardwareTrigger();
+#else
+			;
+#endif
+        	//m_trigger.Print("Called from rp_setup.cpp (UpdateFromJson): 177");
+		}
     }
     catch (std::exception &exp) {
 		jNewSetup["error"] = exp.what();
     }
     return (jNewSetup);
 }
+
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::SaveToJson (const std::string &strFile)
 {
@@ -272,7 +301,7 @@ void TRedPitayaSetup::SetBackground (double dBackground)
 {
     m_dBackground = dBackground;
 }
-    
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetBackgroundFromJson (Json::Value jBkgnd)
 {
@@ -286,12 +315,31 @@ void TRedPitayaSetup::SetBackgroundFromJson (Json::Value jBkgnd)
 }
 
 //-----------------------------------------------------------------------------
+void TRedPitayaSetup::TriggerNow ()
+{
+	m_trigger.TriggerNow ();
+}
+
+//-----------------------------------------------------------------------------
 #ifdef	_RED_PITAYA_HW
 bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 {
-	if (fInit)
-		rp_Init();
+	//fprintf (stderr, "rp_setup.cpp:326, before calling rp_AcqGetTriggerSrc\n");
+	//if (fInit)
+		////rp_Init();
+	rp_acq_trig_src_t dir;
+
+	//fprintf (stderr, "rp_setup.cpp:326, before calling rp_AcqGetTriggerSrc\n");
+	//rp_Init();
+	rp_AcqGetTriggerSrc(&dir);
+	//fprintf (stderr, "rp_setup.cpp:329, AFTER calling rp_AcqGetTriggerSrc\n");
+	//string strDir = m_trigger.GetHardwareTriggerSource (dir);
+	//fprintf (stderr, "rp_setup.cpp:331, AFTER calling GetHardwareTriggerSource \n");
+	//fprintf (stderr, "'TRedPitayaTrigger::LoadFromHardware', after calling 'rp_AcqGetTriggerSrc', trigger source: %s\n", m_trigger.GetHardwareTriggerSource (dir).c_str());
+	//m_trigger.Print("'TRedPitayaSetup::LoadFromHardware', before LoadFromhardware");
     m_trigger.LoadFromHardware();
+	//PrintTriggerSource ("rp_setup.cpp:336");
+	//m_trigger.Print("'TRedPitayaSetup::LoadFromHardware', AFTER LoadFromhardware");
 }
 
 //-----------------------------------------------------------------------------
@@ -303,13 +351,16 @@ bool TRedPitayaSetup::SetHardwareTrigger()
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::SetHardwareTrigger(const TRedPitayaTrigger &trigger)
 {
-	m_trigger.SetHardwareTrigger (trigger);
+	m_trigger = trigger;
+	m_trigger.SetHardwareTrigger ();
+	//m_trigger.SetHardwareTrigger (trigger);
 }
 
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::PrintHardwareSetup (FILE *file)
 {
-	m_trigger.PrintHardwareSetup (file);
+	m_trigger.Print ("PrintHardwareSetup", file);
+	//m_trigger.PrintHardwareSetup (file);
 }
 
 //-----------------------------------------------------------------------------

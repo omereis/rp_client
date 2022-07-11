@@ -6,6 +6,8 @@
 #include "misc.h"
 #include "trim.h"
 
+#include <string.h>
+
 using namespace std;
 
 //-----------------------------------------------------------------------------
@@ -153,8 +155,72 @@ void PrintRuntimeError (std::exception &exp, const std::string &strProcedure, FI
 }
 
 //-----------------------------------------------------------------------------
+void PrintRuntimeError (const char szMessage[], FILE *file)
+{
+	fprintf (file, "Runtime error %s:\n", szMessage);
+}
+
+//-----------------------------------------------------------------------------
 void PrintRuntimeError (std::exception &exp, const char szProcedure[], FILE *file)
 {
 	fprintf (file, "Runtime error in %s:\n%s", szProcedure, exp.what());
 }
+
+#ifdef	_RED_PITAYA_HW
+
+//-----------------------------------------------------------------------------
+std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src)
+{
+	std::string strSource;
+
+    if (trigger_src == RP_TRIG_SRC_DISABLED) {
+		//fprintf (stderr, "RP_TRIG_SRC_DISABLED\n");
+		strSource = "RP_TRIG_SRC_DISABLED";
+	}
+    else if (trigger_src == RP_TRIG_SRC_NOW)
+		strSource = "RP_TRIG_SRC_NOW";
+    else if (trigger_src == RP_TRIG_SRC_CHA_PE)
+		strSource = "RP_TRIG_SRC_CHA_PE";
+    else if (trigger_src == RP_TRIG_SRC_CHA_NE)
+		strSource = "RP_TRIG_SRC_CHA_NE";
+    else if (trigger_src == RP_TRIG_SRC_CHB_PE)
+		strSource = "RP_TRIG_SRC_CHB_PE";
+    else if (trigger_src == RP_TRIG_SRC_CHB_NE)
+		strSource = "RP_TRIG_SRC_CHB_NE";
+    else if (trigger_src == RP_TRIG_SRC_EXT_PE)
+		strSource = "RP_TRIG_SRC_EXT_PE";
+    else if (trigger_src == RP_TRIG_SRC_EXT_NE)
+		strSource = "RP_TRIG_SRC_EXT_NE";
+    else if (trigger_src == RP_TRIG_SRC_AWG_PE)
+		strSource = "RP_TRIG_SRC_AWG_PE";
+    else if (trigger_src == RP_TRIG_SRC_AWG_NE)
+		strSource = "RP_TRIG_SRC_AWG_NE";
+	else
+		strSource = "";
+	//fprintf (stderr, "GetHardwareTriggerName, returning '%s'\n", strSource.c_str());
+	return (strSource);
+}
+
+//-----------------------------------------------------------------------------
+std::string GetHardwareTriggerName ()
+{
+	rp_acq_trig_src_t trigger_src;
+
+	rp_AcqGetTriggerSrc(&trigger_src);
+	std::string strSource = GetHardwareTriggerName (trigger_src);
+	return (strSource);
+}
+
+//-----------------------------------------------------------------------------
+void PrintTriggerSource (const char sz[]/*=NULL*/)
+{
+	rp_acq_trig_src_t trigger_src = RP_TRIG_SRC_AWG_NE;
+
+	if (strlen(sz) > 0)
+		fprintf (stderr, "%s\n", sz);
+	std::string strSource = GetHardwareTriggerName ();
+
+	//fprintf (stderr, "trigger source: %s\n", strSource.c_str());
+}
+#endif
 //---------------------------------------------------------------------------

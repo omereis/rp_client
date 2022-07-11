@@ -12,8 +12,29 @@
     <script>
     </script>
 <body style="background-color: #82e4f5;">
+<script>
+	window.onload=function() {
+		var txtTarget = 'Red Pitaya Card';
+		var fIsRedPitaya = {{ is_red_pitaya }};
+		var color="#FF0000";
+		console.log ('On Load');
+		//if ({{ is_red_pitaya }})
+		if (fIsRedPitaya )
+			txtTarget = 'Red Pitaya Card';
+		else {
+			txtTarget = 'Docker Container';
+			color="#00FF00";
+		}
+		var p = document.getElementById('pTarget');
+		p.innerText = txtTarget;
+		p.style.backgroundColor = color;
+		console.log ({{is_red_pitaya}});
+	}
+</script>
         
     </body>
+	<h3><p id="pTarget"></p></h3>
+<!-- Running on {_ target _} -->
     <table style="background-color: #8ec7eb;width:100%">
         <tr>
             <td style="width:30%">
@@ -29,11 +50,21 @@
                         Trigger
                     </th>
                     <tr>
+						<td colspan="2" style="text-align: center;">
+                           <input type="checkbox" id="cboxTriggerEnabled" value="Enabled" onclick="onTriggerEnabledClick()">Trigger Enabled
+						</td>
+                    </tr>
+                    <tr>
+						<td colspan="2" style="text-align: center;">
+                           <input type="button" id="btnTriggerNow" value="Trigger Now!" onclick="onTriggerNowClick()" disabled="disabled">
+						</td>
+                    </tr>
+                    <tr>
                         <td>
                             Direction
                         </td>
                         <td>
-                            <select id="comboTriggerDir">
+                            <select id="comboTriggerDir" disabled="disabled">
                                 <option value=""></option>"
                                 <option value="Up">Up</option>"
                                 <option value="Down">Down</option>"
@@ -42,10 +73,21 @@
                     </tr>
                     <tr>
                         <td>
+                            Type
+                        </td>
+                        <td>
+                            <select id="comboTriggerType" disabled="disabled">
+                                <option value="Level">Level</option>"
+                                <option value="Edge">Edge</option>"
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             Input #
                         </td>
                         <td>
-                            <select id="comboTriggerIn">
+                            <select id="comboTriggerIn" disabled="disabled">
                                 <option value=""></option>"
                                 <option value="In1">Input #1</option>"
                                 <option value="In2">Input #2</option>"
@@ -57,8 +99,8 @@
 							Level
 						</td>
 						<td>
-							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;">
-							<select id="comboTriggerVoltage">
+							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;" disabled="disabled">
+							<select id="comboTriggerVoltage" disabled="disabled">
 								<option id="optTrgMilli" value="1e-3">Millivolts</option>
 								<option id="optTrgVolt" value="1">Volts</option>
 							</select>
@@ -69,7 +111,7 @@
                             <input type="button" value="Read Card Trigger" onclick="onReadCardTriggerClick ()">
                         </td>
                         <td>
-                            <input type="button" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()">
+                            <input type="button" id="btnUpdateTrigger" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()" disabled="disabled">
                         </td>
                     </tr>
                 </table>
