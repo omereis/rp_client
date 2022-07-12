@@ -657,5 +657,7 @@ void TRedPitayaTrigger::PrintHardwareSetup (FILE *file)
 	fprintf (file, "    Source: %s\n", GetHardwareTriggerSource ().c_str());
 	//fprintf (stderr, "======================================================\n");
 }
+
+//-----------------------------------------------------------------------------
 #endif
 //-----------------------------------------------------------------------------
