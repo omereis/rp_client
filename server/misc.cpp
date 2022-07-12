@@ -166,6 +166,12 @@ void PrintRuntimeError (std::exception &exp, const char szProcedure[], FILE *fil
 	fprintf (file, "Runtime error in %s:\n%s", szProcedure, exp.what());
 }
 
+//-----------------------------------------------------------------------------
+void PrintBool (const char *szTitle, bool fValue)
+{
+	fprintf (stderr, "%s: %s\n", szTitle, fValue ? "true" : "false");
+}
+
 #ifdef	_RED_PITAYA_HW
 
 //-----------------------------------------------------------------------------
@@ -221,6 +227,29 @@ void PrintTriggerSource (const char sz[]/*=NULL*/)
 	std::string strSource = GetHardwareTriggerName ();
 
 	//fprintf (stderr, "trigger source: %s\n", strSource.c_str());
+}
+
+//-----------------------------------------------------------------------------
+rp_acq_decimation_t GetHardwareDecimationFromName(const std::string &strDecimationSrc)
+{
+	std::string strDecimation = ToLower (strDecimationSrc);
+	rp_acq_decimation_t decimation;
+
+	if (strDecimation == "1")
+		decimation = RP_DEC_1;
+	if (strDecimation == "8")
+		decimation = RP_DEC_8;
+	else if (strDecimation == "8")
+		decimation = RP_DEC_64;
+	else if (strDecimation == "8")
+		decimation = RP_DEC_1024;
+	else if (strDecimation == "8")
+		decimation = RP_DEC_8192;
+	else if (strDecimation == "8")
+		decimation = RP_DEC_65536;
+	else
+		decimation = RP_DEC_1;
+	return (decimation);
 }
 #endif
 //---------------------------------------------------------------------------
