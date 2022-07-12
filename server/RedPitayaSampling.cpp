@@ -132,31 +132,36 @@ Json::Value TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
     }
     return (jNew);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
 int TRedPitayaSampling::GetBufferSize () const
 {
     return (m_nBufferSize);
 }
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSampling::SetBufferSize (const std::string &strSize) {
     SetBufferSize(std::stoi(strSize));
 }
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSampling::SetBufferSize (int nSize)
 {
     m_nBufferSize = nSize;
 }
+
 //-----------------------------------------------------------------------------
 int TRedPitayaSampling::GetSignalPoints () const
 {
     return (m_nSignalPoints);
 }
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSampling::SetSignalPoints (int nPoints)
 {
     m_nSignalPoints = max (1, nPoints);
 }
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSampling::SetSignalPoints (const std::string &strPoints)
 {
@@ -170,6 +175,18 @@ void TRedPitayaSampling::SetSignalPoints (const std::string &strPoints)
     }
     SetSignalPoints (nPoints);
 }
+
+#ifdef	_RED_PITAYA_HW
+
+#include "misc.h"
+//-----------------------------------------------------------------------------
+rp_acq_decimation_t TRedPitayaSampling::GetHardwareDecimation()
+{
+	//fprintf (stderr, "Decimation: %s\n", GetDecimation ().c_str());
+	return (GetHardwareDecimationFromName(GetDecimation ()));
+}
+
+#endif
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
