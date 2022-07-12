@@ -30,6 +30,10 @@ public:
     Json::Value AsJson();
     Json::Value UpdateFromJson(Json::Value &jSetup);
 
+#ifdef	_RED_PITAYA_HW
+	rp_acq_decimation_t GetHardwareDecimation();
+#endif
+
     string GetRate () const;
     void SetRate (const string &strRate);
     string GetDecimation () const;
