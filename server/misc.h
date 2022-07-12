@@ -25,10 +25,12 @@ float VectorAverage (const TFloatVec &vec);
 void PrintRuntimeError (const char szMessage[], FILE *file=stderr);
 void PrintRuntimeError (std::exception &exp, const char szChar[], FILE *file=stderr);
 void PrintRuntimeError (std::exception &exp, const std::string &strProcedure, FILE *file=stderr);
+void PrintBool (const char *szTitle, bool fValue);
 #ifdef	_RED_PITAYA_HW
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src);
 //std::string GetHardwareTriggerName ();
 //std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src);
 void PrintTriggerSource (const char sz[]);
+rp_acq_decimation_t GetHardwareDecimationFromName(const std::string &strDecimationSrc);
 #endif
 #endif
