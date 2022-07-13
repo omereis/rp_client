@@ -39,8 +39,8 @@ public:
 	void PrintHardwareSetup (FILE *file=stderr);
 	std::string GetHardwareTriggerSource ();
 	std::string GetHardwareTriggerSource (rp_acq_trig_src_t trigger_src);
-	float GetHardwareTriggerLevel ();
-	rp_channel_trigger_t GetHardwareTriggerChannel ();
+	float GetHardwareTriggerLevel () const;
+	rp_channel_trigger_t GetHardwareTriggerChannel () const;
 	rp_acq_trig_src_t GetRequiredTriggerSource ();
 	rp_channel_trigger_t GetRequiredTriggerChannel ();
 #endif

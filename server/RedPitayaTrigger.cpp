@@ -380,7 +380,7 @@ bool TRedPitayaTrigger::LoadFromHardware ()
 		if (rp_AcqGetTriggerSrc(&dir) == RP_OK)
 			SetDir (dir);
 		fprintf (stderr, "RedPitayaTrigger.cpp:389, Trigger level: %s\n", GetLevel().c_str());
-		f = TRedPitayaTrigger::GetHardwareTriggerLevel ();
+		f = GetHardwareTriggerLevel ();
     	SetLevel (f);
 		fLoad = true;
 	}
@@ -616,7 +616,7 @@ std::string TRedPitayaTrigger::GetHardwareTriggerSource (rp_acq_trig_src_t trigg
 }
 
 //-----------------------------------------------------------------------------
-float TRedPitayaTrigger::GetHardwareTriggerLevel ()
+float TRedPitayaTrigger::GetHardwareTriggerLevel () const
 {
 	rp_channel_trigger_t channel = GetHardwareTriggerChannel ();
 	float fLevel = 0;
@@ -629,7 +629,7 @@ float TRedPitayaTrigger::GetHardwareTriggerLevel ()
 }
 
 //-----------------------------------------------------------------------------
-rp_channel_trigger_t TRedPitayaTrigger::GetHardwareTriggerChannel ()
+rp_channel_trigger_t TRedPitayaTrigger::GetHardwareTriggerChannel () const
 {
 	rp_channel_trigger_t trigger_channel;
 	rp_acq_trig_src_t trigger_src;
