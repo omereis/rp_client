@@ -172,8 +172,26 @@ void PrintBool (const char *szTitle, bool fValue)
 	fprintf (stderr, "%s: %s\n", szTitle, fValue ? "true" : "false");
 }
 
-#ifdef	_RED_PITAYA_HW
+/*
+//-----------------------------------------------------------------------------
+float VectorAverage (const TFloatVec &vPulse)
+{
+	TFloatVec::const_iterator i;
+	double dSum = 0;
+	float fAverage = 0;
 
+	if (vPulse.size() > 0) {
+		i = vPulse.begin();
+		dAverage = *i;
+		for (++i, i != vPulse.end() ; i++)
+			dAverage += *i;
+		fAverage = (float) dSum / vPulse.size();
+	}
+	return (fAverage);
+}
+*/
+
+#ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src)
 {
@@ -251,5 +269,61 @@ rp_acq_decimation_t GetHardwareDecimationFromName(const std::string &strDecimati
 		decimation = RP_DEC_1;
 	return (decimation);
 }
+
+/*
+//---------------------------------------------------------------------------
+bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
+{
+    uint32_t buff_size = 16384;
+    float *buff = (float *)malloc(buff_size * sizeof(float));
+	int16_t* auiBuffer = (int16_t*) calloc (buff_size, sizeof (auiBuffer[0]));
+	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
+	bool fTrigger=false, fTimeout=false;
+	clock_t cStart;
+	double dDiff;
+
+    //rp_AcqReset();
+	//rp_AcqSetDecimation(RP_DEC_1);
+	rp_AcqSetDecimation(rp_setup.GetHardwareDecimation());
+
+	float fLevel = rp_setup.GetHardwareTriggerLevel();
+	//fprintf (stderr, "Trigger level (#642): %g\n", fLevel);
+	rp_AcqSetTriggerLevel(rp_setup.GetHardwareTriggerChannel(), rp_setup.GetHardwareTriggerLevel());
+	//rp_AcqSetTriggerLevel(RP_T_CH_1, -15e-3);
+	rp_AcqSetSamplingRate (rp_setup.GetHardwareSamplingRate());
+	//rp_AcqSetSamplingRate (RP_SMP_125M);
+    rp_AcqSetTriggerDelay(0);
+    rp_AcqStart();
+	usleep(1);
+	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+	cStart = clock();
+	while((fTrigger == false) && (fTimeout == false)){
+		rp_AcqGetTriggerState(&state);
+		if (state == RP_TRIG_STATE_TRIGGERED)//{
+			fTrigger =true;
+		else
+			fprintf (stderr, "No Trigger\r");
+		dDiff = (clock() - cStart);
+		dDiff /= (double) CLOCKS_PER_SEC;
+		if (dDiff >= 3)
+			fTimeout = true;
+	}
+    if (fTrigger) {
+	    uint32_t uiTriggerPos, uiLen=buff_size, n;
+        TFloatVec::iterator i;
+	    rp_AcqGetWritePointerAtTrig (&uiTriggerPos);
+	    rp_AcqGetDataV (RP_CH_1, uiTriggerPos, &uiLen, buff);
+	    //rp_AcqGetDataRaw (RP_CH_1, uiTriggerPos, &uiLen, auiBuffer);
+        vPulse.resize (buff_size, 0);
+        for (n=0, i=vPulse.begin() ; n < (int) buff_size ; n++, i++) //{
+			*i = buff[n];
+			//*i = auiBuffer[n];
+    }
+    else
+    	printf ("Timeout: %g\n", dDiff);
+    rp_AcqStop();
+    return (fTrigger);
+}
+*/
 #endif
 //---------------------------------------------------------------------------
