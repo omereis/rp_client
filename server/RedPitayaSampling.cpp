@@ -179,13 +179,67 @@ void TRedPitayaSampling::SetSignalPoints (const std::string &strPoints)
 #ifdef	_RED_PITAYA_HW
 
 #include "misc.h"
+#include "trim.h"
 //-----------------------------------------------------------------------------
-rp_acq_decimation_t TRedPitayaSampling::GetHardwareDecimation()
+rp_acq_decimation_t TRedPitayaSampling::GetHardwareDecimation() const
 {
 	//fprintf (stderr, "Decimation: %s\n", GetDecimation ().c_str());
 	return (GetHardwareDecimationFromName(GetDecimation ()));
 }
 
+//-----------------------------------------------------------------------------
+rp_acq_sampling_rate_t GetSamplingRate (const std::string &strRate)
+{
+	rp_acq_sampling_rate_t rate;
+
+	try {
+		//fprintf (stderr, "GetSamplingRate, strRate: %s\n", strRate.c_str());
+		if (strRate.length() > 0) {
+			double d = stod (strRate);
+
+			if (d == 125e6) {
+				rate = RP_SMP_125M;
+		//fprintf (stderr, "Sampling Rate: 125M\n");
+			}
+			else if (d == 15.625e6) {
+				rate = RP_SMP_15_625M;
+		//fprintf (stderr, "Sampling Rate: 15.625M\n");
+			}
+			if (d == 1.953e6) {
+				rate = RP_SMP_1_953M;
+		//fprintf (stderr, "Sampling Rate: 1.953M\n");
+			}
+			if (d == 122070) {
+				rate = RP_SMP_122_070K;
+		//fprintf (stderr, "Sampling Rate: 122.070K\n");
+			}
+			if (d == 15258) {
+				rate = RP_SMP_15_258K;
+		//fprintf (stderr, "Sampling Rate: 15.258K\n");
+			}
+			if (d == 1907) {
+				rate = RP_SMP_1_907K;
+		//fprintf (stderr, "Sampling Rate: 1.907K\n");
+			}
+		}
+		else
+			rate = RP_SMP_125M;
+	}
+	catch (std::exception exp) {
+		PrintRuntimeError (exp, "'GetSamplingRate'");
+		rate = RP_SMP_125M;
+	}
+	//fprintf (stderr, "Sampling Rate: %s\n", strRate.c_str());
+	return (RP_SMP_125M);
+}
+
+//-----------------------------------------------------------------------------
+rp_acq_sampling_rate_t TRedPitayaSampling::GetHardwareSamplingRate() const
+{
+	rp_acq_sampling_rate_t rate;// = GetSamplingRate (GetRate());
+	rate = GetSamplingRate (GetRate());
+	return (rate);
+}
 #endif
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

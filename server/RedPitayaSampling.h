@@ -31,7 +31,8 @@ public:
     Json::Value UpdateFromJson(Json::Value &jSetup);
 
 #ifdef	_RED_PITAYA_HW
-	rp_acq_decimation_t GetHardwareDecimation();
+	rp_acq_decimation_t GetHardwareDecimation() const;
+	rp_acq_sampling_rate_t GetHardwareSamplingRate() const;
 #endif
 
     string GetRate () const;
