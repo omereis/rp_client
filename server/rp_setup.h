@@ -26,11 +26,17 @@ public:
     void Clear ();
 
 	void TriggerNow ();
+
+	Json::Value HandleBackground (Json::Value &jBkgnd);
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware (bool fInit=true);
 	bool SetHardwareTrigger();
 	bool SetHardwareTrigger(const TRedPitayaTrigger &trigger);
 	bool PrintHardwareSetup (FILE *file=stderr);
+	rp_acq_decimation_t GetHardwareDecimation() const;
+	rp_channel_trigger_t GetHardwareTriggerChannel() const;
+	float GetHardwareTriggerLevel() const;
+	rp_acq_sampling_rate_t GetHardwareSamplingRate() const;
 #endif
     bool LoadFromJson(const string &strFile);
     bool SaveToJson (const std::string &strFile);
@@ -57,6 +63,7 @@ public:
     bool GetPsdOnOff () const;
 
     double GetBackground() const;
+	void SetBackground (const string &strBackground);
     void SetBackground (double dBackground);
     void SetBackgroundFromJson (Json::Value jBkgnd);
 protected:

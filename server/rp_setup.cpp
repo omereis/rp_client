@@ -168,6 +168,7 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
         jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
 		if (!jSetup["background"].isNull()) {
 			std::string strBkgnd = jSetup["background"].asString();
+			fprintf (stderr, "UpdateFromJson, #170, strBkgnd: %s\n", strBkgnd.c_str());
 			double d = stod (strBkgnd);
 			SetBackground (d);
 			fprintf (stderr, "New Background: %g\n", GetBackground());
@@ -297,6 +298,18 @@ double TRedPitayaSetup::GetBackground() const
 }
 
 //-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetBackground (const string &strBackground)
+{
+	try {
+		double dBackground = stod (strBackground);
+		SetBackground (dBackground);
+	}
+    catch (std::exception &exp) {
+		PrintRuntimeError (exp, "'TRedPitayaSetup::SetBackground'");
+    }
+}
+
+//-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetBackground (double dBackground)
 {
     m_dBackground = dBackground;
@@ -318,6 +331,36 @@ void TRedPitayaSetup::SetBackgroundFromJson (Json::Value jBkgnd)
 void TRedPitayaSetup::TriggerNow ()
 {
 	m_trigger.TriggerNow ();
+}
+
+#include "rp_server.h"
+//-----------------------------------------------------------------------------
+Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd)
+{
+	Json::Value jSetup;
+	Json::Value jSet = jBkgnd["set"];
+
+
+	if (!jBkgnd.isNull()) {
+		if (!jSet.isNull()) {
+			SetBackground (jSet.asString());
+		}
+		if (jBkgnd.isString()) {
+			string strCommand = ToLower (jBkgnd.asString());
+			//if (strCommand == "read")
+    			//jSetup["background"] = DoubleAsString (GetBackground());
+#ifdef	_RED_PITAYA_HW
+			if (strCommand == "measure") {
+                TFloatVec vPulse;
+                if (ReadHardwareSamples (*this, vPulse)) {
+                    SetBackground (VectorAverage (vPulse));
+                }
+            }
+#endif
+		}
+	}
+    jSetup["background"] = DoubleAsString (GetBackground());
+	return (jSetup);
 }
 
 //-----------------------------------------------------------------------------
@@ -363,6 +406,29 @@ bool TRedPitayaSetup::PrintHardwareSetup (FILE *file)
 	//m_trigger.PrintHardwareSetup (file);
 }
 
+//-----------------------------------------------------------------------------
+rp_acq_decimation_t TRedPitayaSetup::GetHardwareDecimation() const
+{
+	return (m_sampling.GetHardwareDecimation());
+}
+
+//-----------------------------------------------------------------------------
+rp_channel_trigger_t TRedPitayaSetup::GetHardwareTriggerChannel() const
+{
+	return (m_trigger.GetHardwareTriggerChannel());
+}
+
+//-----------------------------------------------------------------------------
+float TRedPitayaSetup::GetHardwareTriggerLevel() const
+{
+	return (m_trigger.GetHardwareTriggerLevel());
+}
+
+//-----------------------------------------------------------------------------
+rp_acq_sampling_rate_t TRedPitayaSetup::GetHardwareSamplingRate() const
+{
+	return (m_sampling.GetHardwareSamplingRate());
+}
 //-----------------------------------------------------------------------------
 #endif
 //-----------------------------------------------------------------------------
