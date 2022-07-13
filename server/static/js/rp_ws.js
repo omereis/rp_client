@@ -433,8 +433,7 @@ function sendSamplingCommand (cmd) {
     msg['sampling'] = cmd;
     sendMesssageThroughFlask(msg, readSamplingStatus);
 }
-/*
-*/
+
 //-----------------------------------------------------------------------------
 function setupReadSignal (reply) {
     var cell = document.getElementById("cellSignal");
@@ -449,8 +448,20 @@ function setupReadSignal (reply) {
 		layout["title"] = "Signal";
 		layout["xaxis"] = {};
 		layout["yaxis"] = {};
-		layout.xaxis["title"] = "Time [uSec]";
+		layout['autosize'] = true;
+		//layout.xaxis["title"] = "Time [uSec]";
 		layout.yaxis["title"] = "Voltage";
+		var mrgn = {};
+		var left_title = {};
+		left_title ['text'] = "Time [uSec]";
+		left_title ['font'] = {size:12};
+		layout.xaxis["title"] = left_title;//"Time [uSec]";
+		mrgn['l'] = 50;
+		mrgn['r'] = 50;
+		mrgn['b'] = 25;
+		mrgn['t'] = 25;
+		mrgn['pad'] = 1;
+		layout['margin'] = mrgn;
         for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
             yData[n] = parseFloat (aPulseData[n]);
             //yRaw[n] = parseFloat (aPulseRaw[n]);
@@ -831,5 +842,42 @@ function onTriggerNowClick () {
     msg['setup'] = msgCmd;
     sendMesssageThroughFlask(msg, setupHandler);
 }
+//-----------------------------------------------------------------------------
+function sendBackgroundCommand(bkgnd_cmd) {
+    var msg = new Object, msgCmd = new Object;
+    msgCmd['background'] = bkgnd_cmd;
+    msg['setup'] = msgCmd;
+    sendMesssageThroughFlask(msg, handlerBackground);
+}
 
+//-----------------------------------------------------------------------------
+function onSetBackgroundClick() {
+    var bkgnd = uploadBackground();
+    sendBackgroundCommand ({'set' : bkgnd});
+}
+
+//-----------------------------------------------------------------------------
+function onReadBackgroundClick() {
+    sendBackgroundCommand ('read');
+}
+
+//-----------------------------------------------------------------------------
+function onMeasureBackgroundClick() {
+    sendBackgroundCommand ('measure');
+}
+
+//-----------------------------------------------------------------------------
+function handlerBackground (reply) {
+    var txt = document.getElementById("txtReply");
+    if (txt != null)
+        txt.value = reply;
+    try {
+        var dictSetup = JSON.parse(reply).setup;
+		if (dictSetup.hasOwnProperty('background'))
+			downloadBackground (dictSetup.background);
+    }
+    catch (err) {
+        console.log(err);
+    }
+}
 //-----------------------------------------------------------------------------
