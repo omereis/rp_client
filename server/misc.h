@@ -13,6 +13,7 @@
 #ifdef	_RED_PITAYA_HW
 #include "rp.h"
 #endif
+//#include "rp_setup.h"
 
 //---------------------------------------------------------------------------
 std::string StringifyJson (const Json::Value &val);
@@ -26,11 +27,13 @@ void PrintRuntimeError (const char szMessage[], FILE *file=stderr);
 void PrintRuntimeError (std::exception &exp, const char szChar[], FILE *file=stderr);
 void PrintRuntimeError (std::exception &exp, const std::string &strProcedure, FILE *file=stderr);
 void PrintBool (const char *szTitle, bool fValue);
+//float VectorAverage (const TFloatVec &vPulse);
 #ifdef	_RED_PITAYA_HW
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src);
 //std::string GetHardwareTriggerName ();
 //std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src);
 void PrintTriggerSource (const char sz[]);
 rp_acq_decimation_t GetHardwareDecimationFromName(const std::string &strDecimationSrc);
+//bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 #endif
 #endif
