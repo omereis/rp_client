@@ -29,6 +29,9 @@
 		p.innerText = txtTarget;
 		p.style.backgroundColor = color;
 		console.log ({{is_red_pitaya}});
+		var divChart = document.getElementById ("chartSignal");
+		if (divChart != null)
+			divChart.style.height = 400;
 	}
 </script>
         
@@ -120,17 +123,10 @@
                         Sampling
                     </th>
                     <tr>
-                    <td>
-                        Buffer
-                    </td>
-                    <td>
-                        <input type="text" id="txtBuffer" value="10" style="width:75px;text-align: center;"> 
-                        <select id="comboSignalBufferUnits">
-                            <option value="1e-9">Nano</option>
-                            <option value="1e-6" selected>&mu;</option>
-                            <option value="1e-3">Milli</option>
-                        </select> Seconds
-                    </td>
+                    <td colspan="2">
+                        Update Interval
+                        <input type="text" id="txtInterval" value="1000" style="width:75px;text-align: center;"> milliseconds<br>
+                </td>
                     </tr>
                     <tr>
                         <td>Rate</td>
@@ -179,14 +175,6 @@
 					    </td>
                     </tr>
                     <tr>
-					    <td>
-						    Background
-                        </td>
-                        <td>
-						    <input type="text" id="txtBackground" style="width:75px;text-align: center;" value="0.1">
-					    </td>
-                    </tr>
-                    <tr>
                         <td>
                             Smoothing Window:
                         </td>
@@ -208,6 +196,29 @@
                             <input type="text" id="txtScanRate" style="width:50px;text-align: center;" value="0.5"> Seconds
                         </td>
                         </td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">
+                            Background
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="button" value="Read" onclick="onReadBackgroundClick()">
+                        </td>
+                        <td>
+                            <input type="button" value="Measure" onclick="onMeasureBackgroundClick()">
+                        </td>
+                    </tr>
+                    <tr>
+					    <td colspan="2">
+						    <input type="button" value="Set" onclick="onSetBackgroundClick()">
+<!--
+                        </td>
+                        <td>
+-->
+                            <input type="text" id="txtBackground" style="width:75px;text-align: center;" value="0.1">
+					    </td>
                     </tr>
         </table>
             </td>
@@ -231,7 +242,10 @@
                     </tr>
                     <tr>
                         <td id="cellSignal" colspan="3">
-                            <div id="chartSignal" style="width:600px;height:250px;"></div>
+                            <!--<div id="chartSignal" style="width:600px;height:250px;"></div>
+                            <div id="chartSignal" style="width:600px;height:250px;resize:both;overflow:auto"></div>
+                            <div id="chartSignal" style="resize:both;overflow:auto;min-height:200px;"></div>-->
+                            <div id="chartSignal" style="resize:both;overflow:auto;"></div>
                         </td>
                     </tr>
                     <tr>
@@ -250,9 +264,14 @@
                             <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
                         </td>
                         <td colspan="2">
-							Update Interval
-                        	<input type="text" id="txtInterval" value="1000" style="width:75px;text-align: center;"> milliseconds<br>
-						</td>
+                            Buffer
+                            <input type="text" id="txtBuffer" value="25" style="width:75px;text-align: center;"> 
+                            <select id="comboSignalBufferUnits">
+                                <option value="1e-9">Nano</option>
+                                <option value="1e-6" selected>&mu;</option>
+                                <option value="1e-3">Milli</option>
+                            </select> Seconds
+                        </td>
                     </tr>
                 </table>
             </td>
