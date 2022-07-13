@@ -20,6 +20,7 @@ using namespace std;
 #include "bd_types.h"
 #include "calc_mca.h"
 #include "pulse_info.h"
+#include "rp_server.h"
 
 #include "jsoncpp/json/json.h"
 //-----------------------------------------------------------------------------
@@ -40,6 +41,7 @@ static const char *g_szError     = "error";
 static const char *g_szReset     = "reset";
 static const char *g_szMCA       = "MCA";
 static const char *g_szSaveMCA   = "SaveMca";
+static const char *g_szDefaultSetup = "rp_setup.json";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 //#ifdef	__HARDWARE
@@ -74,6 +76,7 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
+//bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 
 //-----------------------------------------------------------------------------
 std::string ret_str()
@@ -89,14 +92,14 @@ int main1 ()
 {
 #ifdef  _RED_PITAYA_HW
 	rp_Init();
-#endif
+//#endif
 				PrintTriggerSource ("rp_server.cpp:139");
 	fprintf (stderr, "running\n");
 	std::string str = ret_str();
 	fprintf (stderr, "main, str: '%s'\n", str.c_str());
 	std::string strSrc = GetHardwareTriggerName (RP_TRIG_SRC_DISABLED);
 	fprintf (stderr, "main, strSrc: '%s'\n", strSrc.c_str());
-#ifdef  _RED_PITAYA_HW
+//#ifdef  _RED_PITAYA_HW
 	rp_Release();
 #endif
 }
@@ -108,7 +111,7 @@ int main ()
 #ifdef  _RED_PITAYA_HW
 	rp_Init();
 #endif
-    bool fRun=true;
+    bool fRun=true, fUpdateHardware=false;
     //  Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
@@ -119,16 +122,19 @@ int main ()
     string strReply;
     Timer t;
 
-    Json::Value jSetup = g_rp_setup.AsJson();
+	fprintf (stderr, "Loading Setup\n");
 #ifdef	_RED_PITAYA_HW
-	fprintf (stderr, "Loading Hardware Setup\n");
-	g_rp_setup.LoadFromHardware (true);
+	fUpdateHardware = true;
+	//fprintf (stderr, "Loading Hardware Setup\n");
+	//g_rp_setup.LoadFromHardware (true);
 #else
-    g_rp_setup.LoadFromJson("rp_setup.json");
 #endif
+    g_rp_setup.LoadFromJson(g_szDefaultSetup);// "rp_setup.json");
+    Json::Value jSetup = g_rp_setup.AsJson();
+	g_rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
     g_mca_calculator.SetParams (g_rp_setup.GetMcaParams());
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
-    t.setInterval (OnTimerTick, 1000);
+    t.setInterval (OnTimerTick, 100);
     while (fRun) {
         char buffer [1024];
         zmq_recv (responder, buffer, 1024, 0);
@@ -196,58 +202,51 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca
 		fUpdateHardware = true;
 #endif
 		std::string strSetup = StringifyJson (jSetup);
+		fprintf (stderr, "Setup Message: %s\n", strSetup.c_str());
         strCommand = ToLower(jSetup["command"].asString());
 		fprintf (stderr, "Command: %s\n", strCommand.c_str());
+		Json::Value jBkgnd = jSetup["background"];
 		if (strCommand == "update") {
-            jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
 #ifdef	_RED_PITAYA_HW
-			//PrintTriggerSource ("rp_server.cpp:196, AFTER iLoadFromJson");
+    		rp_AcqReset();
 #endif
-/*
-			mca_calculator.SetParams (rp_setup.GetMcaParams());
-            rp_setup.SaveToJson("rp_setup.json");
-*/
+            jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
 		}
 		else if (strCommand == "trigger_now") {
 			rp_setup.TriggerNow ();
 			jNew = rp_setup.TriggerAsJson();
 		}
+		else if (!jBkgnd .isNull()) {
+			fprintf (stderr, "\n\nBackground Command\n");
+			jNew = rp_setup.HandleBackground (jBkgnd);
+			if (jBkgnd.isString()) {
+				string sBkgnd = jSetup["background"].asString();
+				fprintf (stderr, "    Command content:%s\n", sBkgnd.c_str());
+			} 
+			else {
+				string s = StringifyJson (jBkgnd);
+				fprintf (stderr, "    Command content:%s\n", s.c_str());
+			}
+		}
+/*
 #ifdef	_RED_PITAYA_HW
 		fprintf (stderr, "\nLoading from hardware\n");
-		//PrintTriggerSource ("rp_server.cpp:193, before LoadFromHardware");
-// DEBUG
-		//jNew["test"] = "fail";
-		//return (jNew);
-
-		//rp_setup.PrintHardwareSetup ();
-/*
-// DEBUG
-		jNew["test"] = "fail";
-		fprintf (stderr, "In HandleSetup\n");
-		return (jNew);
-*/
 		rp_setup.LoadFromHardware (true);
-		//PrintTriggerSource ("rp_server.cpp:196, AFTER LoadFromHardware");
-		//fprintf (stderr, "Hardware setup loaded\n");
-		//rp_setup.PrintHardwareSetup ();
 #endif
+*/
 		if (strCommand == "read_trigger") {
 			fprintf (stderr, "Writing trigger\n");
 			jNew = rp_setup.TriggerAsJson();
 		}
 		else if (strCommand == "update_trigger")
             jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
-        	//jNew = rp_setup.AsJson();
-			//jNew = rp_setup.UpdateTrigger(jSetup);
 		else
         	jNew = rp_setup.AsJson();
 		strReply = StringifyJson (jNew);
 #ifdef  _RED_PITAYA_HW
-		//fprintf (stderr, "printing Hardware setup\n");
-		//rp_setup.PrintHardwareSetup ();
 #endif
+		rp_setup.SaveToJson (g_szDefaultSetup);
 		fprintf (stderr, "Setup reply JSON:\n%s\n\n", strReply.c_str());
-		//fprintf (stderr, "----------------------------------------------------------\n");
     }
     catch (std::exception &err) {
         jNew = rp_setup.AsJson();
@@ -271,6 +270,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     try {
 		if (jRead["signal"].isNull() == false) {
 			string strSignalLength = jRead["signal"].asString();
+			fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
 			double dLen = stod (strSignalLength);
             if (dLen > 0) {
             	jAllPulses["signal"] = ReadSignal (dLen);
@@ -382,7 +382,9 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
         fCommandOK = true;
 		strResult = StringifyJson(jSampling);
 		if (!jSampling["signal"].isNull()) {
+			//fprintf (stderr, "HandleSampling, 385\n");
 			rp_setup.SetSamplingOnOff (str_to_bool (ToLower (jSampling["signal"].asString())));
+			//fprintf (stderr, "HandleSampling, 387\n");
 		}
 		if (!jSampling["mca"].isNull()) {
 			rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));
@@ -400,6 +402,7 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		jStatus["psd"] = rp_setup.GetPsdOnOff ();
 		jResult["status"] = jStatus;
 		jResult["buffer"] = to_string(g_vRawSignal.size());
+		//fprintf (stderr, "HandleSampling, 405\n");
     }
     catch (std::exception &exp) {
 		fprintf (stderr, "Runtime error in 'HandleSampling':\n%s\n", exp.what());
@@ -495,7 +498,10 @@ void OnTimerTick ()
     TPulseInfoVec piVec;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
+		//fprintf (stderr, "OnTimerTick, 501\n");
         if (GetNextPulse (vPulse)) {
+			//fprintf (stderr, "OnTimerTick, 503\n");
+			//fprintf (stderr, "Pulse read: %d\n", vPulse.size());
             if (GetPulseParams (vPulse, piVec)) {
                 g_vPulsesInfo.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
             	if (g_rp_setup.GetMcaOnOff())
@@ -611,13 +617,78 @@ bool GetNextPulse (TFloatVec &vPulse)
 {
     bool fPulse = false;
 #ifdef  _RED_PITAYA_HW
+    fPulse = ReadHardwareSamples (g_rp_setup, vPulse);
+	//PrintBool ("GetNextPulse:616", fPulse);
 #else
     fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
 #endif
     return (fPulse);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+#ifdef  _RED_PITAYA_HW
+bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
+{
+    uint32_t buff_size = 16384;
+    float *buff = (float *)malloc(buff_size * sizeof(float));
+	int16_t* auiBuffer = (int16_t*) calloc (buff_size, sizeof (auiBuffer[0]));
+	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
+	bool fTrigger=false, fTimeout=false;
+	clock_t cStart;
+	double dDiff;
+
+	//fprintf (stderr, "--------------------------------------\n");
+    //rp_AcqReset();
+	//rp_AcqSetDecimation(RP_DEC_1);
+	rp_AcqSetDecimation(rp_setup.GetHardwareDecimation());
+	//fprintf (stderr, "ReadHardwareSamples, 644\n");
+	float fLevel = rp_setup.GetHardwareTriggerLevel();
+	//fprintf (stderr, "Trigger level (#642): %g\n", fLevel);
+	rp_AcqSetTriggerLevel(rp_setup.GetHardwareTriggerChannel(), rp_setup.GetHardwareTriggerLevel());
+	//fprintf (stderr, "ReadHardwareSamples, 648\n");
+	//rp_AcqSetTriggerLevel(RP_T_CH_1, -15e-3);
+	rp_AcqSetSamplingRate (rp_setup.GetHardwareSamplingRate());
+	//fprintf (stderr, "ReadHardwareSamples, 651\n");
+	//rp_AcqSetSamplingRate (RP_SMP_125M);
+    rp_AcqSetTriggerDelay(0);
+	//fprintf (stderr, "ReadHardwareSamples, 650\n");
+    rp_AcqStart();
+	usleep(1);
+	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+	cStart = clock();
+	while((fTrigger == false) && (fTimeout == false)){
+		rp_AcqGetTriggerState(&state);
+		if (state == RP_TRIG_STATE_TRIGGERED)//{
+			fTrigger =true;
+		else
+			fprintf (stderr, "No Trigger\r");
+		dDiff = (clock() - cStart);
+		dDiff /= (double) CLOCKS_PER_SEC;
+		if (dDiff >= 3)
+			fTimeout = true;
+	}
+    if (fTrigger) {
+	    uint32_t uiTriggerPos, uiLen=buff_size, n;
+        TFloatVec::iterator i;
+	    rp_AcqGetWritePointerAtTrig (&uiTriggerPos);
+	    rp_AcqGetDataV (RP_CH_1, uiTriggerPos, &uiLen, buff);
+	    //rp_AcqGetDataRaw (RP_CH_1, uiTriggerPos, &uiLen, auiBuffer);
+        vPulse.resize (buff_size, 0);
+        for (n=0, i=vPulse.begin() ; n < (int) buff_size ; n++, i++) //{
+			*i = buff[n];
+			//*i = auiBuffer[n];
+    }
+    else
+    	printf ("Timeout: %g\n", dDiff);
+    rp_AcqStop();
+	//fprintf (stderr, "--------------------------------------\n");
+    return (fTrigger);
+}
+/*
+*/
+#endif
+
+//-----------------------------------------------------------------------------
 void SafeAddToMca (const TFloatVec &vPulse)
 {
 	mutex mtx;
