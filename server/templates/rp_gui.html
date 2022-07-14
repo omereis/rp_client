@@ -49,6 +49,11 @@
                         <td style="border:none;"><input type="button" value="Read Setup" onclick="onReadRedPitayaSetupClick()"></td>
                         <td style="border:none;"><input type="button" value="Update Setup" onclick="onUpdateRedPitayaSetupClick()"></td>
                     </tr>
+                    <tr>
+                        <td colspan="2">
+                            <input type="button" value="Measure Pulse Length" onclick="measureDataLength()">
+                        </td>
+                    </tr>
                     <th style="background-color: #5c7ee4;" colspan="2">
                         Trigger
                     </th>
@@ -271,6 +276,11 @@
                                 <option value="1e-6" selected>&mu;</option>
                                 <option value="1e-3">Milli</option>
                             </select> Seconds
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <div id="chartMca" style="resize:both;overflow:auto;"></div>
                         </td>
                     </tr>
                 </table>
