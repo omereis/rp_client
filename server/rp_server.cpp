@@ -76,6 +76,10 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
+TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2));
+//TFloatVec::iterator FindPulseStart (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground);
+//TFloatVec::iterator FindPulseEnd (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground);
+void PrintVector (const TFloatVec &vBuffer, const char szName[]);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 
 //-----------------------------------------------------------------------------
@@ -498,14 +502,12 @@ void OnTimerTick ()
     TPulseInfoVec piVec;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
-		//fprintf (stderr, "OnTimerTick, 501\n");
         if (GetNextPulse (vPulse)) {
-			//fprintf (stderr, "OnTimerTick, 503\n");
-			//fprintf (stderr, "Pulse read: %d\n", vPulse.size());
             if (GetPulseParams (vPulse, piVec)) {
                 g_vPulsesInfo.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
-            	if (g_rp_setup.GetMcaOnOff())
+            	if (g_rp_setup.GetMcaOnOff()) {
                 	g_mca_calculator.NewPulse (piVec);
+				}
                 g_vRawSignal.insert (g_vRawSignal.end(), vPulse.begin(), vPulse.end());
                 while (g_vRawSignal.size() > 10000)
                     g_vRawSignal.erase (g_vRawSignal.begin());
@@ -515,40 +517,103 @@ void OnTimerTick ()
 }
 
 //-----------------------------------------------------------------------------
+bool IsF1GreaterThenF2 (float f1, float f2)
+{
+	return (f1 >= f2);
+}
+
+//-----------------------------------------------------------------------------
+bool IsF1LessThenF2 (float f1, float f2)
+{
+	return (f1 >= f2);
+}
+
+//-----------------------------------------------------------------------------
 bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
 {
     bool fExtractParams=false;
     TPulseInfo piNew;
     TFloatVec vRawPulse, vPulse;
     bool fInPulse;
-    int n, iStart;
+    int n;
     float fMax, fArea;
 	double dBackground;
-	TFloatVec::const_iterator it;
+	TFloatVec::const_iterator it, itStart, itEnd, itBuffer, itPulseEnd;
+	static int nPulses=0;
+	TStringVec vstr;
+	FILE *file;
+	size_t iPulse, iStart;
 
     try {
 /*
-		FILE *file = fopen ("buf.csv", "w+");
-		for (it=vBuffer.begin() ; it != vBuffer.end() ; it++)
-			fprintf (file, "%g\n", *it);
-		fclose (file);
+		if (nPulses < 100) {
+			file = fopen ("buf.csv", "a+");
+			fprintf (file, "-------------------------------------\n");
+			fprintf (file, "Pulse #%d\n", nPulses + 1);
+			for (it=vBuffer.begin() ; it != vBuffer.end() ; it++)
+				fprintf (file, "%g\n", *it);
+			fclose (file);
+		}
 */
 
+		//PrintVector (vBuffer, "b.csv");
         piVec.clear();
 		n = 0;
-        TFloatVec::const_iterator i=vBuffer.begin();
-		dBackground = g_rp_setup.GetBackground (); 
-        for (fInPulse=false, it=vBuffer.begin(); it != vBuffer.end() ; it++) {
+        iStart = 0;
+        TFloatVec::const_iterator itEnd = vBuffer.end();
+		dBackground = g_rp_setup.GetBackground ();
+        for (it=vBuffer.begin() ; it != vBuffer.end() ; ) {
+            itStart = FindPulseStart (it, vBuffer.end(), dBackground, IsF1GreaterThenF2);
+            itPulseEnd = FindPulseStart (itStart+1, vBuffer.end(), dBackground, IsF1LessThenF2);
+            if ((itPulseEnd != itEnd) && (itStart != itEnd)) {
+				it = itPulseEnd;//(TFloatVec::iterator) itEnd;
+                itBuffer = itStart;
+                vRawPulse.clear();
+                fArea = fMax = *itStart;
+                for ( ; itBuffer != itPulseEnd ; itBuffer++) {
+                    vRawPulse.push_back (*itBuffer);
+                    fMax = max (fMax, *itBuffer);
+                    fArea += *itBuffer;
+                }
+                piNew.SetRawPulse (vRawPulse);
+                piNew.SetPulse (SmoothPulse (vRawPulse));
+                piNew.SetMaxVal (fMax);
+                piNew.SetArea (fArea);
+				piNew.SetPulseID (nPulses++);
+                piVec.push_back (piNew);
+				piNew.Clear ();
+				//vstr.push_back (piNew.asString());
+            }
+			else
+				it++;
+        }
+        fExtractParams = true;
+    }
+    catch (std::exception &err) {
+        fprintf (stderr, "Runtime error in 'GetPulseParams':\n%s\n", err.what());
+        fExtractParams = false;
+    }
+    return (fExtractParams);
+/*
+        for (fInPulse=false, it=vBuffer.begin(), iPulse=0 ; it != vBuffer.end() ; it++, iPulse++) {
 			if (it == vBuffer.begin())
 				fMax = *it;
 			n++;
 			//fprintf (stderr, "Item %d: %g\n", n, *it);
             if (!fInPulse) {
                 if (*it > dBackground) { // pulse start
+                    if (iStart > 0)
+                        if (iStart == iPulse - 1)
+                            fInPulse = true;
+                        else
+                            iStart = iPulse;
+                    else
+                        iStart = iPulse;
                 //if (*it > g_rp_setup.GetTriggerLevel ()) { // pulse start
                     //fMax = fArea = *i;
                     fInPulse = true;
                     //vRawPulse.push_back (*i);
+					//fprintf (stderr, "    Pulse found\n");
                 }
             }
             if (fInPulse) { // in pulse
@@ -561,15 +626,32 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
                     piNew.SetPulse (SmoothPulse (vRawPulse));
                     piNew.SetMaxVal (fMax);
                     piNew.SetArea (fArea);
+					piNew.SetPulseID (nPulses++);
                     piVec.push_back (piNew);
                     fInPulse = false;
+					vstr.push_back (piNew.asString());
                     vRawPulse.clear();
 					fMax = fArea = 0;
+					//fprintf (stderr, "Found pulse, vstr size: %d\n", vstr.size());
                 }
             }
         }
+*/
+		//fprintf (stderr, "GetPulseParams , 583\n");
 		//fprintf (stderr, "Pulse Points: %d\n", n);
-        fExtractParams = true;
+/*
+		if (nPulses < 100) {
+			TStringVec::iterator i;
+			string s;
+			file = fopen ("pulse_info.csv", "a+");
+			for (i=vstr.begin() ; i != vstr.end() ; i++) {
+				s = *i;
+				fprintf (file, "%s\n", (*i).c_str());
+			}
+			fclose (file);
+		}
+*/
+		//nPulses ++;
 /*
         TPulseInfoVec::iterator iPulse;
         file = fopen ("pulse_info.csv", "w+");
@@ -579,11 +661,86 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
         }
         fclose (file);
 */
+	//fprintf (stderr, "GetPulseParams , 609\n");
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2))
+{
+    TFloatVec::const_iterator it, itFound=itEnd, itStart=itEnd;
+    size_t idxStart, idx;
+    int nCount;
+
+    idxStart = 0;
+    for (it=itBegin, idx=1 ; (it != itEnd) && (itFound == itEnd) ; it++, idx++) {
+        if (*it >= dBackground) {
+            if (itStart == itEnd) {
+                itStart = it;
+                idxStart = idx;
+                nCount = 1;
+            }
+            else if (idx == (idxStart + 1)) {
+                nCount++;
+				idxStart++;
+			}
+            else {
+                itStart = it;
+                idxStart = idx;
+                nCount = 1;
+            }
+        }
+        else {
+            idxStart = nCount = 0;
+			itStart = itEnd;
+        }
+        if (nCount >= 3)
+            itFound = itStart;
     }
-    catch (std::exception &err) {
-        fprintf (stderr, "Runtime error in 'GetPulseParams':\n%s\n", err.what());
+    return (itFound);
+}
+
+//-----------------------------------------------------------------------------
+TFloatVec::iterator FindPulseEnd (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground)
+{
+    TFloatVec::iterator it, itFound=itEnd, itStart=itEnd;
+    size_t idxStart, idx;
+    int nCount;
+
+    idxStart = 0;
+    for (it=itBegin, idx=1 ; (it != itEnd) && (itFound == itEnd) ; it++, idx++) {
+        if (*it <= dBackground) {
+            if (itStart == itEnd) {
+                itStart = it;
+                idxStart = idx;
+                nCount = 1;
+            }
+            else if (idx == (idxStart + 1))
+                nCount++;
+            else {
+                itStart = it;
+                idxStart = idx;
+                nCount = 1;
+            }
+        }
+        else {
+            idxStart = nCount = 0;
+        }
+        if (nCount >= 3)
+            itFound = it;
     }
-    return (fExtractParams);
+    return (itFound);
+}
+
+//-----------------------------------------------------------------------------
+void PrintVector (const TFloatVec &vBuffer, const char szName[])
+{
+	TFloatVec::const_iterator i;
+	FILE *file = fopen (szName, "a+");
+	fprintf (file, "------------------------------------\n");
+	for (i=vBuffer.begin() ; i < vBuffer.end() ; i++)
+		fprintf (file, "%g\n", *i);
+	fprintf (file, "++++++++++++++++++++++++++++++++++++\n");
+	fclose (file);
 }
 
 //-----------------------------------------------------------------------------
@@ -748,6 +905,8 @@ Json::Value ReadMca ()
 
     g_mca_calculator.GetSpectrum (vSpectrum);
     for (i=vSpectrum.begin() ; i <= vSpectrum.end() ; i++) {
+		if (*i > 0)
+			*i += 0;
         sprintf (sz, "%.3f", *i);
         jMCA.append (sz);
     }
