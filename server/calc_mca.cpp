@@ -85,8 +85,8 @@ void TCalcMca::NewPulse (const TFloatVec &vPulse)
 //-----------------------------------------------------------------------------
 void TCalcMca::NewPulse (const TPulseInfo &pulse_info)
 {
-	FILE *file = fopen("np.csv", "a+");
-	FILE *filePulse = fopen("np_pulse.csv", "a+");
+	//FILE *file = fopen("np.csv", "a+");
+	//FILE *filePulse = fopen("np_pulse.csv", "a+");
 	TFloatVec vPulse;
 	TFloatVec::const_iterator i;
 	//fprintf (stderr, "calc_mca, 88\n");
@@ -95,16 +95,16 @@ void TCalcMca::NewPulse (const TPulseInfo &pulse_info)
 		//if (pulse_info.GetPulseID() < 100)
 		if (idx >= m_vSpectrum.size())  {
 			idx = m_vSpectrum.size() - 1;
-			fprintf (file, "%d, %d, %s\n", pulse_info.GetPulseID(), idx, pulse_info.asString().c_str());
-			fprintf (filePulse, "Pulse %d\n", pulse_info.GetPulseID());
-    		for (i=pulse_info.GetRawPulseBegin() ; i != pulse_info.GetRawPulseEnd() ; i++)
-				fprintf (filePulse, "%g\n", *i);
+			//fprintf (file, "%d, %d, %s\n", pulse_info.GetPulseID(), idx, pulse_info.asString().c_str());
+			//fprintf (filePulse, "Pulse %d\n", pulse_info.GetPulseID());
+    		//for (i=pulse_info.GetRawPulseBegin() ; i != pulse_info.GetRawPulseEnd() ; i++)
+				//fprintf (filePulse, "%g\n", *i);
 		}
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
 	}
-	fclose (file);
-	fclose (filePulse);
+	//fclose (file);
+	//fclose (filePulse);
 }
 
 //-----------------------------------------------------------------------------
