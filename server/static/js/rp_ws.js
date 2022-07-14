@@ -11,6 +11,7 @@ function onReadRedPitayaSetupClick () {
 	msgCommand['command'] = 'read';
     msg['setup'] = msgCommand;
     sendMesssageThroughFlask(msg, setupHandler);
+	setTimeout (onReadStatusClick, 100);
 }
 
 //-----------------------------------------------------------------------------
@@ -311,8 +312,28 @@ function onSendClick() {
 }
 
 //-----------------------------------------------------------------------------
+function measureDataLength () {
+    var msg = new Object, msgSignal = new Object;
+    msgSignal['signal'] = uploadSignalLength();
+    msg['read_data'] = {measure_signal:parseFloat(1e-6)};
+    sendMesssageThroughFlask(msg, handleSignalMeasure);
+}
+
+//-----------------------------------------------------------------------------
+function handleSignalMeasure (reply) {
+    try {
+        var samples = JSON.parse(reply);
+        var aPulseData = samples.pulses.signal;
+        console.log(aPulseData.length);
+    }
+    catch (exception) {
+        console.log(exception);
+    }
+}
+
+//-----------------------------------------------------------------------------
 function onReadSignalClick() {
-    var msg = new Object, msgSignal = new Object, msgRead = new Object;
+    var msg = new Object, msgSignal = new Object;
     if (uploadSignalRead())
         msgSignal['signal'] = uploadSignalLength();
     if (uploadMcaRead())
@@ -441,64 +462,80 @@ function setupReadSignal (reply) {
         var txt, n, i, samples = JSON.parse(reply);
         var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
         var dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
-		var aPulseData = samples.pulses.signal;//.pulse;
-/**/
-        //var aPulseRaw = samples.pulses.signal.raw;
-		var layout = {};
-		layout["title"] = "Signal";
-		layout["xaxis"] = {};
-		layout["yaxis"] = {};
-		layout['autosize'] = true;
-		//layout.xaxis["title"] = "Time [uSec]";
-		layout.yaxis["title"] = "Voltage";
-		var mrgn = {};
-		var left_title = {};
-		left_title ['text'] = "Time [uSec]";
-		left_title ['font'] = {size:12};
-		layout.xaxis["title"] = left_title;//"Time [uSec]";
-		mrgn['l'] = 50;
-		mrgn['r'] = 50;
-		mrgn['b'] = 25;
-		mrgn['t'] = 25;
-		mrgn['pad'] = 1;
-		layout['margin'] = mrgn;
-        for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
-            yData[n] = parseFloat (aPulseData[n]);
-            //yRaw[n] = parseFloat (aPulseRaw[n]);
-            xData[n] = t;
-            yTrigger[n] = dTrigger;
-			yBackground[n] = dBackground;
-        }
-        //var cbox = document.getElementById('cboxTrigger');
-        //var fShowTrigger=false;
-		var fShowTrigger = uploadCheckbox ('cboxTrigger');
-		var fShowBackground = uploadCheckbox ('cboxBackground');
-        //if (cbox)
-            //fShowTrigger = cbox.checked;
-        var dataPulse = {x:xData, y:yData, name: "Filtered"};
-        //var dataRaw = {x:xData, y:yRaw, name: "Raw"};
-        var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
-        var dataBackground = {x:xData, y:yBackground, name: "Background"};
-        var data=[];
-        //data[0] = dataRaw;//dataPulse;
-        data[0] = dataPulse;
-		//data.push(dataPulse);
-        if (fShowTrigger)
-            data.push(dataTrigger);
-        if (fShowBackground)
-            data.push(dataBackground);
-        var chart = document.getElementById("chartSignal");
-        Plotly.newPlot(chart, data, layout);
-/**/
-        var aMca = samples.pulses.mca;//.pulse;
-        plotMca (aMca);
+		var aPulseData = null;//samples.pulses.signal;//.pulse;
+        var aMcaData = null;//samples.pulses.mca;
+
+        var layout = {};
+        if (samples.pulses.hasOwnProperty("mca"))
+            aMcaData = samples.pulses.mca;
+        if (samples.pulses.hasOwnProperty('signal'))
+            aPulseData = samples.pulses.signal;
+
+        if (aPulseData != null)
+            plotSignal (aPulseData);
+            //var aMca = samples.pulses.mca;//.pulse;
+            //plotMca (aMca);
+        if (aMcaData != null)
+            plotMca (aMcaData);
     }
     catch (exception) {
-		var txt = cell.innerText;
-		txt = exception;
+        var txt = cell.innerText;
+        txt = exception;
         console.log(exception);
     }
 }
+//-----------------------------------------------------------------------------
+function plotSignal (aPulseData) {
+	var layout = {}, yData=[], t, yTrigger=[], yBackground=[];
+    var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
+    var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
+
+	layout["title"] = "Signal";
+	layout["xaxis"] = {};
+	layout["yaxis"] = {};
+	layout['autosize'] = true;
+		//layout.xaxis["title"] = "Time [uSec]";
+	layout.yaxis["title"] = "Voltage";
+	var mrgn = {};
+	var left_title = {};
+	left_title ['text'] = "Time [uSec]";
+	left_title ['font'] = {size:12};
+	layout.xaxis["title"] = left_title;//"Time [uSec]";
+	mrgn['l'] = 50;
+	mrgn['r'] = 50;
+	mrgn['b'] = 25;
+	mrgn['t'] = 25;
+	mrgn['pad'] = 1;
+	layout['margin'] = mrgn;
+    for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
+        yData[n] = parseFloat (aPulseData[n]);
+            //yRaw[n] = parseFloat (aPulseRaw[n]);
+        xData[n] = t;
+        yTrigger[n] = dTrigger;
+		yBackground[n] = dBackground;
+    }
+        //var cbox = document.getElementById('cboxTrigger');
+        //var fShowTrigger=false;
+	var fShowTrigger = uploadCheckbox ('cboxTrigger');
+	var fShowBackground = uploadCheckbox ('cboxBackground');
+        //if (cbox)
+            //fShowTrigger = cbox.checked;
+    var dataPulse = {x:xData, y:yData, name: "Filtered"};
+        //var dataRaw = {x:xData, y:yRaw, name: "Raw"};
+    var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
+    var dataBackground = {x:xData, y:yBackground, name: "Background"};
+    var data=[];
+        //data[0] = dataRaw;//dataPulse;
+    data[0] = dataPulse;
+		//data.push(dataPulse);
+    if (fShowTrigger)
+        data.push(dataTrigger);
+    if (fShowBackground)
+        data.push(dataBackground);
+    var chart = document.getElementById("chartSignal");
+    Plotly.newPlot(chart, data, layout);
+}
+
 
 //-----------------------------------------------------------------------------
 function uploadBackground() {
@@ -736,20 +773,14 @@ function donwloadText (txtId, val) {
 function plotMca (aMca) {
 	try {
     	var xData=[], yData=[]
-		//var fMax=-1, iMax;
-    	for (var n=0 ; n < aMca.length ; n++) {
-        	xData[n] = n + 1;
-        	yData[n] = aMca[n];
-/*
-			if (yData[n] > fMax) {
-				fMax = yData[n];
-				iMax = n;
-			}
-*/
-    	}
+
+        for (var n=0 ; n < aMca.length ; n++) {
+            xData[n] = n + 1;
+            yData[n] = aMca[n];
+        }
 		//console.log('Maximum: ' + fMax + ', at ' + iMax);
-    	var dataMca = {x:xData, y:yData, type: 'bar'};
-		var layout = {};
+        var dataMca = {x:xData, y:yData, type: 'bar'};
+	    var layout = {};
         var data=[];
         data[0] = dataMca;
     	layout["title"] = "MCA";
