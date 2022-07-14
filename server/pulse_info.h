@@ -16,6 +16,8 @@ public:
     TPulseInfo (const TPulseInfo &other);
     void Clear ();
 
+	string asString() const;
+
     void SetArea (double dArea);
     double GetArea () const;
     void SetMaxVal (double dMaxVal);
@@ -31,6 +33,8 @@ public:
     void SetRawPulse (const TFloatVec &vRawPulse);
     TFloatVec GetRawPulse() const;
 
+	void SetPulseID (int id);
+	int GetPulseID () const;
     TFloatVec::const_iterator GetPulseBegin() const;
     TFloatVec::const_iterator GetPulseEnd() const;
     TFloatVec::const_iterator GetRawPulseBegin() const;
@@ -45,6 +49,7 @@ private:
     double m_dLength;
     double m_dPrompt;
     double m_dDelayed;
+	int m_id;
 };
 //-----------------------------------------------------------------------------
 #endif

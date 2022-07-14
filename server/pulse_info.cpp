@@ -24,6 +24,7 @@ void TPulseInfo::Clear ()
     SetLength (0);
     SetPrompt (0);
     SetDelayed (0);
+	SetPulseID (0);
 }
 
 //-----------------------------------------------------------------------------
@@ -36,6 +37,7 @@ void TPulseInfo::AssignAll (const TPulseInfo &other)
     SetLength (other.GetLength ());
     SetPrompt (other.GetPrompt ());
     SetDelayed (other.GetDelayed ());
+	SetPulseID (other.GetPulseID() );
 }
 
 //-----------------------------------------------------------------------------
@@ -145,4 +147,26 @@ TFloatVec::const_iterator TPulseInfo::GetRawPulseEnd() const
 {
     return (m_vRawPulse.end());
 }
+
+//-----------------------------------------------------------------------------
+string TPulseInfo::asString() const
+{
+	string str;
+
+	str = to_string (GetPulseID() ) + "," + to_string (GetArea ()) + "," + to_string (GetMaxVal ()) + "," + to_string (GetLength ()) + "," + to_string (GetPrompt ()) + "," + to_string (GetDelayed ());
+	return (str);
+}
+
+//-----------------------------------------------------------------------------
+void TPulseInfo::SetPulseID (int id)
+{
+	m_id = id;
+}
+
+//-----------------------------------------------------------------------------
+int TPulseInfo::GetPulseID () const
+{
+	return (m_id);
+}
+
 //-----------------------------------------------------------------------------
