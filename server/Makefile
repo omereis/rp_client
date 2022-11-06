@@ -10,7 +10,7 @@
 CPP = gcc
 #CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
 #CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/
-CFLAGS = -std=c++14 -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/ -O0 -g
+CFLAGS = -std=c++14 -I/usr/include/modern/include/ -D_RED_PITAYA_HW -I/opt/redpitaya/include/ -O0 -g -fconcepts
 #CFLAGS +=  -std=c++14
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION) 
 

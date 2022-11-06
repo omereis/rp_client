@@ -62,6 +62,9 @@ void TRedPitayaSampling::AssignAll (const TRedPitayaSampling &other)
 //-----------------------------------------------------------------------------
 string TRedPitayaSampling::GetRate () const
 {
+	fprintf (stderr, "--------------------------------\n");
+	fprintf (stderr, "TRedPitayaSampling::GetRate: rate = '%s'\n", m_strRate.c_str());
+	fprintf (stderr, "--------------------------------\n");
     return (m_strRate);
 }
 //-----------------------------------------------------------------------------

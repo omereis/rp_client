@@ -11,14 +11,16 @@ using std::endl; using std::string;
 
 string trimLeftRight(string& str, string& chars);
 
-string leftTrim(string &str, string &chars)
+string leftTrim(string &strSrc, string &chars)
 {
+	string str(strSrc);
     str.erase(0, str.find_first_not_of(chars));
     return str;
 }
 
-string rightTrim(string &str, string &chars)
+string rightTrim(string &strSrc, string &chars)
 {
+	string str(strSrc);
     str.erase(str.find_last_not_of(chars) + 1);
     return str;
 }

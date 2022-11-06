@@ -1,5 +1,9 @@
 <html>
-    <head>
+<!--
+--------------------    
+    rp_gui.html
+--------------------    
+-->    <head>
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
         <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
         <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
@@ -30,6 +34,7 @@
 		p.style.backgroundColor = color;
 		console.log ({{is_red_pitaya}});
 		var divChart = document.getElementById ("chartSignal");
+		enableItemsByTrigger(false);
 		if (divChart != null)
 			divChart.style.height = 400;
 	}
@@ -54,25 +59,24 @@
                             <input type="button" value="Measure Pulse Length" onclick="measureDataLength()">
                         </td>
                     </tr>
-                    <th style="background-color: #5c7ee4;" colspan="2">
+                    <th colspan="2" style="background-color: #5c7ee4;" colspan="2">
                         Trigger
                     </th>
-                    <tr>
-						<td colspan="2" style="text-align: center;">
+					<tr>
+						<td>
                            <input type="checkbox" id="cboxTriggerEnabled" value="Enabled" onclick="onTriggerEnabledClick()">Trigger Enabled
 						</td>
-                    </tr>
-                    <tr>
-						<td colspan="2" style="text-align: center;">
-                           <input type="button" id="btnTriggerNow" value="Trigger Now!" onclick="onTriggerNowClick()" disabled="disabled">
+						<td>
+                           <input type="checkbox" id="cboxTriggerNow" value="Enabled" onclick="onTriggerNowClick()">Trigger Now
 						</td>
-                    </tr>
+					</tr>
                     <tr>
                         <td>
                             Direction
                         </td>
                         <td>
-                            <select id="comboTriggerDir" disabled="disabled">
+                            <select id="comboTriggerDir">
+                            <!-- <select id="comboTriggerDir" disabled="disabled"> -->
                                 <option value=""></option>"
                                 <option value="Up">Up</option>"
                                 <option value="Down">Down</option>"
@@ -84,7 +88,8 @@
                             Type
                         </td>
                         <td>
-                            <select id="comboTriggerType" disabled="disabled">
+                            <select id="comboTriggerType">
+                            <!-- <select id="comboTriggerType" disabled="disabled"> -->
                                 <option value="Level">Level</option>"
                                 <option value="Edge">Edge</option>"
                             </select>
@@ -95,7 +100,8 @@
                             Input #
                         </td>
                         <td>
-                            <select id="comboTriggerIn" disabled="disabled">
+                            <select id="comboTriggerIn">
+                            <!-- <select id="comboTriggerIn" disabled="disabled"> -->
                                 <option value=""></option>"
                                 <option value="In1">Input #1</option>"
                                 <option value="In2">Input #2</option>"
@@ -107,8 +113,10 @@
 							Level
 						</td>
 						<td>
-							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;" disabled="disabled">
-							<select id="comboTriggerVoltage" disabled="disabled">
+							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;">
+							<!-- <input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;" disabled="disabled"> -->
+							<select id="comboTriggerVoltage">
+							<!-- <select id="comboTriggerVoltage" disabled="disabled"> -->
 								<option id="optTrgMilli" value="1e-3">Millivolts</option>
 								<option id="optTrgVolt" value="1">Volts</option>
 							</select>
@@ -119,7 +127,8 @@
                             <input type="button" value="Read Card Trigger" onclick="onReadCardTriggerClick ()">
                         </td>
                         <td>
-                            <input type="button" id="btnUpdateTrigger" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()" disabled="disabled">
+                            <input type="button" id="btnUpdateTrigger" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()">
+                            <!-- <input type="button" id="btnUpdateTrigger" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()" disabled="disabled"> -->
                         </td>
                     </tr>
                 </table>

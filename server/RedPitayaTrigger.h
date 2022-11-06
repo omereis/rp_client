@@ -23,7 +23,7 @@ public:
     TRedPitayaTrigger ();
     TRedPitayaTrigger (const TRedPitayaTrigger &other);
 
-	void Print (const char sz[]=NULL, FILE *file=stderr);
+	bool Print (const char sz[]=NULL, FILE *file=stderr);
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware ();
 	void SetDir (rp_acq_trig_src_t dir);

@@ -148,10 +148,15 @@ Json::Value TRedPitayaSetup::AsJson()
 {
     Json::Value jSetup;
 
+	fprintf (stderr, "TRedPitayaSetup::AsJson\n");
     jSetup["sampling"] = m_sampling.AsJson();
+	fprintf (stderr, "TRedPitayaSetup::AsJson, sampling read\n");
     jSetup["trigger"] = m_trigger.AsJson();
+	fprintf (stderr, "TRedPitayaSetup::AsJson, trigger read\n");
     jSetup["mca"] = m_mca_params.AsJson();
+	fprintf (stderr, "TRedPitayaSetup::AsJson, MCA read\n");
     jSetup["background"] = DoubleAsString (GetBackground());
+	fprintf (stderr, "TRedPitayaSetup::AsJson, Setup set\n");
     return (jSetup);
 }
 
@@ -217,6 +222,7 @@ void TRedPitayaSetup::SetSamplingOnOff (bool fSampling)
 {
     mutex mtx;
 
+	//fprintf (stderr, "TRedPitayaSetup::SetSamplingOnOff, fSampling:%d\n", (int) fSampling);
     mtx.lock();
     m_fSamplingOnOff = fSampling;
     mtx.unlock();
@@ -367,6 +373,7 @@ Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd)
 #ifdef	_RED_PITAYA_HW
 bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 {
+	bool fLoad;
 	//fprintf (stderr, "rp_setup.cpp:326, before calling rp_AcqGetTriggerSrc\n");
 	//if (fInit)
 		////rp_Init();
@@ -374,15 +381,23 @@ bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 
 	//fprintf (stderr, "rp_setup.cpp:326, before calling rp_AcqGetTriggerSrc\n");
 	//rp_Init();
-	rp_AcqGetTriggerSrc(&dir);
+	try {
+		rp_AcqGetTriggerSrc(&dir);
+    	m_trigger.LoadFromHardware();
+		fLoad = true;
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error in 'TRedPitayaSetup::LoadFromHardware':\n%s", exp.what());
+		fLoad = false;
+	}
 	//fprintf (stderr, "rp_setup.cpp:329, AFTER calling rp_AcqGetTriggerSrc\n");
 	//string strDir = m_trigger.GetHardwareTriggerSource (dir);
 	//fprintf (stderr, "rp_setup.cpp:331, AFTER calling GetHardwareTriggerSource \n");
 	//fprintf (stderr, "'TRedPitayaTrigger::LoadFromHardware', after calling 'rp_AcqGetTriggerSrc', trigger source: %s\n", m_trigger.GetHardwareTriggerSource (dir).c_str());
 	//m_trigger.Print("'TRedPitayaSetup::LoadFromHardware', before LoadFromhardware");
-    m_trigger.LoadFromHardware();
 	//PrintTriggerSource ("rp_setup.cpp:336");
 	//m_trigger.Print("'TRedPitayaSetup::LoadFromHardware', AFTER LoadFromhardware");
+	return (fLoad);
 }
 
 //-----------------------------------------------------------------------------
@@ -394,15 +409,24 @@ bool TRedPitayaSetup::SetHardwareTrigger()
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::SetHardwareTrigger(const TRedPitayaTrigger &trigger)
 {
-	m_trigger = trigger;
-	m_trigger.SetHardwareTrigger ();
-	//m_trigger.SetHardwareTrigger (trigger);
+	bool fSet;
+
+	try {
+		m_trigger = trigger;
+		m_trigger.SetHardwareTrigger ();
+		fSet = true;
+	}
+	catch (std::exception exp) {
+		fprintf (stderr, "Runtime error in 'TRedPitayaSetup::SetHardwareTrigger':\n%s", exp.what());
+		fSet = false;
+	}
+	return (fSet);
 }
 
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::PrintHardwareSetup (FILE *file)
 {
-	m_trigger.Print ("PrintHardwareSetup", file);
+	return (m_trigger.Print ("PrintHardwareSetup", file));
 	//m_trigger.PrintHardwareSetup (file);
 }
 

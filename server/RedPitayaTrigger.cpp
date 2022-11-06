@@ -133,22 +133,32 @@ void TRedPitayaTrigger::SetNow (bool fNow)
 }
 
 //-----------------------------------------------------------------------------
-void TRedPitayaTrigger::Print (const char szTitle[], FILE *file)
+bool TRedPitayaTrigger::Print (const char szTitle[], FILE *file)
 {
-	if (szTitle != NULL)
-		if (strlen(szTitle) > 0) {
-			fprintf (stderr, "\n+++++++++++++++++++++++++++++++++++++++++++++++\n");
-			fprintf (file, "%s\n", szTitle);
-		}
-	fprintf (stderr, "+++++++++++++++++++++++++++++++++++++++++++++++\n");
-	fprintf (stderr, "Trigger:\n");
-    fprintf (stderr, "Level: %s\n", GetLevel ().c_str());
-	fprintf (stderr, "Direction: %s\n", GetDir ().c_str());
-	fprintf (stderr, "Source: %s\n", GetSrc ().c_str());
-	fprintf (stderr, "Type: %s\n", GetType().c_str());
-	fprintf (stderr, "On/Off: %s\n", GetTrigger() ? "On" : "Off");
-	fprintf (stderr, "Now: %s\n", GetNow () ? "true" : "false");
-	fprintf (stderr, "\n+++++++++++++++++++++++++++++++++++++++++++++++\n");
+	bool fPrint;
+
+	try {
+		if (szTitle != NULL)
+			if (strlen(szTitle) > 0) {
+				fprintf (stderr, "\n+++++++++++++++++++++++++++++++++++++++++++++++\n");
+				fprintf (file, "%s\n", szTitle);
+			}
+		fprintf (stderr, "+++++++++++++++++++++++++++++++++++++++++++++++\n");
+		fprintf (stderr, "Trigger:\n");
+    	fprintf (stderr, "Level: %s\n", GetLevel ().c_str());
+		fprintf (stderr, "Direction: %s\n", GetDir ().c_str());
+		fprintf (stderr, "Source: %s\n", GetSrc ().c_str());
+		fprintf (stderr, "Type: %s\n", GetType().c_str());
+		fprintf (stderr, "On/Off: %s\n", GetTrigger() ? "On" : "Off");
+		fprintf (stderr, "Now: %s\n", GetNow () ? "true" : "false");
+		fprintf (stderr, "\n+++++++++++++++++++++++++++++++++++++++++++++++\n");
+		fPrint = true;
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error in 'TRedPitayaTrigger::Print':%s\n", exp.what());
+		fPrint = false;
+	}
+	return (fPrint);
 }
 
 //-----------------------------------------------------------------------------
@@ -304,6 +314,7 @@ Json::Value TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
         SetLevel (jSetup["level"].asString());
         SetDir (jSetup["dir"].asString());
         SetSrc (jSetup["src"].asString());
+		SetNow (jSetup["now"].asBool());
     	SetTrigger (jSetup["enabled"]);
     	//SetTrigger (jSetup["trigger"]);
 		//Print ("From 'TRedPitayaTrigger::UpdateFromJson', before AsJson");

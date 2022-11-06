@@ -143,3 +143,6 @@ __history/
 ~*.*
 psd.cpp
 *.zip
+read_json
+err.txt
+*.csv

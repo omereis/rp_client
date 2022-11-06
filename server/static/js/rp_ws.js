@@ -44,6 +44,7 @@ function uploadTriggerSetup () {
 	msg['src'] = uploadTriggerSrc ();
 	msg['type'] = uploadTriggerType ();
 	msg['enabled'] = uploadTriggerOnOff();
+	msg['now'] = uploadTriggerNow();
 	return (msg);
 }
 
@@ -82,6 +83,13 @@ function downloadTriggerOnOff (fOnOff) {
 }
 
 //-----------------------------------------------------------------------------
+function downloadTriggerNow (fNow) {
+	var cbox = document.getElementById ('cboxTriggerNow');
+	if (cbox != null)
+		cbox.checked = fNow;
+}
+
+//-----------------------------------------------------------------------------
 function uploadTriggerType () {
 	var combo = document.getElementById ('comboTriggerType');
 	return (combo.value);
@@ -96,9 +104,11 @@ var g_data = null;
 
 //-----------------------------------------------------------------------------
 function setupHandler (reply) {
+/*
     var txt = document.getElementById("txtReply");
     if (txt != null)
         txt.value = reply;
+*/
     try {
         dictSetup = JSON.parse(reply).setup;
 		if (dictSetup.hasOwnProperty('trigger'))
@@ -336,9 +346,9 @@ function onReadSignalClick() {
     var msg = new Object, msgSignal = new Object;
     if (uploadSignalRead())
         msgSignal['signal'] = uploadSignalLength();
-    if (uploadMcaRead())
+    //if (uploadMcaRead())
         msgSignal['mca'] = uploadMcaRead();
-    if (uploadPsdRead())
+    //if (uploadPsdRead())
         msgSignal['psd'] = uploadPsdRead();
     msg['read_data'] = msgSignal;
     if (Object.keys(msgSignal).length > 0)
@@ -368,12 +378,14 @@ function uploadSignalRead() {
 
 //-----------------------------------------------------------------------------
 function uploadMcaRead() {
-    return (uploadCheckBox ("cboxReadMCA"));
+    return (uploadCheckBox ("cboxStartMCA"));
+    //return (uploadCheckBox ("cboxReadMCA"));
 }
 
 //-----------------------------------------------------------------------------
 function uploadPsdRead() {
-    return (uploadCheckBox ("cboxReadPSD"));
+    return (uploadCheckBox ("cboxStartPSD"));
+    //return (uploadCheckBox ("cboxReadPSD"));
 }
 
 //-----------------------------------------------------------------------------
@@ -738,9 +750,11 @@ function uploadTextReal (txtId) {
 
 //-----------------------------------------------------------------------------
 function mcaSetupHandler (reply) {
+/*
     var txt = document.getElementById("txtReply");
     if (txt != null)
         txt.value = reply;
+*/
     try {
         dictSetup = JSON.parse(reply).setup.mca;
 		downloadMca (dictSetup.mca);
@@ -803,10 +817,15 @@ function uploadTriggerOnOff() {
 }
 
 //-----------------------------------------------------------------------------
+function uploadTriggerNow() {
+    return (uploadCheckBox ("cboxTriggerNow"));
+}
+
+//-----------------------------------------------------------------------------
 function onTriggerEnabledClick() {
 	try {
-    var fTriggerEnabled = uploadCheckBox ("cboxTriggerEnabled");
-	enableItemsByTrigger(fTriggerEnabled);
+    	var fTriggerEnabled = uploadCheckBox ("cboxTriggerEnabled");
+		enableItemsByTrigger(fTriggerEnabled);
 /*
 		enableItem ("comboTriggerDir", fTriggerEnabled);
 		enableItem ("comboTriggerIn", fTriggerEnabled);
@@ -830,8 +849,8 @@ function enableItemsByTrigger(fTriggerEnabled) {
 		enableItem ("comboTriggerType", fTriggerEnabled);
 		enableItem ("txtTriggerLevel", fTriggerEnabled);
 		enableItem ("comboTriggerVoltage", fTriggerEnabled);
-		enableItem ("btnUpdateTrigger", fTriggerEnabled);
-		enableItem ("btnTriggerNow", fTriggerEnabled);
+		//enableItem ("btnUpdateTrigger", fTriggerEnabled);
+		//enableItem ("btnTriggerNow", fTriggerEnabled);
 	}
 	catch (exception) {
 		console.log(exception);
@@ -859,7 +878,8 @@ function downloadTrigger(dictTriggerSetup) {
         downloadTriggerDir (dictTriggerSetup.dir);
         downloadTriggerSrc (dictTriggerSetup.src);
 		downloadTriggerOnOff (dictTriggerSetup.enabled);
-		enableItemsByTrigger(dictTriggerSetup.enabled);
+		downloadTriggerNow (dictTriggerSetup.now);
+		//enableItemsByTrigger(dictTriggerSetup.enabled);
 	}
 	catch (exception) {
 		console.log(exception);
@@ -868,10 +888,13 @@ function downloadTrigger(dictTriggerSetup) {
 
 //-----------------------------------------------------------------------------
 function onTriggerNowClick () {
+/*
+	onUpdateCardTriggerClick ();
     var msg = new Object, msgTrigger=new Object, msgCmd = new Object;
     msgCmd['command'] = 'trigger_now';
     msg['setup'] = msgCmd;
     sendMesssageThroughFlask(msg, setupHandler);
+*/
 }
 //-----------------------------------------------------------------------------
 function sendBackgroundCommand(bkgnd_cmd) {
@@ -899,9 +922,11 @@ function onMeasureBackgroundClick() {
 
 //-----------------------------------------------------------------------------
 function handlerBackground (reply) {
+/*
     var txt = document.getElementById("txtReply");
     if (txt != null)
         txt.value = reply;
+*/
     try {
         var dictSetup = JSON.parse(reply).setup;
 		if (dictSetup.hasOwnProperty('background'))
