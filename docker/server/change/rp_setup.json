@@ -1,0 +1,2 @@
+{"background":"0.100","mca":{"channels":1024,"max_voltage":5,"min_voltage":0},"sampling":{"buffer_length":"200","decimation":"","rate":"","signal_points":"200"},"trigger":{"dir":"","enabled":false,"level":"0.00050000000000000001","now":false,"src":""}}
+

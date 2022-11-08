@@ -1,0 +1,223 @@
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
+        <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
+        <script src="{{ url_for ('static', filename='js/rp_ws.js') }}" charset="utf-8"></script>
+
+        <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="https://d3js.org/d3.v4.js"></script>
+		<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+    </head>
+    <script>
+    </script>
+<body style="background-color: #82e4f5;">
+        
+    </body>
+    <table>
+        <tr>
+			<th>
+				<table style="border:none;">
+					<tr>Setup</tr>
+                	<tr><td style="border:none;"><input type="button" value="Read Setup" onclick="onReadRedPitayaSetupClick()"></td></tr>
+                	<tr><td style="border:none;"><input type="button" value="Update Setup" onclick="onUpdateRedPitayaSetupClick()"></td></tr>
+				</table>
+            </th>
+            <td>
+                <table>
+                    <tr>
+                        <th colspan="2">Trigger</th>
+                        <th colspan="2">Sampling</th>
+                    </tr>
+                    <tr>
+                        <td>Rate</td>
+                        <td><select id="comboRate">
+                            	<option value=""></option>
+                            	<option value="125000000">125Msps</option>
+                            	<option value="15625000">15.625Msps</option>
+                            	<option value="1953000">1.953Msps</option>
+                            	<option value="122070">122.070ksps</option>
+                            	<option value="15258">15.258ksps</option>
+                            	<option value="1907">1.907ksps</option>
+                        	</select>
+						</td>
+						<td>
+							Buffer
+						</td>
+						<td>
+							<input type="text" id="txtBuffer" value="10" style="width:75px;text-align: center;"> 
+                            <select id="comboSignalBufferUnits">
+                                <option value="1e-9">Nano</option>
+                                <option value="1e-6" selected>&mu;</option>
+                                <option value="1e-3">Milli</option>
+                            </select> Seconds
+						</td>
+                    </tr>
+                    <tr>
+                        <td>Decimation</td>
+                        <td><select id="comboDecimation">
+                            <option value=""></option>
+                            <option value="1">1</option>
+                            <option value="8">8</option>
+                            <option value="64">64</option>
+                            <option value="1024">1024</option>
+                            <option value="8192">8192</option>
+                            <option value="65536">65536</option>
+                        </select>
+                        </td>
+                        <td colspan="2">
+                            <input type="checkbox" id="cboxStartSignal" value="Signal" checked="true">Signal
+                            <input type="checkbox" id="cboxStartMCA" value="MCA" checked="true">MCA
+                            <input type="checkbox" id="cboxStartPSD" value="PSD" checked="true">PSD
+                            <input type="button" value="Update" onclick="onSamplingUpdate()">
+                            <input type="button" id="cellStatus" value="status"  onclick="onReadStatusClick()">
+                            <input type="text" id="txtBufferLength" value="" style="width:50px;text-align: center;" readonly="readonly"> 
+                        </td>
+                        
+    
+                    </tr>
+                    <tr>
+                        <td>
+							Level
+						</td>
+						<td>
+							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;">
+							<select id="comboTriggerVoltage">
+								<option id="optTrgMilli" value="1e-3">Millivolts</option>
+								<option id="optTrgVolt" value="1">Volts</option>
+							</select>
+						</td>
+					<td>
+						Update Rate
+						<input type="text" id="txtUpdateRate" style="width:75px;text-align: center;" value="0.5"> Seconds
+					</td>
+					<td>
+						Background
+						<input type="text" id="txtBackground" style="width:75px;text-align: center;" value="0.1">
+					</td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <td>Direction
+                        <select id="comboTriggerDir">
+                            <option value=""></option>"
+                            <option value="Up">Up</option>"
+                            <option value="Down">Down</option>"
+                        </select>
+                        </td>
+                        <td>Input #
+                        <select id="comboTriggerIn">
+                                <option value=""></option>"
+                                <option value="In1">Input #1</option>"
+                                <option value="In2">Input #2</option>"
+                            </select>
+                        </td>
+                    </tr>
+                <tr>
+                    <td>
+                        Scan Rate: <input type="text" id="txtScanRate" style="width:50px;text-align: center;" value="0.5"> Seconds
+                    </td>
+                    <td>
+                        Smoothing Window: <select id="comboSmoothingWindow">
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="7">7</option>
+                            <option value="9" selected>9</option>
+                            <option value="11">11</option>
+                            <option value="13">13</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                <table style="border:none;">
+                    <tr style="border:none;">
+                        <th style="border:none;">Signal</th>
+                    </tr>
+                    <tr>
+                        <td style="border:none;"><input type="button" value="Read from Card" onclick="onReadSignalClick()">
+                            <br>
+                            <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal<br>
+                            <input type="checkbox" id="cboxReadMCA" value="MCA" checked="true">MCA<br>
+                            <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true">PSD
+                        </td>
+                    </tr>
+                    <tr>
+						<td>
+							Update Interval<br>
+                        	<input type="text" id="txtInterval" value="1000" style="width:75px;text-align: center;"> milliseconds<br>
+						</td>
+                    </tr>
+                    <tr>
+						<td>
+                        	<input type="button" value="Start" id="btnSignalStartStop" onclick="onSignalStartStopClick(this.id)">
+                            <br>
+                            <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
+                            <br>
+                            <input type="checkbox" value="Trigger" id="cboxTrigger"><label for="cboxTrigger">Trigger</label>
+                            <br>
+                            <input type="checkbox" value="Background" id="cboxBackground"><label for="cboxBackgriound">Background</label>
+						</td>
+                    </tr>
+                </table>
+            </th>
+            <td id="cellSignal">
+                <div id="chartSignal" style="width:600px;height:250px;"></div>
+            </td>
+        </tr>
+        <tr>
+            <th>MCA<br>
+                <table style="border:none;">
+                    <tr>
+                        <td colspan="2" style="border:none;">
+                            <input type="checkbox" id="cboxShowMca" checked="true"><label for="cboxShowMca">Show MCA</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="border:none;">
+                            Channels: <input type="text" style="width:50px;text-align: center;" value="1000" id="txtMcaChannels">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:none;" colspan="2">
+                            Max. Voltage: <input type="text" style="width:50px;text-align: center;" value="1" id="txtMcaMax">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:none;" colspan="2">
+                            Min. Voltage: <input type="text" style="width:50px;text-align: center;" value="0" id="txtMcaMin">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:none;">
+                            <input type="button" value="Reset" onclick="onMcaResetClick()">
+                        </td>
+                        <td style="border:none;">
+                            <input type="button" value="Update" onclick="onMcaUpdateClick()">
+                        </td>
+                    </tr>
+                </table>
+            </th>
+            <td>MCA Chart<br>
+                <div id="chartMca" style="width:800px;height:450px;"></div>
+            </td>
+        </tr>
+        <tr>
+            <th>PSD</th>
+            <td>PSD Chart</td>
+        </tr>
+        <tr>
+			<th>
+				<input type="button" value="Chart" onclick="onChartClick()">
+			</th>
+            <td colspan="2">
+				<div id="divChart" style="width:600px;height:250px;"></div>
+			</td>
+        </tr>
+    </table>
+    <textarea id="txtReply"  rows="4" cols="50"></textarea>
+    </html>
