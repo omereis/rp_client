@@ -964,3 +964,33 @@ function handlerBackground (reply) {
     }
 }
 //-----------------------------------------------------------------------------
+function onCardBufferLength () {
+    var msg = new Object, msgSignal = new Object;
+	msgSignal['buffer'] = 'read';
+    msg['read_data'] = msgSignal;
+	sendMesssageThroughFlask(msg, setupCardBuffer);
+}
+
+//-----------------------------------------------------------------------------
+function onCardBufferClear () {
+    var msg = new Object, msgSignal = new Object;
+	msgSignal['buffer'] = 'reset';
+    msg['read_data'] = msgSignal;
+	sendMesssageThroughFlask(msg, setupCardBuffer);
+}
+
+//-----------------------------------------------------------------------------
+function setupCardBuffer (reply) {
+    var txtbx = document.getElementById("txtCardBuffer");
+    try {
+		var jReply = JSON.parse (reply);
+		txtbx.value = jReply.pulses.buffer;//sampling.buffer
+ 	}
+    catch (exception) {
+        var txt = cell.innerText;
+        txt = exception;
+        console.log(exception);
+    }
+}
+
+//-----------------------------------------------------------------------------

@@ -60,6 +60,10 @@ void ExportDebugPulse(TFloatVecQueue &qDebug);
 void SafeStartStop (bool fCommand);
 bool SafeGetStatus ();
 size_t SafeQueueSize ();
+void SafeQueueClear ();
+size_t SafeQueueExtract (TFloatVec &vPulse);
+void SafeQueueAdd (const TFloatVec &vPulse);
+
 void SafeSetMca (bool fOnOff);
 bool SafeGetMca ();
 TMcaParams SafeGetMcaParams ();
@@ -76,7 +80,8 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
-TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2));
+bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2));
+//TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2));
 //TFloatVec::iterator FindPulseStart (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground);
 //TFloatVec::iterator FindPulseEnd (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground);
 void PrintVector (const TFloatVec &vBuffer, const char szName[]);
@@ -304,6 +309,19 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 			fprintf (stderr, "%s\n", jMca.asBool() ? "true" : "false");
 			fprintf (stderr, "+++++++++++++++++\n");
         }
+		if (!jRead["buffer"].isNull()) {
+			if (jRead["buffer"].isString()) {
+				string s = jRead["buffer"].asString();
+				if (s == "reset")
+					SafeQueueClear ();
+				//s = to_string (SafeQueueSize ());
+				//jAllPulses["buffer"] = s;//to_string (SafeQueueSize ());
+			}
+			//std::string s = StringifyJson (jRead["buffer"]);
+			//fprintf (stderr, "%s\n", s.c_str());
+		}
+		string s = to_string (SafeQueueSize ());
+		jAllPulses["buffer"] = s;//to_string (SafeQueueSize ());
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
@@ -315,18 +333,37 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 Json::Value ReadSignal (double dLen)
 {
     Json::Value jSignal;
-	int nBuffer;
+	int nVectorPoints;
 	TFloatVec vPulse;
+	TFloatVec::iterator it;
+	TFloatVec vDebug;
 	std::string strNumber;
+	size_t sPulse;
+	static int nCount=0;
+	float rValue;
 
     try {
-		nBuffer = int ((dLen / 8e-9) + 0.5);
-		fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nBuffer);
-        while ((jSignal.size() < nBuffer) && (g_vRawSignal.size() > 0)) {
-			strNumber = to_string (*(g_vRawSignal.begin()));
-            jSignal.append(strNumber.c_str());
-			g_vRawSignal.erase (g_vRawSignal.begin());
+		nVectorPoints = int ((dLen / 8e-9) + 0.5);
+		fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nVectorPoints);
+        while ((jSignal.size() < nVectorPoints) && (SafeQueueSize () > 0)) {
+			sPulse = SafeQueueExtract (vPulse);
+			if (sPulse > 0) {
+				for (it=vPulse.begin() ; (it != vPulse.end()) && (jSignal.size() < nVectorPoints) ; it++) {
+					rValue = *it;
+					if (rValue > 0)
+						rValue += 0;
+					vDebug.push_back (1000.0 * rValue);
+					//vDebug.push_back (1000.0 * (*it));
+					strNumber = to_string (1000.0 * rValue);
+            		jSignal.append(strNumber.c_str());
+				}
+			}
+			//strNumber = to_string (*(g_vRawSignal.begin()));
+            //jSignal.append(strNumber.c_str());
+			//g_vRawSignal.erase (g_vRawSignal.begin());
         }
+		PrintVector (vDebug, "out_debug.csv");
+		fprintf (stderr, "Signal Read: %d\n", nCount++);
     }
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
@@ -334,16 +371,59 @@ Json::Value ReadSignal (double dLen)
 	//printf ("rp_server.cpp:315, signal length:%d\n", jSignal.size());
     return (jSignal);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+size_t SafeQueueExtract (TFloatVec &vPulse)
+{
+    mutex mtx;
+    size_t s;
+
+    vPulse.clear();
+    mtx.lock ();
+    vPulse = g_qPulses.back();
+	g_qPulses.pop();
+    s = vPulse.size();
+    mtx.unlock ();
+	double d=0;
+	TFloatVec::iterator it;
+	for (it=vPulse.begin() ; it != vPulse.end() ; it++)
+		d += *it;
+	fprintf (stderr, "QueueSafeExtract, vector sum: %g\n", d);
+    return (s);
+}
+
+//-----------------------------------------------------------------------------
+void SafeQueueAdd (const TFloatVec &vPulse)
+{
+    mutex mtx;
+
+    mtx.lock ();
+    g_qPulses.push(vPulse);
+    while (g_qPulses.size() > 1000)
+        g_qPulses.pop();
+    mtx.unlock ();
+}
+
+//-----------------------------------------------------------------------------
+void SafeQueueClear ()
+{
+    mutex mtx;
+
+    mtx.lock ();
+    while (!g_qPulses.empty())
+		g_qPulses.pop();
+    mtx.unlock ();
+}
+
+//-----------------------------------------------------------------------------
 size_t SafeQueueSize ()
 {
     size_t s;
     mutex mtx;
 
     mtx.lock ();
-    //s = g_qPulses.size();
-	s = g_vPulsesInfo.size();
+    s = g_qPulses.size();
+	//s = g_vPulsesInfo.size();
     mtx.unlock ();
     return (s);
 }
@@ -531,22 +611,23 @@ void OnTimerTick ()
     TPulseInfoVec::iterator iPulseInfo;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
-		fprintf (stderr, "OnTimerTick, before GetNextPulse\n");
+		//fprintf (stderr, "OnTimerTick, before GetNextPulse\n");
         if (GetNextPulse (vPulse)) {
-			fprintf (stderr, "OnTimerTick, After GetNextPulse\n");
-			//fprintf (stderr, "rp_server.cpp:509, AFTER GetNextPulse, pulse length: %d\n", vPulse.size());
+            SafeQueueAdd (vPulse);
+			size_t s = SafeQueueSize ();
+			if ((s % 10) == 0)
+				fprintf (stderr, "Queue size: %d\n", (int) s);
+			//g_vRawSignal.insert (g_vRawSignal.end(), vPulse.begin(), vPulse.end());
+			//while (g_vRawSignal.size() > 10000)
+				//g_vRawSignal.erase (g_vRawSignal.begin());
+			//fprintf (stderr, "OnTimerTick, After GetNextPulse\n");
             if (GetPulseParams (vPulse, piVec)) {
-				fprintf (stderr, "OnTimerTick, After GetPulseParams\n");
-				//fprintf (stderr, "rp_server.cpp:511, AFTER GetPulseParams , pulse length: %d\n", vPulse.size());
+				//fprintf (stderr, "OnTimerTick, After GetPulseParams\n");
                 for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
                 	g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
-                //g_vPulsesInfo.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
             	if (g_rp_setup.GetMcaOnOff()) {
                 	g_mca_calculator.NewPulse (piVec);
 				}
-                g_vRawSignal.insert (g_vRawSignal.end(), vPulse.begin(), vPulse.end());
-                while (g_vRawSignal.size() > 10000)
-                    g_vRawSignal.erase (g_vRawSignal.begin());
             }
         }
     }
@@ -570,7 +651,7 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
     bool fExtractParams=false;
     TPulseInfo piNew;
     TFloatVec vRawPulse, vPulse;
-    bool fInPulse;
+    bool fInPulse, fPulseFound;
     int n;
     float fMax, fArea;
 	double dBackground;
@@ -600,14 +681,39 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
 		m = 0;
         TFloatVec::const_iterator itEnd = vBuffer.end();
 		dBackground = g_rp_setup.GetBackground ();
-		fprintf (stderr, "GetPulseParams, dBackground=%g\n", dBackground);
+		//fprintf (stderr, "GetPulseParams, dBackground=%g\n", dBackground);
         for (it=vBuffer.begin() ; it != vBuffer.end() ; m++) {
-            itStart = FindPulseStart (it, vBuffer.end(), dBackground, IsF1GreaterThenF2);
-			fprintf (stderr, "Pulse start found: %g\nBuffer Length: %d\n", *itStart, (int) vBuffer.size());
+			fPulseFound = false;
+			if (FindPulseStart (it, vBuffer.end(), itStart, dBackground, IsF1GreaterThenF2)) {
+				if (FindPulseStart (itStart + 1, vBuffer.end(), itPulseEnd, dBackground, IsF1GreaterThenF2)) {
+                	vRawPulse.clear();
+					fArea = fMax = 0;
+					for (it=itStart ; it != itPulseEnd ; it++) {
+						vRawPulse.push_back (*it);
+                    	fMax = max (fMax, *it);
+                    	fArea += *it;
+					}
+                	piNew.SetRawPulse (vRawPulse);
+                	piNew.SetPulse (SmoothPulse (vRawPulse));
+                	piNew.SetMaxVal (fMax);
+                	piNew.SetArea (fArea);
+					piNew.SetPulseID (nPulses++);
+                	piVec.push_back (piNew);
+					piNew.Clear ();
+					fPulseFound = true;
+				}
+			}
+			if (fPulseFound)
+				it = itPulseEnd;
+			else
+				it = vBuffer.end();//itPulseEnd;
+            //itStart = FindPulseStart (it, vBuffer.end(), dBackground, IsF1GreaterThenF2);
+			//fprintf (stderr, "Pulse start found: %g\nBuffer Length: %d\n", *itStart, (int) vBuffer.size());
 			///printf ("Start found at %d\r", m);
 			//printf ("Start found at %g\n", *itStart);
-            itPulseEnd = FindPulseStart (itStart+1, vBuffer.end(), dBackground, IsF1LessThenF2);
+            //itPulseEnd = FindPulseStart (itStart+1, vBuffer.end(), dBackground, IsF1LessThenF2);
 			//printf ("Start found at %d\n", m);
+/*
             if ((itPulseEnd != itEnd) && (itStart != itEnd)) {
 				it = itPulseEnd;//(TFloatVec::iterator) itEnd;
                 itBuffer = itStart;
@@ -629,8 +735,9 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
             }
 			else
 				it++;
+*/
         }
-        fExtractParams = true;
+        fExtractParams = piVec.size() > 0;//true;
     }
     catch (std::exception &err) {
         fprintf (stderr, "Runtime error in 'GetPulseParams':\n%s\n", err.what());
@@ -708,21 +815,28 @@ bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2))
+//TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2))
+bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2))
 {
-    TFloatVec::const_iterator it, itFound=itEnd, itStart=itEnd;
+    TFloatVec::const_iterator it, itStart=itEnd;
+    //TFloatVec::const_iterator it, itFound=itEnd, itStart=itEnd;
     size_t idxStart, idx;
     int nCount;
+	bool fStartFound = false;
 
     idxStart = 0;
-    for (it=itBegin, idx=1 ; (it != itEnd) && (itFound == itEnd) ; it++, idx++) {
+    for (it=itBegin, idx=0 ; (it != itEnd) && (fStartFound == false) ; it++, idx++) {
+    //for (it=itBegin, idx=1 ; (it != itEnd) && (itFound == itEnd) ; it++, idx++) {
         if (*it >= dBackground) {
+/*
             if (itStart == itEnd) {
                 itStart = it;
                 idxStart = idx;
                 nCount = 1;
             }
             else if (idx == (idxStart + 1)) {
+*/
+            if (idx == (idxStart + 1)) {
                 nCount++;
 				idxStart++;
 			}
@@ -736,11 +850,13 @@ TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFl
             idxStart = nCount = 0;
 			itStart = itEnd;
         }
-        if (nCount >= 3)
+        if (nCount >= 3) {
             itFound = itStart;
+			fStartFound = true;
+		}
     }
 	//////printf ("FindPulseStart:711, idx=%d\n", idx);
-    return (itFound);
+    return (fStartFound);
 }
 
 //-----------------------------------------------------------------------------

@@ -20,6 +20,14 @@ typedef vector<string> TStringVec;
 typedef vector<float> TFloatVec;
 #endif
 //---------------------------------------------------------------------------
+#ifndef	TFloatVecIterator
+typedef TFloatVec::iterator	TFloatVecIterator;
+#endif
+//---------------------------------------------------------------------------
+#ifndef	TFloatVecConstIterator
+typedef TFloatVec::const_iterator	TFloatVecConstIterator;
+#endif
+//---------------------------------------------------------------------------
 #ifndef	TFloatVecQueue
 typedef queue<TFloatVec> TFloatVecQueue;
 #endif
