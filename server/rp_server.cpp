@@ -74,7 +74,7 @@ void SafeReadMca (Json::Value &jResult);
 void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
-Json::Value ReadSignal (double dLen);
+size_t ReadSignal (double dLen, TFloatVec &vSignal);
 bool GetNextPulse (TFloatVec &vPulse);
 bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
@@ -287,12 +287,13 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
     int n, nPulses, j;
     
     try {
+		strReply = StringifyJson (jRead);
 		if (jRead["signal"].isNull() == false) {
 			string strSignalLength = jRead["signal"].asString();
 			fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
 			double dLen = stod (strSignalLength);
             if (dLen > 0) {
-            	jAllPulses["signal"] = ReadSignal (dLen);
+            	jAllPulses["signal"] = to_string(ReadSignal (dLen, vPulse));
             	strReply = StringifyJson(jAllPulses);
             	ExportDebugPulse(g_qDebug);
             }
@@ -309,6 +310,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 			fprintf (stderr, "%s\n", jMca.asBool() ? "true" : "false");
 			fprintf (stderr, "+++++++++++++++++\n");
         }
+/*
 		if (!jRead["buffer"].isNull()) {
 			if (jRead["buffer"].isString()) {
 				string s = jRead["buffer"].asString();
@@ -320,23 +322,26 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup)
 			//std::string s = StringifyJson (jRead["buffer"]);
 			//fprintf (stderr, "%s\n", s.c_str());
 		}
-		string s = to_string (SafeQueueSize ());
-		jAllPulses["buffer"] = s;//to_string (SafeQueueSize ());
+*/
+		//string s = to_string (SafeQueueSize ());
+		//jAllPulses["buffer"] = s;//to_string (SafeQueueSize ());
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
     }
+    strReply = StringifyJson(jAllPulses);
     return (jAllPulses);
 }
 
 //-----------------------------------------------------------------------------
-Json::Value ReadSignal (double dLen)
+size_t ReadSignal (double dLen, TFloatVec &vSignal)
+//Json::Value ReadSignal (double dLen, TFloatVec &vSignal)
 {
     Json::Value jSignal;
 	int nVectorPoints;
 	TFloatVec vPulse;
 	TFloatVec::iterator it;
-	TFloatVec vDebug;
+	//TFloatVec vDebug;
 	std::string strNumber;
 	size_t sPulse;
 	static int nCount=0;
@@ -344,6 +349,7 @@ Json::Value ReadSignal (double dLen)
 
     try {
 		nVectorPoints = int ((dLen / 8e-9) + 0.5);
+		vSignal.clear();
 		fprintf (stderr, "length: i%g\nBuffer: %d\n", dLen, nVectorPoints);
         while ((jSignal.size() < nVectorPoints) && (SafeQueueSize () > 0)) {
 			sPulse = SafeQueueExtract (vPulse);
@@ -352,24 +358,27 @@ Json::Value ReadSignal (double dLen)
 					rValue = *it;
 					if (rValue > 0)
 						rValue += 0;
-					vDebug.push_back (1000.0 * rValue);
+					vSignal.push_back (1000.0 * rValue);
 					//vDebug.push_back (1000.0 * (*it));
 					strNumber = to_string (1000.0 * rValue);
-            		jSignal.append(strNumber.c_str());
+            		//jSignal.append(strNumber.c_str());
 				}
 			}
 			//strNumber = to_string (*(g_vRawSignal.begin()));
             //jSignal.append(strNumber.c_str());
 			//g_vRawSignal.erase (g_vRawSignal.begin());
         }
-		PrintVector (vDebug, "out_debug.csv");
+        jSignal["signa_length"] = to_string (vSignal.size());
+		PrintVector (vSignal, "out_debug.csv");
+		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
     }
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
     }
 	//printf ("rp_server.cpp:315, signal length:%d\n", jSignal.size());
-    return (jSignal);
+    return (vSignal.size());
+    //return (jSignal);
 }
 
 //-----------------------------------------------------------------------------
