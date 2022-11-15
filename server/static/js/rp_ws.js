@@ -394,8 +394,8 @@ function uploadSignalRead() {
 
 //-----------------------------------------------------------------------------
 function uploadMcaRead() {
-    return (uploadCheckBox ("cboxStartMCA"));
-    //return (uploadCheckBox ("cboxReadMCA"));
+    //return (uploadCheckBox ("cboxStartMCA"));
+    return (uploadCheckBox ("cboxReadMCA"));
 }
 
 //-----------------------------------------------------------------------------
