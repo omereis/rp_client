@@ -79,14 +79,6 @@ def message_to_rp (dictCommand, qData):
 def message_server(dictCommand):
     try:
         msg_str=''
-        #socket = open_socket()
-        #s = str(json.dumps(dictCommand))
-        #socket.send_string(s)
-        #print("message sent")
-
-        #message = socket.recv()
-        #print("message recieved:\n{}".format(message))
-        #msg_str = message.decode('utf-8')
         qData = Queue()
         prcSender = Process(target=message_to_rp, args=(dictCommand, qData,))
         prcSender.start()
@@ -102,22 +94,15 @@ def message_server(dictCommand):
             prcSender.join()
             while qData.qsize() > 0:
                 msg_str += qData.get()
-            #if (len(msg_str) <= 10):
-                #print('Message:\n"{}"'.format(msg_str))
-            #else:
-                #print('Message length:\n"{}"'.format(len(msg_str)))
         else:
             prcSender.terminate()
             msg_str = 'timeout'
     except Exception as e:
         print("Runtime error opening socket:\n%s" % e)
-    #finally:
-        #socket.close()
     if (len(msg_str) <= 20):
         print('Message:\n"{}"'.format(msg_str))
     else:
         print('Message length:\n"{}"'.format(len(msg_str)))
-    #print('Reply: "{}"'.format(msg_str))
     return (msg_str)
 
 #------------------------------------------------------------------------------
@@ -145,6 +130,7 @@ def OnRedPitayaMessage():
         print(res)
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
+        print('reply: {}'.format(txtReply))
         #if 'setup' in dictCommand:
             #print('calling client_setup_command')
             #txtReply = client_setup_command (dictCommand)
