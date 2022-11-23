@@ -8,6 +8,8 @@
 
 #include <mutex>
 
+static const char *g_szPackageSize = "package_size";
+static const int g_nDefaultPackageSize = 1024;
 //-----------------------------------------------------------------------------
 // TRedPitayaSetup
 //-----------------------------------------------------------------------------
@@ -49,6 +51,7 @@ void TRedPitayaSetup::Clear ()
     SetMcaOnOff (false);
     SetPsdOnOff (false);
     SetBackground (0.1);
+    SetPackageSize (g_nDefaultPackageSize);
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
@@ -59,7 +62,8 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetSamplingOnOff (other.GetSamplingOnOff ());
     SetMcaOnOff (other.GetMcaOnOff ());
     SetPsdOnOff (other.GetPsdOnOff ());
-    SetBackground (GetBackground());
+    SetBackground (other.GetBackground());
+    SetPackageSize (other.GetPackageSize());
 }
 //-----------------------------------------------------------------------------
 TRedPitayaTrigger TRedPitayaSetup::GetTrigger() const
@@ -155,6 +159,7 @@ Json::Value TRedPitayaSetup::AsJson()
     jSetup["mca"] = m_mca_params.AsJson();
 	//fprintf (stderr, "TRedPitayaSetup::AsJson, MCA read\n");
     jSetup["background"] = DoubleAsString (GetBackground());
+    jSetup["package_size"] = to_string (GetPackageSize());
 	//fprintf (stderr, "TRedPitayaSetup::AsJson, Setup set\n");
 	fprintf (stderr, "TRedPitayaSetup::AsJson, sampling read\n%s\n\n", StringifyJson (jSetup["sampling"]).c_str());
     return (jSetup);
@@ -173,11 +178,14 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
         jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
 		if (!jSetup["background"].isNull()) {
 			std::string strBkgnd = jSetup["background"].asString();
-			fprintf (stderr, "UpdateFromJson, #170, strBkgnd: %s\n", strBkgnd.c_str());
+			//fprintf (stderr, "UpdateFromJson, #170, strBkgnd: %s\n", strBkgnd.c_str());
 			double d = stod (strBkgnd);
 			SetBackground (d);
-			fprintf (stderr, "New Background: %g\n", GetBackground());
+			//fprintf (stderr, "New Background: %g\n", GetBackground());
 		}
+        if (!jSetup[g_szPackageSize].isNull())
+            if (jSetup[g_szPackageSize].isInt())
+                SetPackageSize (jSetup[g_szPackageSize].asInt());
 /*
 */
 		if (fUpdateHardware) {
@@ -367,6 +375,18 @@ Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd)
 	}
     jSetup["background"] = DoubleAsString (GetBackground());
 	return (jSetup);
+}
+
+//-----------------------------------------------------------------------------
+int TRedPitayaSetup::GetPackageSize() const
+{
+    return (m_nPackageSize);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetPackageSize (int nPackageSize)
+{
+    m_nPackageSize = nPackageSize;
 }
 
 //-----------------------------------------------------------------------------

@@ -67,6 +67,8 @@ public:
 	void SetBackground (const string &strBackground);
     void SetBackground (double dBackground);
     void SetBackgroundFromJson (Json::Value jBkgnd);
+    int GetPackageSize() const;
+    void SetPackageSize (int nPackageSize);
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
@@ -79,6 +81,7 @@ private:
     bool m_fSamplingOnOff;
     bool m_fMcaOnOff;
     bool m_fPsdOnOff;
+    int m_nPackageSize;
 };
 //-----------------------------------------------------------------------------
 #endif

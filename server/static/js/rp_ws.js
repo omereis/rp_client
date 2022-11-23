@@ -22,6 +22,7 @@ function onUpdateRedPitayaSetupClick() {
     msgCmd['trigger'] = msgTrigger;
     msgCmd['sampling'] = uploadSampling();
 	msgCmd['background'] = uploadBackground();
+	msgCmd['package_size'] = uploadPackageSize();
     msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
@@ -120,6 +121,8 @@ function setupHandler (reply) {
 		}
 		if (dictSetup.hasOwnProperty('background'))
 			downloadBackground (dictSetup.background);
+		if (dictSetup.hasOwnProperty('package_size'))
+			downloadPagckageSize (dictSetup.package_size);
 		if (dictSetup.hasOwnProperty('mca'))
 			downloadMca (dictSetup.mca);
     }
@@ -169,6 +172,13 @@ function downloadBackground (dBackground) {
 	var txt = document.getElementById ('txtBackground');
 	if (txt != null)
 		txt.value = dBackground;
+}
+
+//-----------------------------------------------------------------------------
+function downloadPagckageSize (package_size) {
+	var txt = document.getElementById ('txtPackageSize');
+	if (txt != null)
+		txt.value = package_size;
 }
 
 //-----------------------------------------------------------------------------
@@ -498,11 +508,10 @@ function setupReadSignal (reply) {
             aMcaData = samples.pulses.mca;
         if (samples.pulses.hasOwnProperty('signal'))
             aPulseData = samples.pulses.signal;
-
+        if (samples.pulses.hasOwnProperty('buffer_length'))
+			downloadBufferLength(samples.pulses.buffer_length);
         if (aPulseData != null)
             plotSignal (aPulseData);
-            //var aMca = samples.pulses.mca;//.pulse;
-            //plotMca (aMca);
         if (aMcaData != null)
             plotMca (aMcaData);
     }
@@ -512,6 +521,13 @@ function setupReadSignal (reply) {
         console.log(exception);
     }
 }
+
+//-----------------------------------------------------------------------------
+function downloadBufferLength(value) {
+	var txtbx = document.getElementById("txtCardBuffer");
+	txtbx.value = value;
+}
+
 //-----------------------------------------------------------------------------
 function plotSignal (aPulseData) {
 	var layout = {}, yData=[], t, yTrigger=[], yBackground=[];
@@ -564,10 +580,15 @@ function plotSignal (aPulseData) {
     Plotly.newPlot(chart, data, layout);
 }
 
-
 //-----------------------------------------------------------------------------
 function uploadBackground() {
 	var txt = document.getElementById ('txtBackground');
+	return (parseFloat(txt.value));
+}
+
+//-----------------------------------------------------------------------------
+function uploadPackageSize() {
+	var txt = document.getElementById ('txtPackageSize');
 	return (parseFloat(txt.value));
 }
 

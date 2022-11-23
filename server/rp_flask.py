@@ -103,6 +103,9 @@ def message_server(dictCommand):
         print('Message:\n"{}"'.format(msg_str))
     else:
         print('Message length:\n"{}"'.format(len(msg_str)))
+    #print('=======================================================')
+    #print(msg_str)
+    #print('=======================================================')
     return (msg_str)
 
 #------------------------------------------------------------------------------
