@@ -10,7 +10,6 @@ txtHostName = None
 g_txtTarget = 'Red Pitaya'
 g_fIsRedPitaya = True
 g_fIsontainer = False
-global g_nPackageSize
 
 #------------------------------------------------------------------------------
 @app.route("/")
@@ -104,9 +103,9 @@ def message_server(dictCommand):
         print('Message:\n"{}"'.format(msg_str))
     else:
         print('Message length:\n"{}"'.format(len(msg_str)))
-    #print('=======================================================')
-    #print(msg_str)
-    #print('=======================================================')
+    print('++++++++++++++++++++++++++++++++++++++++++++')
+    print(msg_str)
+    print('++++++++++++++++++++++++++++++++++++++++++++')
     return (msg_str)
 
 #------------------------------------------------------------------------------
@@ -129,27 +128,12 @@ def OnRedPitayaMessage():
     print('type(res): {}'.format(type(res)))
     try:
         res = request.args['message'].lower()
-        print('on_red_pitaya_message')
         print('+++++++++++++++++++++++++++++++++++++++++++++')
+        print('on_red_pitaya_message')
         print(res)
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
-        dictReply = json.loads(txtReply)
-        print(dictReply.keys())
-        if 'pulses' in dictReply.keys():
-            print('+++++++++++++++++++++++++++++++++++++++++++++')
-            print(txtReply)
-            print('+++++++++++++++++++++++++++++++++++++++++++++')
-            print(dictReply)
-            print('+++++++++++++++++++++++++++++++++++++++++++++')
-            dictPulses = dictReply['pulses']
-            if ('signal' in dictPulses.keys()):
-                nSignalLength = int (dictReply['pulses']['signal']['signal_length'])
-                nPackageSize = int (dictReply['pulses']['signal']['package_size'])
-                print('signal: {}\npackage: {}'.format(nSignalLength, nPackageSize))
-                #print('Expecting {} packages'.format(nPackages))
-                #print('Expecting {} messages'.format(nPackages / g_nPackageSize))
-        print('+++++++++++++++++++++++++++++++++++++++++++++')
+        print('reply: {}'.format(txtReply))
         #if 'setup' in dictCommand:
             #print('calling client_setup_command')
             #txtReply = client_setup_command (dictCommand)

@@ -183,9 +183,14 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 			SetBackground (d);
 			//fprintf (stderr, "New Background: %g\n", GetBackground());
 		}
-        if (!jSetup[g_szPackageSize].isNull())
+        if (!jSetup[g_szPackageSize].isNull()) {
+			int nPkgSize=GetPackageSize();
             if (jSetup[g_szPackageSize].isInt())
-                SetPackageSize (jSetup[g_szPackageSize].asInt());
+                nPkgSize = jSetup[g_szPackageSize].asInt();
+			else if (jSetup[g_szPackageSize].isString())
+                nPkgSize = atoi (jSetup[g_szPackageSize].asString().c_str());
+			SetPackageSize (nPkgSize);
+		}
 /*
 */
 		if (fUpdateHardware) {
