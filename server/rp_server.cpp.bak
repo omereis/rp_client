@@ -188,8 +188,8 @@ int main ()
 		if (strReply.length() == 0)
 			strReply += std::string("{}");
 		zmq_send (responder, strReply.c_str(), strReply.length(), 0);
-		//if (nBufferPoints > 0)
-			//zmq_send (responder, afBuffer, nBufferPoints * sizeof(float), 0);
+		if (nBufferPoints > 0)
+			zmq_send (responder, afBuffer, nBufferPoints * sizeof(float), 0);
 		fMessageRecieved = false;
     }
     return 0;
@@ -1095,16 +1095,14 @@ Json::Value ReadMca ()
 Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal)
 {
 	Json::Value jReply;
-	TFloatVec::iterator it;
 
 	try {
-		int n, nSize = jCmd["signal"].asInt();
+		int nSize = jCmd["signal"].asInt();
 		int nStart = jCmd["start"].asInt();
 		for (n=0, it=vSignal.begin() ; (n < nStart) && (it != vSignal.end()) ; n++)
 			it++;
 		for (n=0 ; (n < nSize) && (it != vSignal.end()) ; n++, it++)
 			jReply["signal"].append (*it);
-		jReply["length"] = to_string(n);
 	}
     catch (std::exception exp) {
 		fprintf (stderr, "Runtime error in 'ContinueReadSignal ':\n%s\n", exp.what());
