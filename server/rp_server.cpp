@@ -1110,5 +1110,9 @@ Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal)
 		fprintf (stderr, "Runtime error in 'ContinueReadSignal ':\n%s\n", exp.what());
 		jReply["error"] = exp.what();
 	}
+	string strReply = StringifyJson (jReply);
+	fprintf (stderr, "+----------------------------------------------------+\n");
+	fprintf (stderr, "Reply:\n%s\n", strReply.c_str());
+	fprintf (stderr, "+----------------------------------------------------+\n");
 	return (jReply);
 }

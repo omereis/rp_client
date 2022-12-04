@@ -135,39 +135,33 @@ def OnRedPitayaMessage():
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
         dictReply = json.loads(txtReply)
+        #d = dictReply
         print(dictReply.keys())
+        """
+        """
         if 'pulses' in dictReply.keys():
-            print('+++++++++++++++++++++++++++++++++++++++++++++')
-            print(txtReply)
-            print('+++++++++++++++++++++++++++++++++++++++++++++')
-            print(dictReply)
-            print('+++++++++++++++++++++++++++++++++++++++++++++')
             dictPulses = dictReply['pulses']
             if ('signal' in dictPulses.keys()):
                 nSignalLength = int (dictReply['pulses']['signal']['signal_length'])
                 nPackageSize = int (dictReply['pulses']['signal']['package_size'])
-                print('signal: {}\npackage: {}'.format(nSignalLength, nPackageSize))
-                get_signal_from_hw (nSignalLength, nPackageSize)
-                #dictPkg = dict()
-                #nRemaining = nSignalLength
-                #while nRemaining > 0:
-                    #if nRemaining > nSignalSize:
-                        #nPackage = nPackageSize
-                    #else:
-                        #nPackage = nRemaining 
-                    #dictPkg['package'] = nPackage 
-                    #txtReply = message_server(dictPkg)
-                #print('Expecting {} packages'.format(nPackages))
-                #print('Expecting {} messages'.format(nPackages / g_nPackageSize))
+                aSignal = get_signal_from_hw (nSignalLength, nPackageSize)
+                print('===============================================')
+                dictReply['pulses']['signal'] = aSignal#[0:5]
+                print('===============================================')
+                txtReply = json.dumps(dictReply)#str(dictReply)
+                #print(dictReply['pulses']['signal'])
+                print(txtReply)
+                print('===============================================')
+                print('===============================================')
+        """
+        """
+        #txtReply = str(d)
         print('+++++++++++++++++++++++++++++++++++++++++++++')
-        #if 'setup' in dictCommand:
-            #print('calling client_setup_command')
-            #txtReply = client_setup_command (dictCommand)
-        #else:
-            #txtReply = client_read_signal (dictCommand)
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
         print(txtReply)
+    print('----------------------------------------------')
+    print(txtReply)
     print('----------------------------------------------')
     return (txtReply)
 
@@ -175,24 +169,24 @@ def OnRedPitayaMessage():
 def get_signal_from_hw (nSignalLength, nPackageSize):
     try:
         dictCommand = dict()
-        aSignal = [0]# * nSignalLength
+        aSignal = []# * nSignalLength
         socket = open_socket()
         nStart = nRecieved = 0
         dictCommand['signal'] = nPackageSize
         while (nRecieved < nSignalLength):
             dictCommand['start'] = nRecieved#nStart
             s = str(json.dumps(dictCommand))
-            print('===============================================')
-            print(s)
-            print('===============================================')
+            #print('===============================================')
+            #print(s)
+            #print('===============================================')
             socket.send_string(s)
             message = socket.recv()
             msg_str = message.decode('utf-8')
-            print('===============================================')
-            print('Recieved message: {}'.format(len(msg_str)))
-            print('===============================================')
+            #print('===============================================')
+            #print('Recieved message: {}'.format(len(msg_str)))
+            #print('===============================================')
             dictReply = json.loads(msg_str)
-            print(dictReply)
+            #print(dictReply)
             if ('length' in dictReply.keys()):
             #input('Message Recieved. Enter <CR> to proceed ')
                 nRecieved += int(dictReply['length'])
@@ -203,9 +197,13 @@ def get_signal_from_hw (nSignalLength, nPackageSize):
             else:
                 nRecieved = nSignalLength
             #input('Added buffer. Enter <CR> to proceed ')
+        #print('===============================================')
+        #if (len(aSignal) > 1):
+            #print('First element: {}'.format(aSignal[0]))
+        #print('===============================================')
     except Exception as e:
         print("Runtime error opening socket:\n%s" % e)
-        aSignal = [0]
+        aSignal = None
     finally:
         socket.close()
     return (aSignal)

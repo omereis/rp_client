@@ -506,8 +506,10 @@ function setupReadSignal (reply) {
         var layout = {};
         if (samples.pulses.hasOwnProperty("mca"))
             aMcaData = samples.pulses.mca;
-        if (samples.pulses.hasOwnProperty('signal'))
+        if (samples.pulses.hasOwnProperty('signal')) {
+			console.log('signal accepted');
             aPulseData = samples.pulses.signal;
+		}
         if (samples.pulses.hasOwnProperty('buffer_length'))
 			downloadBufferLength(samples.pulses.buffer_length);
         if (aPulseData != null)
