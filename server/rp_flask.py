@@ -145,24 +145,24 @@ def OnRedPitayaMessage():
                 nSignalLength = int (dictReply['pulses']['signal']['signal_length'])
                 nPackageSize = int (dictReply['pulses']['signal']['package_size'])
                 aSignal = get_signal_from_hw (nSignalLength, nPackageSize)
-                print('===============================================')
+                #print('===============================================')
                 dictReply['pulses']['signal'] = aSignal#[0:5]
-                print('===============================================')
+                #print('===============================================')
                 txtReply = json.dumps(dictReply)#str(dictReply)
                 #print(dictReply['pulses']['signal'])
-                print(txtReply)
-                print('===============================================')
-                print('===============================================')
+                #print(txtReply)
+                #print('===============================================')
+                #print('===============================================')
         """
         """
         #txtReply = str(d)
-        print('+++++++++++++++++++++++++++++++++++++++++++++')
+        #print('+++++++++++++++++++++++++++++++++++++++++++++')
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
         print(txtReply)
-    print('----------------------------------------------')
-    print(txtReply)
-    print('----------------------------------------------')
+    #print('----------------------------------------------')
+    #print(txtReply)
+    #print('----------------------------------------------')
     return (txtReply)
 
 #------------------------------------------------------------------------------

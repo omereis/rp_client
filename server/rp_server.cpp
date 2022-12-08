@@ -300,34 +300,46 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
     char szNum[128];
     Json::Value jAllPulses, jPulse(Json::arrayValue), jPulseData(Json::arrayValue);
     int n, nPulses, j;
+	bool fReset = false;
     
     try {
         vSignal.clear();
 		strReply = StringifyJson (jRead);
-        jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
-		if (jRead["signal"].isNull() == false) {
-			string strSignalLength = jRead["signal"].asString();
-			fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
-			double dLen = stod (strSignalLength);
-            if (dLen > 0) {
-            	jAllPulses["signal"] = ReadSignal (rp_setup, dLen, vSignal);
-            	//jAllPulses["signal"] = to_string(ReadSignal (dLen, vSignal));
-            	strReply = StringifyJson(jAllPulses);
-            	ExportDebugPulse(g_qDebug);
-            }
+		if (jRead["buffer"].isNull() == false) {
+			string str = jRead["buffer"].asString();
+			fprintf (stderr, "Buffer Command: %s\n", str.c_str());
+			if (str == "reset")
+				fReset = true;
 		}
-        if (!jRead["mca"].isNull()) {
-			Json::Value jMca = jRead["mca"];
-			fprintf (stderr, "\n+++++++++++++++++\n");
-			if (jRead["mca"].asBool()) {
-				fprintf (stderr, "\nMCA read\n");
-            	jAllPulses["mca"] = ReadMca ();
+		if (fReset) {
+			SafeQueueClear ();
+		}
+		else {
+			if (jRead["signal"].isNull() == false) {
+				string strSignalLength = jRead["signal"].asString();
+				fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
+				double dLen = stod (strSignalLength);
+            	if (dLen > 0) {
+            		jAllPulses["signal"] = ReadSignal (rp_setup, dLen, vSignal);
+            		//jAllPulses["signal"] = to_string(ReadSignal (dLen, vSignal));
+            		strReply = StringifyJson(jAllPulses);
+            		ExportDebugPulse(g_qDebug);
+            	}
 			}
-			else
-				fprintf (stderr, "\nMCA NOT read\n");
-			fprintf (stderr, "%s\n", jMca.asBool() ? "true" : "false");
-			fprintf (stderr, "+++++++++++++++++\n");
-        }
+        		if (!jRead["mca"].isNull()) {
+					Json::Value jMca = jRead["mca"];
+					fprintf (stderr, "\n+++++++++++++++++\n");
+					if (jRead["mca"].asBool()) {
+						fprintf (stderr, "\nMCA read\n");
+            			jAllPulses["mca"] = ReadMca ();
+				}
+				else
+					fprintf (stderr, "\nMCA NOT read\n");
+				fprintf (stderr, "%s\n", jMca.asBool() ? "true" : "false");
+				fprintf (stderr, "+++++++++++++++++\n");
+        	}
+		}/**/
+        jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
@@ -1110,9 +1122,11 @@ Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal)
 		fprintf (stderr, "Runtime error in 'ContinueReadSignal ':\n%s\n", exp.what());
 		jReply["error"] = exp.what();
 	}
+/*
 	string strReply = StringifyJson (jReply);
 	fprintf (stderr, "+----------------------------------------------------+\n");
 	fprintf (stderr, "Reply:\n%s\n", strReply.c_str());
 	fprintf (stderr, "+----------------------------------------------------+\n");
+*/
 	return (jReply);
 }
