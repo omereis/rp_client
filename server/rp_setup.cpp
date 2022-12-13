@@ -52,6 +52,7 @@ void TRedPitayaSetup::Clear ()
     SetPsdOnOff (false);
     SetBackground (0.1);
     SetPackageSize (g_nDefaultPackageSize);
+    SetPreTriggerNs (100);
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
@@ -64,6 +65,7 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetPsdOnOff (other.GetPsdOnOff ());
     SetBackground (other.GetBackground());
     SetPackageSize (other.GetPackageSize());
+    SetPreTriggerNs (other.GetPreTriggerNs());
 }
 //-----------------------------------------------------------------------------
 TRedPitayaTrigger TRedPitayaSetup::GetTrigger() const
@@ -148,6 +150,16 @@ Json::Value TRedPitayaSetup::TriggerAsJson()
 }
 
 //-----------------------------------------------------------------------------
+std::string TRedPitayaSetup::PreTriggerAsString (double dPreTrigger)
+{
+	char *sz = new char[50];
+	sprintf (sz, "%.2f", dPreTrigger);
+	std::string s (sz);
+	delete[] sz;
+	return (s);
+}
+
+//-----------------------------------------------------------------------------
 Json::Value TRedPitayaSetup::AsJson()
 {
     Json::Value jSetup;
@@ -160,8 +172,10 @@ Json::Value TRedPitayaSetup::AsJson()
 	//fprintf (stderr, "TRedPitayaSetup::AsJson, MCA read\n");
     jSetup["background"] = DoubleAsString (GetBackground());
     jSetup["package_size"] = to_string (GetPackageSize());
+	jSetup["pre_trigger_ns"] = PreTriggerAsString (GetPreTriggerNs());// to_string (GetPreTriggerNs());
 	//fprintf (stderr, "TRedPitayaSetup::AsJson, Setup set\n");
-	fprintf (stderr, "TRedPitayaSetup::AsJson, sampling read\n%s\n\n", StringifyJson (jSetup["sampling"]).c_str());
+	//fprintf (stderr, "TRedPitayaSetup::AsJson, sampling read\n%s\n\n", StringifyJson (jSetup["sampling"]).c_str());
+    //fprintf (stderr, "TRedPitayaSetup::AsJson\n%s\n\n", StringifyJson (jSetup).c_str());
     return (jSetup);
 }
 
@@ -191,6 +205,7 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
                 nPkgSize = atoi (jSetup[g_szPackageSize].asString().c_str());
 			SetPackageSize (nPkgSize);
 		}
+        SetPreTriggerNs (jSetup["pre_trigger_ns"]);
 /*
 */
 		if (fUpdateHardware) {
@@ -395,6 +410,41 @@ void TRedPitayaSetup::SetPackageSize (int nPackageSize)
 }
 
 //-----------------------------------------------------------------------------
+float TRedPitayaSetup::GetPreTriggerNs() const
+{
+    return (m_fPreTriggerNs);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetPreTriggerNs (float fDelayNs)
+{
+    m_fPreTriggerNs = fDelayNs;
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetPreTriggerNs (const std::string &str)
+{
+    try {
+        double dPre = std::stod (str);
+        SetPreTriggerNs (dPre);
+    }
+    catch (std::exception &exp) {
+        fprintf (stderr, "Runtime error setting pre trigger:\n%s\n", exp.what());
+    }
+}
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetPreTriggerNs (Json::Value jPreTrigger)
+{
+    if (!jPreTrigger.isNull()) {
+        if (jPreTrigger.isString())
+            SetPreTriggerNs (jPreTrigger.asString());
+        else if (jPreTrigger.isDouble())
+            SetPreTriggerNs (jPreTrigger.asDouble());
+    }
+}
+
+//-----------------------------------------------------------------------------
+
 #ifdef	_RED_PITAYA_HW
 bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 {

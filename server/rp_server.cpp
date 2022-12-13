@@ -155,9 +155,9 @@ int main ()
         char buffer [1024];
         zmq_recv (responder, buffer, 1024, 0);
 		std::string strJson = ToLower(buffer);
-		fprintf (stderr, "-------------------------------\n");
-		fprintf (stderr, "Received Message:\n%s\n", strJson.c_str());
-		fprintf (stderr, "-------------------------------\n");
+		//fprintf (stderr, "-------------------------------\n");
+		//fprintf (stderr, "Received Message:\n%s\n", strJson.c_str());
+		//fprintf (stderr, "-------------------------------\n");
 		strJson = ReplaceAll(strJson, "\'", "\"");
 
 		if (reader.parse (strJson, root)) {
@@ -269,9 +269,9 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca
             jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
 		else {
         	jNew = rp_setup.AsJson();
-			fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
-			fprintf (stderr, "Reading setup\n");
-			fprintf (stderr, "+++++++++++++++++++++++++++\n\n");
+			//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
+			//fprintf (stderr, "Reading setup\n");
+			//fprintf (stderr, "+++++++++++++++++++++++++++\n\n");
 		}
 		strReply = StringifyJson (jNew);
 #ifdef  _RED_PITAYA_HW
@@ -284,9 +284,9 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca
         jNew["error"] = err.what();
     }
 	strReply = StringifyJson (jNew);
-	fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
-	fprintf (stderr, "Setup:\n%s\n", strReply.c_str());
-	fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
+	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
+	//fprintf (stderr, "Setup:\n%s\n", strReply.c_str());
+	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
     return (jNew);
 }
 //-----------------------------------------------------------------------------
@@ -992,15 +992,15 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
     rp_AcqSetTriggerDelay(0);
 	//fprintf (stderr, "ReadHardwareSamples, 650\n");
     rp_AcqStart();
-	fprintf (stderr, "Trigger Source: %s\n", GetHardwareTriggerName (rp_setup.GetHardwareTriggerSource()).c_str());
+	//fprintf (stderr, "Trigger Source: %s\n", GetHardwareTriggerName (rp_setup.GetHardwareTriggerSource()).c_str());
 	usleep(1);
 	rp_AcqSetTriggerSrc(rp_setup.GetHardwareTriggerSource());
 	//rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
-	fprintf (stderr, "Trigger Source Set: %s\n", GetHardwareTriggerName (rp_setup.GetHardwareTriggerSource()).c_str()); 
+	//fprintf (stderr, "Trigger Source Set: %s\n", GetHardwareTriggerName (rp_setup.GetHardwareTriggerSource()).c_str()); 
 	cStart = clock();
 	int nDebug=0;
 	while((fTrigger == false) && (fTimeout == false)){
-		fprintf (stderr, "debug: %d\n", nDebug);
+		//fprintf (stderr, "debug: %d\n", nDebug);
 		nDebug++;
 		rp_AcqGetTriggerState(&state);
 		if (state == RP_TRIG_STATE_TRIGGERED)//{
@@ -1009,16 +1009,18 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
 			fprintf (stderr, "No Trigger\r");
 		dDiff = (clock() - cStart);
 		dDiff /= (double) CLOCKS_PER_SEC;
-		fprintf (stderr, "fDiff = %g\n", dDiff);
+		//fprintf (stderr, "fDiff = %g\n", dDiff);
 		if (dDiff >= 3)
 			fTimeout = true;
-		fprintf (stderr, "fDiff = %g\nfTimeout=%s\n", dDiff, BoolToString(fTimeout).c_str());
+		//fprintf (stderr, "fDiff = %g\nfTimeout=%s\n", dDiff, BoolToString(fTimeout).c_str());
 	}
     if (fTrigger) {
 	    uint32_t uiTriggerPos, uiLen=buff_size, n;
+		int64_t time_ns;
         TFloatVec::iterator i;
 	    rp_AcqGetWritePointerAtTrig (&uiTriggerPos);
-	    rp_AcqGetDataV (RP_CH_1, uiTriggerPos, &uiLen, buff);
+	    //rp_AcqGetDataV (RP_CH_1, uiTriggerPos, &uiLen, buff);
+	    rp_AcqGetDataV (RP_CH_1, uiTriggerPos - 100, &uiLen, buff);
 	    //rp_AcqGetDataRaw (RP_CH_1, uiTriggerPos, &uiLen, auiBuffer);
         vPulse.resize (buff_size, 0);
         for (n=0, i=vPulse.begin() ; n < (int) buff_size ; n++, i++) //{

@@ -23,6 +23,7 @@ function onUpdateRedPitayaSetupClick() {
     msgCmd['sampling'] = uploadSampling();
 	msgCmd['background'] = uploadBackground();
 	msgCmd['package_size'] = uploadPackageSize();
+    msgCmd['pre_trigger_ns'] = uploadPreTrigger();
     msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
@@ -79,8 +80,10 @@ function uploadTriggerSrc () {
 //-----------------------------------------------------------------------------
 function downloadTriggerOnOff (fOnOff) {
 	var cbox = document.getElementById ('cboxTriggerEnabled');
-	if (cbox != null)
+	if (cbox != null) {
 		cbox.checked = fOnOff;
+		enableItemsByTrigger(fOnOff)
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -125,6 +128,8 @@ function setupHandler (reply) {
 			downloadPagckageSize (dictSetup.package_size);
 		if (dictSetup.hasOwnProperty('mca'))
 			downloadMca (dictSetup.mca);
+        if (dictSetup.hasOwnProperty('pre_trigger_ns'))
+            downloadPreTrigger(dictSetup.pre_trigger_ns);
     }
     catch (err) {
         console.log(err);
@@ -999,7 +1004,7 @@ function onCardBufferClear () {
     var msg = new Object, msgSignal = new Object;
 	msgSignal['buffer'] = 'reset';
     msg['read_data'] = msgSignal;
-	sendMesssageThroughFlask(msg, setupCardBuffer);
+	sendMesssageThroughFlask(msg, setupReadSignal );
 }
 
 //-----------------------------------------------------------------------------
@@ -1014,6 +1019,34 @@ function setupCardBuffer (reply) {
         txt = exception;
         console.log(exception);
     }
+}
+
+
+//-----------------------------------------------------------------------------
+function onPreTriggerSet() {
+}
+
+//-----------------------------------------------------------------------------
+function onPreTriggerGet() {
+}
+
+//-----------------------------------------------------------------------------
+function uploadPreTrigger() {
+    var txtbx = document.getElementById("txtPreTriggerNS");
+    var pre;
+    try {
+        pre = parseInt (txtbx.value);
+    }
+    catch (exception) {
+        pre = 0;
+    }
+    return (pre);
+}
+
+//-----------------------------------------------------------------------------
+function downloadPreTrigger(val) {
+    var txtbx = document.getElementById("txtPreTriggerNS");
+    txtbx.value = val;
 }
 
 //-----------------------------------------------------------------------------

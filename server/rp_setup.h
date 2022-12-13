@@ -26,6 +26,8 @@ public:
     void Clear ();
 
 	void TriggerNow ();
+	
+	static std::string PreTriggerAsString (double dPreTrigger);
 
 	Json::Value HandleBackground (Json::Value &jBkgnd);
 #ifdef	_RED_PITAYA_HW
@@ -69,6 +71,10 @@ public:
     void SetBackgroundFromJson (Json::Value jBkgnd);
     int GetPackageSize() const;
     void SetPackageSize (int nPackageSize);
+    float GetPreTriggerNs() const;
+    void SetPreTriggerNs (float fDelayNs);
+    void SetPreTriggerNs (const std::string &str);
+    void SetPreTriggerNs (Json::Value jPreTrigger);
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
@@ -82,6 +88,7 @@ private:
     bool m_fMcaOnOff;
     bool m_fPsdOnOff;
     int m_nPackageSize;
+    float m_fPreTriggerNs;
 };
 //-----------------------------------------------------------------------------
 #endif
