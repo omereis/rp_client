@@ -78,7 +78,7 @@ int CountInString (const std::string &strJson, int c);
 //size_t ReadSignal (double dLen, TFloatVec &vSignal);
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal);
 bool GetNextPulse (TFloatVec &vPulse);
-bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec);
+bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
@@ -86,7 +86,6 @@ bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterato
 //TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2));
 //TFloatVec::iterator FindPulseStart (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground);
 //TFloatVec::iterator FindPulseEnd (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground);
-void PrintVector (const TFloatVec &vBuffer, const char szName[]);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 
 //-----------------------------------------------------------------------------
@@ -372,8 +371,9 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 					rValue = *it;
 					if (rValue > 0)
 						rValue += 0;
-					vSignal.push_back (1000.0 * rValue);
-					strNumber = to_string (1000.0 * rValue);
+					vSignal.push_back (rValue);
+					//vSignal.push_back (1000.0 * rValue);
+					//strNumber = to_string (1000.0 * rValue);
 				}
 			}
 			rValue += 0;
@@ -668,7 +668,123 @@ bool IsF1LessThenF2 (float f1, float f2)
 }
 
 //-----------------------------------------------------------------------------
-bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
+bool GetVectorMinMax (TFloatVec &vBuffer, double &dMin, double &dMax)
+{
+	TFloatVec::iterator i;
+	bool fMinMax = false;
+
+	try {
+		if (vBuffer.size() > 0) {
+			i = vBuffer.begin();
+			dMin = dMax = (double) *i;
+			for (i++ ; i != vBuffer.end() ; i++) {
+				dMin = min (dMin, (double) *i);
+				dMax = max (dMax, (double) *i);
+			}
+		}
+	}
+    catch (std::exception &err) {
+        fprintf (stderr, "Runtime error in 'GetVectorMinMax ':\n%s\n", err.what());
+        fMinMax= false;
+    }
+	return (fMinMax);
+}
+
+//-----------------------------------------------------------------------------
+void Normalize (TFloatVec &vSource, double dMin, double dMax, TFloatVec &vResult)
+{
+	TFloatVec::iterator iSource, iResult;
+	vResult.resize(vSource.size());
+	iResult = vResult.begin();
+	for (iSource=vSource.begin() ; iSource != vSource.end() ; iSource++, iResult++) {
+		*iResult = -(*iSource) + dMax;
+	}
+}
+
+//-----------------------------------------------------------------------------
+bool FindPulseStart (TFloatVec &vSignal, TFloatVec::iterator iFromHere, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd)
+{
+	TFloatVec::iterator i, iSignalStart;
+	int n, nStart=-1, nFound = -1, nEnd = -1;
+	bool f = iStart == vSignal.end();
+
+	i = iFromHere;
+	iEnd = vSignal.end();
+	iStart = vSignal.end();
+	f = i != vSignal.end();
+	for (i=iFromHere, n=0 ; (iStart == vSignal.end()) && (i != vSignal.end()) ; i++, n++) {
+		if (*i > dBkgnd) {
+			if (nStart < 0) {
+				iSignalStart = i;
+				nStart = n;
+			}
+			else if (n - nStart > 3) {
+				iStart = iSignalStart;
+				nFound = n;
+			}
+		}
+		else
+			if (nStart >= 0)
+				nStart = -1;
+	}
+	if (iStart != vSignal.end()) {
+		for (i=iStart ; (iEnd == vSignal.end()) && (i != vSignal.end()) ;  n++, i++) {
+			if (*i < dBkgnd) {
+				iEnd = i;
+				nEnd = n;
+			}
+		}
+	}
+	//fprintf (stderr, "%g,%g\n", *iStart, *iEnd);
+	f = (iStart != vSignal.end()) && (iEnd != vSignal.end());
+	return (f);
+}
+
+//-----------------------------------------------------------------------------
+bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec)
+{
+	double dMin, dMax, dBkgnd;
+	TFloatVec vSignal;
+	TFloatVec::iterator i, iStart, iEnd;
+	int n;
+	bool fPulseFound = false;
+
+	GetVectorMinMax (vBuffer, dMin, dMax);
+	Normalize (vBuffer, dMin, dMax, vSignal);
+	//PrintVector (vBuffer, "buffer.csv");
+	//PrintVector (vSignal, "signal.csv");
+	i = vSignal.begin();
+	dBkgnd = *i;
+	//for (n=1, i++ ; n < (20 - 10) ; n++, i++) {
+	for (n=1, i++ ; n < (g_rp_setup.GetPreTriggerNs() - 10) ; n++, i++) {
+		//if (n == 0)
+			//fprintf (stderr, "Index: %d, Value: %g, Sum: %g\n", n, *i, dBkgnd);
+		dBkgnd += (double) *i;//= max (dBkgnd, (double) *i);
+		//fprintf (stderr, "Index: %d, Value: %g, Sum: %g\n", n, *i, dBkgnd);
+		//fprintf (stderr, "%d - %g\n", n, *i);
+		//if (n % 10 == 0)
+		//dBkgnd += 0;
+	}
+	//getchar();
+	dBkgnd /= (g_rp_setup.GetPreTriggerNs() - 10);
+	if (FindPulseStart (vSignal, vSignal.begin(), dBkgnd, iStart, iEnd)) {
+		FILE *file = fopen ("norm.csv", "w+");
+		TFloatVec::iterator i1, i2, i3;
+		i1 = vBuffer.begin();
+		i2 = vSignal.begin();
+		for (i3 = iStart ; i3 != iEnd ; i3++)
+			fprintf (file, "%g\n", *i3);
+		//for ( ; (i1 != vBuffer.end()) && (i2 != vSignal.end()) ; i1++, i2++)
+			//fprintf (file, "%g,%g\n", *i1, *i2);
+		fclose (file);
+		//getchar();
+		fPulseFound = true;
+	}
+	return (fPulseFound);
+}
+//-----------------------------------------------------------------------------
+bool GetPulseParams1 (TFloatVec &vBuffer, TPulseInfoVec &piVec)
+//bool GetPulseParams (TFloatVec vBuffer, TPulseInfoVec &piVec)
 {
     bool fExtractParams=false;
     TPulseInfo piNew;
@@ -914,18 +1030,6 @@ TFloatVec::iterator FindPulseEnd (TFloatVec::iterator itBegin, TFloatVec::iterat
 }
 
 //-----------------------------------------------------------------------------
-void PrintVector (const TFloatVec &vBuffer, const char szName[])
-{
-	TFloatVec::const_iterator i;
-	FILE *file = fopen (szName, "a+");
-	fprintf (file, "------------------------------------\n");
-	for (i=vBuffer.begin() ; i < vBuffer.end() ; i++)
-		fprintf (file, "%g\n", *i);
-	fprintf (file, "++++++++++++++++++++++++++++++++++++\n");
-	fclose (file);
-}
-
-//-----------------------------------------------------------------------------
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
 {
     TFloatVec vSmooth, vWin;
@@ -1020,7 +1124,8 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
         TFloatVec::iterator i;
 	    rp_AcqGetWritePointerAtTrig (&uiTriggerPos);
 	    //rp_AcqGetDataV (RP_CH_1, uiTriggerPos, &uiLen, buff);
-	    rp_AcqGetDataV (RP_CH_1, uiTriggerPos - 100, &uiLen, buff);
+	    //rp_AcqGetDataV (RP_CH_1, uiTriggerPos - 100, &uiLen, buff);
+	    rp_AcqGetDataV (RP_CH_1, uiTriggerPos - (int) rp_setup.GetPreTriggerNs() , &uiLen, buff);
 	    //rp_AcqGetDataRaw (RP_CH_1, uiTriggerPos, &uiLen, auiBuffer);
         vPulse.resize (buff_size, 0);
         for (n=0, i=vPulse.begin() ; n < (int) buff_size ; n++, i++) //{

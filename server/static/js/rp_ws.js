@@ -546,7 +546,7 @@ function plotSignal (aPulseData) {
 	layout["yaxis"] = {};
 	layout['autosize'] = true;
 		//layout.xaxis["title"] = "Time [uSec]";
-	layout.yaxis["title"] = "Voltage";
+	layout.yaxis["title"] = "Voltage [mV]";
 	var mrgn = {};
 	var left_title = {};
 	left_title ['text'] = "Time [uSec]";
@@ -1020,7 +1020,6 @@ function setupCardBuffer (reply) {
         console.log(exception);
     }
 }
-
 
 //-----------------------------------------------------------------------------
 function onPreTriggerSet() {

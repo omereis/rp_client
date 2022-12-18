@@ -230,6 +230,18 @@ std::string PulseDirName (EPulseDir pulse_dir)
 	return (strPulseDir);
 }
 
+//-----------------------------------------------------------------------------
+void PrintVector (const TFloatVec &vBuffer, const char szName[])
+{
+	TFloatVec::const_iterator i;
+	FILE *file = fopen (szName, "a+");
+	fprintf (file, "------------------------------------\n");
+	for (i=vBuffer.begin() ; i < vBuffer.end() ; i++)
+		fprintf (file, "%g\n", *i);
+	fprintf (file, "++++++++++++++++++++++++++++++++++++\n");
+	fclose (file);
+}
+
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src)
