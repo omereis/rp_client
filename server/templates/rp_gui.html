@@ -156,9 +156,11 @@
                         	<input type="text" id="txtPackageSize" value="1024" style="width:75px;text-align: center;">
 						</td>
                     </tr>
+<!--
                     <th style="background-color: #5c7ee4;" colspan="2">
 						Trigger
                     </th>
+!-->
                     <tr>
                         <td>Rate</td>
                         <td><select id="comboRate">
@@ -185,6 +187,9 @@
                         </select>
                         </td>
                     </tr>
+                    <th colspan="2" style="background-color: #5c7ee4;" colspan="2">
+                        Processing
+                    </th>
                     <tr>
                         <td>
                             <input type="checkbox" id="cboxStartSignal" value="Signal" checked="true">Signal
@@ -244,8 +249,44 @@
 						</td>
                         <td><input type="button" value="Clear" onclick="onCardBufferClear()"></td>
                     </tr>
+                    <th colspan="2" style="background-color: #5c7ee4;" colspan="2">
+                        MCA
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        Min Voltage <input type="text" id="txtMcaMin" style="width:50px;text-align: center;" value="0">
+                    </td>
+                    <td>
+                        Maximum Voltage <input type="text" id="txtMcaMax" style="width:50px;text-align: center;" value="0">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Channels <input type="text" id="txtMcaChannels" style="width:50px;text-align: center;" value="1024">
+                    </td>
+                    <td>
+                        Period <input type="text" id="txtMcaPeriod" style="width:50px;text-align: center;" value="0"> seconds
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="button" value="Reset">
+                    </td>
+                    <td>
+                        <input type="button" value="Save...">
+                    </td>
+                </tr>
+<!--
+                    <th style="background-color: #5c7ee4;" colspan="2">
+						MCA Parameters
+                    </th>
                     <tr>
-                        <th colspan="2">
+                        <td>Min Voltage</td>
+                    </tr>
+-->
+                    <tr>
+                        <th colspan="2" style="background-color: #5c7ee4;" colspan="2">
                             Background
                         </th>
                     </tr>
@@ -260,13 +301,10 @@
                     <tr>
 					    <td colspan="2">
 						    <input type="button" value="Set" onclick="onSetBackgroundClick()">
-<!--
-                        </td>
-                        <td>
--->
                             <input type="text" id="txtBackground" style="width:75px;text-align: center;" value="0.1">
 					    </td>
                     </tr>
+                    <tr>
         </table>
             </td>
             <td style="vertical-align:top;">
