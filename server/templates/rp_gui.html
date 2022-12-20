@@ -73,23 +73,15 @@
                     <tr>
                         <td>
                             Direction
-                        </td>
-                        <td>
                             <select id="comboTriggerDir">
-                            <!-- <select id="comboTriggerDir" disabled="disabled"> -->
                                 <option value=""></option>"
                                 <option value="Up">Up</option>"
                                 <option value="Down">Down</option>"
                             </select>
                         </td>
-                    </tr>
-                    <tr>
                         <td>
                             Type
-                        </td>
-                        <td>
                             <select id="comboTriggerType">
-                            <!-- <select id="comboTriggerType" disabled="disabled"> -->
                                 <option value="Level">Level</option>"
                                 <option value="Edge">Edge</option>"
                             </select>
@@ -98,25 +90,16 @@
                     <tr>
                         <td>
                             Input #
-                        </td>
-                        <td>
                             <select id="comboTriggerIn">
-                            <!-- <select id="comboTriggerIn" disabled="disabled"> -->
                                 <option value=""></option>"
                                 <option value="In1">Input #1</option>"
                                 <option value="In2">Input #2</option>"
                             </select>
                         </td>
-                    </tr>
-                    <tr>
                         <td>
 							Level
-						</td>
-						<td>
-							<input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;">
-							<!-- <input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;" disabled="disabled"> -->
+                            <input type="text" id="txtTriggerLevel" value="0.5" style="width:75px;text-align: center;">
 							<select id="comboTriggerVoltage">
-							<!-- <select id="comboTriggerVoltage" disabled="disabled"> -->
 								<option id="optTrgMilli" value="1e-3">Millivolts</option>
 								<option id="optTrgVolt" value="1">Volts</option>
 							</select>
@@ -128,7 +111,6 @@
                         </td>
                         <td>
                             <input type="button" id="btnUpdateTrigger" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()">
-                            <!-- <input type="button" id="btnUpdateTrigger" value="Update Card Trigger" onclick="onUpdateCardTriggerClick ()" disabled="disabled"> -->
                         </td>
                     </tr>
                 </table>
@@ -137,33 +119,27 @@
                         Sampling
                     </th>
                     <tr>
-						<td>Pulse Direction</td>
 						<td>
+                            Pulse Direction<br>
                             <input type="radio" id="radioPulsePositive" name="signal_dir" checked="false">Positive
-							<br>
 							<input type="radio" id="radioPulseNegative" name="signal_dir" checked="true">Negative
 						</td>
+                        <td>
+                            Update Interval<br>
+                            <input type="text" id="txtInterval" value="1000" style="width:75px;text-align: center;"> milliseconds<br>
+                        </td>
+                    </tr>
                     </tr>
                     <tr>
-                    <td colspan="2">
-                        Update Interval
-                        <input type="text" id="txtInterval" value="1000" style="width:75px;text-align: center;"> milliseconds<br>
-                </td>
-                    </tr>
-                    <tr>
-						<td>Package Size</td>
-						<td>
-                        	<input type="text" id="txtPackageSize" value="1024" style="width:75px;text-align: center;">
+						<td colspan="2">
+                            Package Size
+                            <input type="text" id="txtPackageSize" value="1024" style="width:75px;text-align: center;">
 						</td>
                     </tr>
-<!--
-                    <th style="background-color: #5c7ee4;" colspan="2">
-						Trigger
-                    </th>
-!-->
                     <tr>
-                        <td>Rate</td>
-                        <td><select id="comboRate">
+                        <td>
+                            Rate
+                            <select id="comboRate">
                             	<option value=""></option>
                             	<option value="125000000">125Msps</option>
                             	<option value="15625000">15.625Msps</option>
@@ -173,10 +149,9 @@
                             	<option value="1907">1.907ksps</option>
                         	</select>
 						</td>
-                    </tr>
-                    <tr>
-                        <td>Decimation</td>
-                        <td><select id="comboDecimation">
+                        <td>
+                            Decimation
+                            <select id="comboDecimation">
                             <option value=""></option>
                             <option value="1">1</option>
                             <option value="8">8</option>
@@ -235,7 +210,7 @@
                     </tr>
                     <tr>
 						<td>
-							Pre Trigger [Ns]
+							Pre Trigger
 							<input type="text" id="txtPreTriggerNS" value="" style="width:75px;text-align: center;">
 						</td>
 						<td>
@@ -258,7 +233,7 @@
                         Min Voltage <input type="text" id="txtMcaMin" style="width:50px;text-align: center;" value="0">
                     </td>
                     <td>
-                        Maximum Voltage <input type="text" id="txtMcaMax" style="width:50px;text-align: center;" value="0">
+                        Maximum Voltage <input type="text" id="txtMcaMax" style="width:50px;text-align: center;" value="2.0">
                     </td>
                 </tr>
                 <tr>
@@ -266,7 +241,7 @@
                         Channels <input type="text" id="txtMcaChannels" style="width:50px;text-align: center;" value="1024">
                     </td>
                     <td>
-                        Period <input type="text" id="txtMcaPeriod" style="width:50px;text-align: center;" value="0"> seconds
+                        Period <input type="text" id="txtMcaPeriod" style="width:50px;text-align: center;" value="10"> minutes
                     </td>
                 </tr>
                 <tr>
@@ -274,18 +249,26 @@
                         <input type="button" value="Reset">
                     </td>
                     <td>
-                        <input type="button" value="Save...">
+                        <input type="button" value="Upload" onclick="onUploadMcaParams()">
+                        <input type="button" value="Download" onclick="onDownloadMcaParams()">
                     </td>
                 </tr>
-<!--
-                    <th style="background-color: #5c7ee4;" colspan="2">
-						MCA Parameters
-                    </th>
-                    <tr>
-                        <td>Min Voltage</td>
-                    </tr>
--->
-                    <tr>
+                <tr>
+                    <td>
+                        <input type="button" value="Start">
+                    </td>
+                    <td>
+                        <input type="button" value="Stop">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="text" id="txtMcaFale" style="width:200px;text-align: center;" value=""> <input type="button" value="Save...">
+                    </td>
+                </tr>
+
+
+                <tr>
                         <th colspan="2" style="background-color: #5c7ee4;" colspan="2">
                             Background
                         </th>

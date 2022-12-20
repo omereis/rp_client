@@ -716,11 +716,6 @@ function onQuitSampling() {
 }
 
 //-----------------------------------------------------------------------------
-function onMcaResetClick() {
-
-}
-
-//-----------------------------------------------------------------------------
 function uploadSampling() {
     var msgSampling = new Object;
     msgSampling["rate"] = uploadRate();
@@ -1048,4 +1043,37 @@ function downloadPreTrigger(val) {
     txtbx.value = val;
 }
 
+//-----------------------------------------------------------------------------
+function onDownloadMcaParams() {
+    var msg = new Object, msgMca = new Object;
+    msgMca['mca'] = uploadMcaParams();
+    msgMca['command'] = 'update';
+    msg['setup'] = msgMca
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function onUploadMcaParams() {
+    var msg = new Object, msgTrigger=new Object, msgCmd = new Object;
+    msgCmd['command'] = 'read_mca_params';
+    msg['setup'] = msgCmd;
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function uploadTextValue(txtInputId) {
+    var txt = document.getElementById(txtInputId);
+    var val;
+    if (txt != null)
+        val = txt.value;
+    return (val);
+}
+//-----------------------------------------------------------------------------
+function uploadMcaParams() {
+    var msgMca = new Object;
+    msgMca['max_voltage'] = uploadTextValue('txtMcaMax');
+    msgMca['min_voltage'] = uploadTextValue('txtMcaMin');
+    msgMca['channels'] = uploadTextValue('txtMcaChannels');
+	return (msgMca);
+}
 //-----------------------------------------------------------------------------
