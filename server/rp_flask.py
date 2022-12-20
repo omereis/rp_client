@@ -132,6 +132,7 @@ def OnRedPitayaMessage():
         print('on_red_pitaya_message')
         print('+++++++++++++++++++++++++++++++++++++++++++++')
         print(res)
+        print('+++++++++++++++++++++++++++++++++++++++++++++')
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
         dictReply = json.loads(txtReply)
