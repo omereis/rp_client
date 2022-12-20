@@ -46,6 +46,7 @@ public:
     Json::Value AsJson();
 	Json::Value TriggerAsJson();
     Json::Value UpdateFromJson(Json::Value &jSetup, bool fUpdateHardware=false);
+	Json::Value McaAsJson();
 
     TRedPitayaTrigger GetTrigger() const;
     void SetTrigger (const TRedPitayaTrigger &trigger);
@@ -54,7 +55,6 @@ public:
 
     TMcaParams GetMcaParams () const;
     void SetMcaParams (const TMcaParams &mca_params);
-    Json::Value McaAsJson();
     Json::Value AppsAsJson();
 
     float GetTriggerLevel ();
