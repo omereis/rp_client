@@ -45,7 +45,7 @@ static const char *g_szDefaultSetup = "rp_setup.json";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 //#ifdef	__HARDWARE
-TRedPitayaSetup Replyg_rp_setup;
+TRedPitayaSetup g_rp_setup;
 //TRedPitayaSampling rps;
 //TRedPitayaTrigger rpt;
 //#endif
