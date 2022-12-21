@@ -45,7 +45,7 @@ static const char *g_szDefaultSetup = "rp_setup.json";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 //#ifdef	__HARDWARE
-TRedPitayaSetup g_rp_setup;
+TRedPitayaSetup Replyg_rp_setup;
 //TRedPitayaSampling rps;
 //TRedPitayaTrigger rpt;
 //#endif
@@ -165,6 +165,8 @@ int main ()
 			strReply  = "";
 			if (!root["setup"].isNull()) {
 				//PrintTriggerSource ("rp_server.cpp:139");
+				string s = StringifyJson (root["setup"]);
+				printf ("Setup: %s\n", s.c_str());
 				jReply["setup"] = HandleSetup(root["setup"], g_rp_setup, g_mca_calculator);
 			}
 			if (!root[g_szReadData].isNull())
@@ -183,6 +185,10 @@ int main ()
 			strReply += strJson + "\nParsing Error";
 		}
 		strReply = StringifyJson (jReply);
+		string str = strReply.substr (0, 80);
+		printf ("======================================\n");
+		printf ("%s\n", strReply.c_str());
+		printf ("======================================\n");
 		if (strReply.length() == 0)
 			strReply += std::string("{}");
 		zmq_send (responder, strReply.c_str(), strReply.length(), 0);
@@ -259,7 +265,10 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca
 		rp_setup.LoadFromHardware (true);
 #endif
 */
-		if (strCommand == "read_trigger") {
+		else if (strCommand == "read_mca_params") {
+			jNew = rp_setup.McaAsJson();
+		}
+		else if (strCommand == "read_trigger") {
 			fprintf (stderr, "Writing trigger\n");
 			jNew = rp_setup.TriggerAsJson();
 		}
@@ -697,17 +706,14 @@ void Normalize (TFloatVec &vSource, double dMin, double dMax, TFloatVec &vResult
 
 //-----------------------------------------------------------------------------
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd)
-//bool FindPulseStart (TFloatVec &vSignal, TFloatVec::iterator iFromHere, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd)
 {
 	TFloatVec::iterator i, iSignalStart;
 	int n, nStart=-1, nFound = -1, nEnd = -1;
-	bool f = iStart == iBufferEnd;//vSignal.end();
+	bool f = iStart == iBufferEnd;
 
-	//i = iFromHere;
-	iEnd = iBufferEnd;//vSignal.end();
-	iStart = iBufferStart;//vSignal.end();
-	f = i != iBufferEnd;//vSignal.end();
-	//for (i=iFromHere, n=0 ; (iStart == vSignal.end()) && (i != vSignal.end()) ; i++, n++) {
+	iEnd = iBufferEnd;
+	iStart = iBufferStart;
+	f = i != iBufferEnd;
 	for (i=iBufferStart, n=0 ; (iStart == iBufferStart) && (i != iBufferEnd) ; i++, n++) {
 		if (*i > dBkgnd) {
 			if (nStart < 0) {
@@ -717,19 +723,14 @@ bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iB
 			else if ((n - nStart) >= 3) {
 				iStart = iSignalStart;
 				nFound = n;
-				//fprintf (stderr, "n - %d, i - %g\n", n, *i);
 			}
 		}
 		else
 			if (nStart >= 0)
 				nStart = -1;
 	}
-	//if (iStart != iBufferEnd) {
 	if (iStart != iBufferStart) {
-	//if (iStart != vSignal.end()) {
-		//for (i=iStart ; (iEnd == vSignal.end()) && (i != vSignal.end()) ;  n++, i++) {
 		for (i=iStart ; (iEnd == iBufferEnd) && (i != iBufferEnd) ;  n++, i++) {
-			//fprintf (stderr, "n - %d, i - %g\n", n, *i);
 			if (*i < dBkgnd) {
 				iEnd = i;
 				nEnd = n;
@@ -737,7 +738,6 @@ bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iB
 		}
 	}
 	f = (iStart != iBufferStart) && (iEnd != iBufferEnd);
-	//f = (iStart != vSignal.end()) && (iEnd != vSignal.end());
 	return (f);
 }
 
@@ -746,43 +746,30 @@ bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 {
 	double dMin, dMax, dBkgnd;
 	TFloatVec vSignal;
-	TPulseInfo pi;
 	TFloatVec::iterator i, iStart, iEnd, iBufferStart;
 	int n;
-	bool fPulseFound = false;
 
 	piVec.clear();
 	GetVectorMinMax (vBuffer, dMin, dMax);
 	Normalize (vBuffer, dMin, dMax, vSignal);
 	i = vSignal.begin();
-	//PrintVector (vBuffer, "buffer.csv");
-	PrintVector (vSignal, "signal.csv");
 	dBkgnd = *i;
 	for (n=1, i++ ; n < (g_rp_setup.GetPreTriggerNs() - 10) ; n++, i++)
-		//dBkgnd += (double) *i;//= max (dBkgnd, (double) *i);
 		dBkgnd = max (dBkgnd, (double) *i);
 	dBkgnd *= 2;
-	//dBkgnd /= (g_rp_setup.GetPreTriggerNs() - 10);
-	iBufferStart = vSignal.begin();//vBuffer.begin();
+	iBufferStart = vSignal.begin();
 	do {
-		//if (FindPulseStart (vSignal, vSignal.begin(), dBkgnd, iStart, iEnd)) {
-		//if (FindPulseStart (vSignal.begin(), vSignal.end(), dBkgnd, iStart, iEnd)) {
 		if (FindPulseStartEnd (iBufferStart , vSignal.end(), dBkgnd, iStart, iEnd)) {
 			AddPulse (iStart, iEnd, dBkgnd, piVec);
-			//pi.Clear ();
-			//pi.SetPulse (iStart, iEnd);
 			iBufferStart = iEnd;
 		}
 		else
 			iBufferStart = vSignal.end();
-			//fPulseFound = true;
 	} while (iBufferStart != vSignal.end());
-	//return (fPulseFound);
 	return (piVec.size() > 0);
 }
 
 //-----------------------------------------------------------------------------
-			
 void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec)
 {
 	TPulseInfo pi;
@@ -800,52 +787,6 @@ void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkg
 	pi.SetBackground (dBkgnd);
 	piVec.push_back (pi);
 }
-/*
-//-----------------------------------------------------------------------------
-//TFloatVec::const_iterator FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, double dBackground, bool func (float f1, float f2))
-bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2))
-{
-    TFloatVec::const_iterator it, itStart=itEnd;
-    //TFloatVec::const_iterator it, itFound=itEnd, itStart=itEnd;
-    size_t idxStart, idx;
-    int nCount;
-	bool fStartFound = false;
-
-    idxStart = 0;
-    for (it=itBegin, idx=0 ; (it != itEnd) && (fStartFound == false) ; it++, idx++) {
-    //for (it=itBegin, idx=1 ; (it != itEnd) && (itFound == itEnd) ; it++, idx++) {
-        if (*it >= dBackground) {
-**
-            if (itStart == itEnd) {
-                itStart = it;
-                idxStart = idx;
-                nCount = 1;
-            }
-            else if (idx == (idxStart + 1)) {
-**
-            if (idx == (idxStart + 1)) {
-                nCount++;
-				idxStart++;
-			}
-            else {
-                itStart = it;
-                idxStart = idx;
-                nCount = 1;
-            }
-        }
-        else {
-            idxStart = nCount = 0;
-			itStart = itEnd;
-        }
-        if (nCount >= 3) {
-            itFound = itStart;
-			fStartFound = true;
-		}
-    }
-	//////printf ("FindPulseStart:711, idx=%d\n", idx);
-    return (fStartFound);
-}
-*/
 
 //-----------------------------------------------------------------------------
 TFloatVec::iterator FindPulseEnd (TFloatVec::iterator itBegin, TFloatVec::iterator itEnd, double dBackground)
