@@ -754,6 +754,7 @@ function uploadPulseDir() {
 	return (txtDir);
 }
 
+/*
 //-----------------------------------------------------------------------------
 function onMcaUpdateClick() {
     var msg = new Object, msgMca = new Object, msgCmd = new Object;
@@ -788,6 +789,7 @@ function uploadMcaMinVoltage() {
 function uploadMcaMaxVoltage() {
     return (uploadTextReal ('txtMcaMax'));
 }
+*/
 
 //-----------------------------------------------------------------------------
 function uploadTextReal (txtId) {
@@ -818,8 +820,8 @@ function mcaSetupHandler (reply) {
 function downloadMca (dictMca) {
 	try {
         donwloadText ('txtMcaChannels', dictMca.channels);
-        donwloadText ('txtMcaMin', dictMca.min_voltage);
-        donwloadText ('txtMcaMax', dictMca.max_voltage);
+        donwloadText ('txtMcaMin', parseFloat(dictMca.min_voltage) / 1000.0);
+        donwloadText ('txtMcaMax', parseFloat(dictMca.max_voltage) / 1000.0);
 	}
 	catch (exception) {
 		console.log(exception);
@@ -1071,8 +1073,8 @@ function uploadTextValue(txtInputId) {
 //-----------------------------------------------------------------------------
 function uploadMcaParams() {
     var msgMca = new Object;
-    msgMca['max_voltage'] = uploadTextValue('txtMcaMax');
-    msgMca['min_voltage'] = uploadTextValue('txtMcaMin');
+    msgMca['max_voltage'] = 1000.0 * uploadTextValue('txtMcaMax');
+    msgMca['min_voltage'] = 1000.0 * uploadTextValue('txtMcaMin');
     msgMca['channels'] = uploadTextValue('txtMcaChannels');
 	return (msgMca);
 }
