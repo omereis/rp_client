@@ -5,9 +5,10 @@
 #ifndef  __MCA_PARAMS_H
 #define  __MCA_PARAMS_H
 //-----------------------------------------------------------------------------
+#include "jsoncpp/json/json.h"
 #include "bd_types.h"
 #include "misc.h"
-#include "jsoncpp/json/json.h"
+#include "pulse_info.h"
 //-----------------------------------------------------------------------------
 class TMcaParams {
 public:
@@ -17,6 +18,13 @@ public:
     bool operator== (const TMcaParams &other) const;
     bool operator!= (const TMcaParams &other) const;
     void Clear ();
+
+	void ResetSpectrum ();
+	int HeightIndex (float fSignalMin, float fSignalMax);
+	void SetSpectrum (uint uiChannels);
+	void NewPulse (const TFloatVec &vPulse);
+	void NewPulse (const TPulseInfo &pulse_info);
+	void NewPulse (const TPulseInfoVec &vPulsesInfo);
 //-----------------------------------------------------------------------------
     Json::Value LoadFromJson (Json::Value jMCA);
     Json::Value AsJson () const;
@@ -29,12 +37,15 @@ public:
 
     double GetMaxVoltage () const;
     void SetMaxVoltage (double dMaxVoltage);
+	void SetSpectrum (const TFloatVec &vSpectrum);
+	size_t GetSpectrum (TFloatVec &vSpectrum);
 protected:
     void AssignAll (const TMcaParams &other);
 private:
     uint m_uiChannels;
     double m_dMinVoltage;
     double m_dMaxVoltage;
+	TFloatVec m_vSpectrum;
 };
 //-----------------------------------------------------------------------------
 #endif

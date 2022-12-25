@@ -10,7 +10,9 @@
 #include "RedPitayaSampling.h"
 
 #include <string>
+
 #include "mca_params.h"
+#include "pulse_info.h"
 using namespace std;
 
 //-----------------------------------------------------------------------------
@@ -29,7 +31,13 @@ public:
 	
 	static std::string PreTriggerAsString (double dPreTrigger);
 
+	void GetMcaSpectrum (TFloatVec &vSpectrum);
+	void ResetMcaSpectrum ();
+
 	Json::Value HandleBackground (Json::Value &jBkgnd);
+	void NewPulse (const TPulseInfoVec &vPulsesInfo);
+	void NewPulse (const TPulseInfo &pi);
+	void NewPulse (const TFloatVec &vPulse);
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware (bool fInit=true);
 	bool SetHardwareTrigger();

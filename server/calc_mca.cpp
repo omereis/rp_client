@@ -39,6 +39,7 @@ TMcaParams TCalcMca::GetParams () const
 {
     return (m_params);
 }
+
 //-----------------------------------------------------------------------------
 int TCalcMca::HeightIndex (float fSignalMin, float fSignalMax)
 {
@@ -54,6 +55,8 @@ int TCalcMca::HeightIndex (float fSignalMin, float fSignalMax)
         idx = -1;
     return (idx);
 }
+
+/*
 //-----------------------------------------------------------------------------
 void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
 {
@@ -66,6 +69,7 @@ void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
         fMax = max (fMax, *i);
     }
 }
+*/
 
 //-----------------------------------------------------------------------------
 void TCalcMca::NewPulse (const TFloatVec &vPulse)

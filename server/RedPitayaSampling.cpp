@@ -147,13 +147,15 @@ Json::Value TRedPitayaSampling::UpdateFromJson(Json::Value &jSetup)
     Json::Value jNew;
     
     try {
-        SetRate (jSetup["rate"].asString());
-        SetDecimation (jSetup["decimation"].asString());
-		SetPulseDir (jSetup["pulse_dir"]);
-        if (!jSetup["buffer_length"].isNull())
-            SetBufferSize(jSetup["buffer_length"].asString());
-        if (!jSetup["signal_points"].isNull())
-            SetBufferSize(jSetup["signal_points"].asString());
+		if (!jSetup.isNull()) {
+        	SetRate (jSetup["rate"].asString());
+        	SetDecimation (jSetup["decimation"].asString());
+			SetPulseDir (jSetup["pulse_dir"]);
+        	if (!jSetup["buffer_length"].isNull())
+            	SetBufferSize(jSetup["buffer_length"].asString());
+        	if (!jSetup["signal_points"].isNull())
+            	SetBufferSize(jSetup["signal_points"].asString());
+		}
         jNew = AsJson();
     }
     catch (std::exception exp) {

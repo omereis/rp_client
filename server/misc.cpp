@@ -242,6 +242,20 @@ void PrintVector (const TFloatVec &vBuffer, const char szName[])
 	fclose (file);
 }
 
+//-----------------------------------------------------------------------------
+void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
+{
+    TFloatVec::const_iterator i;
+
+    i = vPulse.begin();
+    fMin = fMax = *i;
+    for (i++ ; i != vPulse.end() ; i++) {
+        fMin = min (fMin, *i);
+        fMax = max (fMax, *i);
+    }
+}
+
+
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src)

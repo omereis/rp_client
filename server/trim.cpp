@@ -11,6 +11,7 @@ using std::endl; using std::string;
 
 string trimLeftRight(string& str, string& chars);
 
+//-----------------------------------------------------------------------------
 string leftTrim(string &strSrc, string &chars)
 {
 	string str(strSrc);
@@ -18,6 +19,7 @@ string leftTrim(string &strSrc, string &chars)
     return str;
 }
 
+//-----------------------------------------------------------------------------
 string rightTrim(string &strSrc, string &chars)
 {
 	string str(strSrc);
@@ -25,6 +27,7 @@ string rightTrim(string &strSrc, string &chars)
     return str;
 }
 
+//-----------------------------------------------------------------------------
 string trimString(string& str)
 {
 	string s (" ");
@@ -37,6 +40,7 @@ string trimString(string& str)
 	return (strToTrim);
 }
 
+//-----------------------------------------------------------------------------
 string trimLeftRight(string& str, string& chars)
 {
     string strTemp = rightTrim(str, chars);

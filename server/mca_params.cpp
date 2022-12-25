@@ -56,28 +56,43 @@ uint TMcaParams::GetChannels () const
 //-----------------------------------------------------------------------------
 void TMcaParams::SetChannels (uint uiChannels)
 {
+	TFloatVec::iterator i;
+
     m_uiChannels = uiChannels;
+	m_vSpectrum.resize (uiChannels, 0);
+	for (i=m_vSpectrum.begin() ; i != m_vSpectrum.end() ; i++)
+		*i = 0;
 }
 //-----------------------------------------------------------------------------
 double TMcaParams::GetMinVoltage () const
 {
     return (m_dMinVoltage);
 }
+
 //-----------------------------------------------------------------------------
 void TMcaParams::SetMinVoltage (double dMinVoltage)
 {
     m_dMinVoltage = dMinVoltage;
 }
+
 //-----------------------------------------------------------------------------
 double TMcaParams::GetMaxVoltage () const
 {
     return (m_dMaxVoltage);
 }
+
 //-----------------------------------------------------------------------------
 void TMcaParams::SetMaxVoltage (double dMaxVoltage)
 {
     m_dMaxVoltage = dMaxVoltage;
 }
+
+//-----------------------------------------------------------------------------
+void TMcaParams::ResetSpectrum ()
+{
+	m_vSpectrum.resize (m_vSpectrum.size(), 0);
+}
+
 //-----------------------------------------------------------------------------
 Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
 {
@@ -85,8 +100,6 @@ Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
 
     try {
         if (!jMCA.isNull()) {
-			//std::string strMca = StringifyJson (jMCA);
-			//fprintf (stderr, "Required MCA:\n%s\n", strMca.c_str());
             Json::Value jChannels=jMCA["channels"], jMinVoltage=jMCA["min_voltage"], jMaxVoltage=jMCA["max_voltage"];
             if (!jChannels.isNull())
                 SetChannels ((uint)std::stoi(jChannels.asString()));
@@ -102,6 +115,7 @@ Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
     }
     return (jNew);
 }
+
 //-----------------------------------------------------------------------------
 Json::Value TMcaParams::AsJson () const
 {
@@ -111,12 +125,121 @@ Json::Value TMcaParams::AsJson () const
         jMCA["channels"] = GetChannels();
         jMCA["min_voltage"] = GetMinVoltage();
         jMCA["max_voltage"] = GetMaxVoltage();
-		//std::string strMca = StringifyJson (jMCA);
-		//fprintf (stderr, "MCA setup:\n%s\n", strMca.c_str());
     }
     catch (std::exception &exp) {
         jMCA["error"] = exp.what();
     }
     return (jMCA);
 }
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetSpectrum (const TFloatVec &vSpectrum)
+{
+	if (vSpectrum.size() != m_vSpectrum.size())
+		m_vSpectrum.resize (vSpectrum.size());
+	TFloatVec::const_iterator iSrc=vSpectrum.begin();
+	TFloatVec::iterator iDest=m_vSpectrum.end();
+	for ( ; iSrc != vSpectrum.end() ; iSrc++, iDest++)
+		*iDest = *iSrc;
+}
+
+//-----------------------------------------------------------------------------
+size_t TMcaParams::GetSpectrum (TFloatVec &vSpectrum)
+{
+	vSpectrum.resize(m_vSpectrum.size());
+	vSpectrum.insert (vSpectrum.begin(), m_vSpectrum.begin(), m_vSpectrum.end());
+	return (m_vSpectrum.size());
+}
+
+//-----------------------------------------------------------------------------
+int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
+{
+    int idx;
+
+/*
+    if ((m_params.GetMaxVoltage() > m_params.GetMinVoltage()) && (fSignalMax > fSignalMin)) {
+        float fIndex = (fSignalMax - fSignalMin) / (m_params.GetMaxVoltage() - m_params.GetMinVoltage());
+        idx = (int) (fIndex * m_params.GetChannels());
+		if (idx >= m_params.GetChannels())
+			idx >= m_params.GetChannels();
+    }
+*/
+    if ((GetMaxVoltage() > GetMinVoltage()) && (fSignalMax > fSignalMin)) {
+        float fIndex = (fSignalMax - fSignalMin) / (GetMaxVoltage() - GetMinVoltage());
+        idx = (int) (fIndex * GetChannels());
+		if (idx >= GetChannels())
+			idx >= GetChannels();
+    }
+    else
+        idx = -1;
+    return (idx);
+}
+
+/*
+//-----------------------------------------------------------------------------
+void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
+{
+    TFloatVec::const_iterator i;
+
+    i = vPulse.begin();
+    fMin = fMax = *i;
+    for (i++ ; i != vPulse.end() ; i++) {
+        fMin = min (fMin, *i);
+        fMax = max (fMax, *i);
+    }
+}
+*/
+
+//-----------------------------------------------------------------------------
+void TMcaParams::NewPulse (const TFloatVec &vPulse)
+{
+    float fMin, fMax, fHeight;
+
+    GetVectorMinMax (vPulse, fMin, fMax);
+    int idx = HeightIndex (fMin, fMax);
+    if (idx >= 0) {
+		if (idx >= m_vSpectrum.size())
+			idx = m_vSpectrum.size() - 1;
+        int n = m_vSpectrum[idx];
+        m_vSpectrum[idx] = (n + 1);
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetSpectrum (uint uiChannels)
+{
+	SetChannels (uiChannels);
+	m_vSpectrum.resize(uiChannels, 0);
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
+{
+	TFloatVec vPulse;
+	TFloatVec::const_iterator i;
+
+    if (m_vSpectrum.size() == 0)
+        SetSpectrum (GetChannels());
+        //ResetSpectrum (m_params.GetChannels());
+    int idx = HeightIndex (0, pulse_info.GetMaxVal ());
+    if (idx >= 0) {
+		if (idx >= m_vSpectrum.size())  {
+			idx = m_vSpectrum.size() - 1;
+		}
+        int n = m_vSpectrum[idx];
+        m_vSpectrum[idx] = (n + 1);
+	}
+	//fclose (file);
+	//fclose (filePulse);
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::NewPulse (const TPulseInfoVec &vPulsesInfo)
+{
+	TPulseInfoVec ::const_iterator i;
+
+	for (i=vPulsesInfo.begin() ; i != vPulsesInfo.end() ; i++)
+		NewPulse (*i);
+}
+
 //-----------------------------------------------------------------------------

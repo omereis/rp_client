@@ -367,6 +367,18 @@ void TRedPitayaSetup::TriggerNow ()
 	m_trigger.TriggerNow ();
 }
 
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::GetMcaSpectrum (TFloatVec &vSpectrum)
+{
+    m_mca_params.GetSpectrum (vSpectrum);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::ResetMcaSpectrum ()
+{
+	m_mca_params.ResetSpectrum ();
+}
+
 #include "rp_server.h"
 //-----------------------------------------------------------------------------
 Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd)
@@ -444,7 +456,20 @@ void TRedPitayaSetup::SetPreTriggerNs (Json::Value jPreTrigger)
 }
 
 //-----------------------------------------------------------------------------
+void TRedPitayaSetup::NewPulse (const TPulseInfoVec &vPulsesInfo)
+{
+	if (GetMcaOnOff())
+    	m_mca_params.NewPulse (vPulsesInfo);
+}
 
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::NewPulse (const TFloatVec &vPulse)
+{
+	if (GetMcaOnOff())
+    	m_mca_params.NewPulse (vPulse);
+}
+
+//-----------------------------------------------------------------------------
 #ifdef	_RED_PITAYA_HW
 bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 {

@@ -11,7 +11,7 @@ function onReadRedPitayaSetupClick () {
 	msgCommand['command'] = 'read';
     msg['setup'] = msgCommand;
     sendMesssageThroughFlask(msg, setupHandler);
-	setTimeout (onReadStatusClick, 100);
+	//setTimeout (onReadStatusClick, 100);
 }
 
 //-----------------------------------------------------------------------------

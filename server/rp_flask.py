@@ -130,30 +130,33 @@ def OnRedPitayaMessage():
     try:
         res = request.args['message'].lower()
         print('on_red_pitaya_message')
-        print('+++++++++++++++++++++++++++++++++++++++++++++')
+        print('++++++ Command +++++++++++++++++++++++++++++++++++++++')
         print(res)
-        print('+++++++++++++++++++++++++++++++++++++++++++++')
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
+        #print('++++++ R e p l y +++++++++++++++++++++++++++++++++++++')
+        #print(txtReply)
+        #print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictReply = json.loads(txtReply)
         #d = dictReply
         print(dictReply.keys())
         """
         """
-        if 'pulses' in dictReply.keys():
-            dictPulses = dictReply['pulses']
-            if ('signal' in dictPulses.keys()):
-                nSignalLength = int (dictReply['pulses']['signal']['signal_length'])
-                nPackageSize = int (dictReply['pulses']['signal']['package_size'])
-                aSignal = get_signal_from_hw (nSignalLength, nPackageSize)
-                #print('===============================================')
-                dictReply['pulses']['signal'] = aSignal#[0:5]
-                #print('===============================================')
-                txtReply = json.dumps(dictReply)#str(dictReply)
-                #print(dictReply['pulses']['signal'])
-                #print(txtReply)
-                #print('===============================================')
-                #print('===============================================')
+        #if 'pulses' in dictReply.keys():
+            #dictPulses = dictReply['pulses']
+            #if ('signal' in dictPulses.keys()):
+                #nSignalLength = int (dictReply['pulses']['signal']['signal_length'])
+                #nPackageSize = int (dictReply['pulses']['signal']['package_size'])
+                #aSignal = get_signal_from_hw (nSignalLength, nPackageSize)
+                ##print('===============================================')
+                #dictReply['pulses']['signal'] = aSignal#[0:5]
+                ##print('===============================================')
+                #txtReply = json.dumps(dictReply)#str(dictReply)
+                ##print(dictReply['pulses']['signal'])
+                ##print(txtReply)
+                ##print('===============================================')
+                ##print('===============================================')
         """
         """
         #txtReply = str(d)
