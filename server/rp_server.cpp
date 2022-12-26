@@ -191,11 +191,11 @@ int main ()
 		strReply = trimString (strReply);
 		//string str = strReply.substr (0, 80);
 		int nMessages = 1 + (int) (strReply.length() / g_rp_setup.GetPackageSize()), nCharsToSend, nTotalToSend;
-		printf ("\n+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
-		printf ("Package Size: %d\n", g_rp_setup.GetPackageSize());
-		printf ("Message Size: %ld\n", strReply.length());
-		printf ("Number of messages: %d\n", nMessages);
-		printf ("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
+		//printf ("\n+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
+		//printf ("Package Size: %d\n", g_rp_setup.GetPackageSize());
+		//printf ("Message Size: %ld\n", strReply.length());
+		//printf ("Number of messages: %d\n", nMessages);
+		//printf ("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
 		nTotalToSend = strReply.length();
 		string s;
 		int nStart=0;
@@ -229,7 +229,7 @@ int main ()
 */
 			//zmq_send (responder, sz, strlen(sz), 0);
 			zmq_send (responder, s.c_str(), s.length(), 0);
-			printf ("Message sent:\n%s\n", s.c_str());
+			//printf ("Message sent:\n%s\n", s.c_str());
 			zmq_recv (responder, buffer, 1024, 0);
 			//zmq_send (responder, strMessage.c_str(), strMessage.length(), 0);
 			nTotalToSend -= 100;
@@ -237,9 +237,9 @@ int main ()
 /**/
 		}
 
-		printf ("======================================\n");
-		printf ("Message Length: %ld\n", strReply.length());
-		printf ("======================================\n");
+		//printf ("======================================\n");
+		//printf ("Message Length: %ld\n", strReply.length());
+		//printf ("======================================\n");
 		if (strReply.length() == 0)
 			strReply += std::string("{}");
 		//zmq_send (responder, strReply.c_str(), strReply.length(), 0);
@@ -388,15 +388,15 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 			}
         		if (!jRead["mca"].isNull()) {
 					Json::Value jMca = jRead["mca"];
-					fprintf (stderr, "\n+++++++++++++++++\n");
+					//fprintf (stderr, "\n+++++++++++++++++\n");
 					if (jRead["mca"].asBool()) {
 						fprintf (stderr, "\nMCA read\n");
             			jAllPulses["mca"] = ReadMca ();
 				}
-				else
-					fprintf (stderr, "\nMCA NOT read\n");
-				fprintf (stderr, "%s\n", jMca.asBool() ? "true" : "false");
-				fprintf (stderr, "+++++++++++++++++\n");
+				//else
+					//fprintf (stderr, "\nMCA NOT read\n");
+				////fprintf (stderr, "%s\n", jMca.asBool() ? "true" : "false");
+				//fprintf (stderr, "+++++++++++++++++\n");
         	}
 		}/**/
         jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
@@ -452,7 +452,7 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 	//printf ("rp_server.cpp:315, signal length:%d\n", jSignal.size());
     //return (vSignal.size());
 	strNumber = StringifyJson (jSignal);
-	fprintf (stderr, "ReadSignal, reply:\n%s\n", strNumber.c_str());
+	//fprintf (stderr, "ReadSignal, reply:\n%s\n", strNumber.c_str());
     return (jSignal);
 }
 
@@ -571,16 +571,16 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
         fCommandOK = true;
 		string str = StringifyJson(jSampling);
 		strResult = trimString (str);
-		fprintf (stderr, "HandleSampling, JSON='%s'\n", strResult.c_str());
+		//fprintf (stderr, "HandleSampling, JSON='%s'\n", strResult.c_str());
 		if (!jSampling["signal"].isNull()) {
 			bool fOnOff = jSampling["signal"].asBool();
 			//fprintf (stderr, "HandleSampling, 385\n");
 			//fprintf (stderr, "signal command: %d\n", jSampling.asBool());
 			//bool fSignal = str_to_bool (ToLower (jSampling["signal"].asString()));
-			fprintf (stderr, "HandleSampling, 415\n");
+			//fprintf (stderr, "HandleSampling, 415\n");
 			rp_setup.SetSamplingOnOff (fOnOff);
 			//rp_setup.SetSamplingOnOff (str_to_bool (ToLower (jSampling["signal"].asString())));
-			fprintf (stderr, "HandleSampling, Sampling is '%s'\n", BoolToString (fOnOff).c_str());
+			//fprintf (stderr, "HandleSampling, Sampling is '%s'\n", BoolToString (fOnOff).c_str());
 		}
 		if (!jSampling["mca"].isNull()) {
 			rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));

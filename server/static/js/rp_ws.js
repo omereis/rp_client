@@ -10,6 +10,7 @@ function onReadRedPitayaSetupClick () {
     var msg = new Object, msgCommand = new Object;
 	msgCommand['command'] = 'read';
     msg['setup'] = msgCommand;
+	document.body.style.cursor = 'wait';
     sendMesssageThroughFlask(msg, setupHandler);
 	//setTimeout (onReadStatusClick, 100);
 }
@@ -20,6 +21,7 @@ function onUpdateRedPitayaSetupClick() {
     msgCmd['command'] = 'update';
     msgTrigger = uploadTriggerSetup ();
     msgCmd['trigger'] = msgTrigger;
+	msgCmd['mca'] = uploadMcaParams();
     msgCmd['sampling'] = uploadSampling();
 	msgCmd['background'] = uploadBackground();
 	msgCmd['package_size'] = uploadPackageSize();
@@ -115,6 +117,7 @@ function setupHandler (reply) {
 */
     try {
         dictSetup = JSON.parse(reply).setup;
+		document.body.style.cursor = 'default';
 		if (dictSetup.hasOwnProperty('trigger'))
 			downloadTrigger(dictSetup.trigger);
 		if (dictSetup.hasOwnProperty('sampling')) {

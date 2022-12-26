@@ -136,32 +136,35 @@ def OnRedPitayaMessage():
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
-        print('++++++ R e p l y +++++++++++++++++++++++++++++++++++++')
-        print(txtReply)
-        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        #print('++++++ R e p l y +++++++++++++++++++++++++++++++++++++')
+        #print(txtReply)
+        #print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictReply = json.loads(txtReply)
         #d = dictReply
         print(dictReply.keys())
         #if not dictReply['flag']:
             #socket = open_socket()
         socket = open_socket()
-        print('Socket opened')
-        txtReply = ''
+        #print('Socket opened')
+        txtReply = dictReply['text']
         part = 1
         while not dictReply['flag']:
             socket.send_string('go')
-            print('Waiting for message')
+            #print('Waiting for message')
             message = socket.recv();
-            print('Message part:\n')
-            print(message)
+            #print('Message part:\n')
+            #print(message)
             strMessage = message.decode('utf-8')
             dictReply = json.loads(strMessage)
             txtReply += dictReply['text']
-            print('Part {}:\n{}'.format(part, dictReply['text']))
+            #print('Part {}:\n{}'.format(part, dictReply['text']))
             part += 1
 
         """
         """
+        #f = open('msg_in.txt', 'w')
+        #f.write(txtReply)
+        #f.close()
         #if 'pulses' in dictReply.keys():
             #dictPulses = dictReply['pulses']
             #if ('signal' in dictPulses.keys()):
