@@ -126,6 +126,7 @@ def OnRedPitayaMessage():
     txtReply = 'Red Pitaya Reply'
     res = request.args['message']
     print(res)
+    socket = None
     print('type(res): {}'.format(type(res)))
     try:
         res = request.args['message'].lower()
@@ -135,12 +136,30 @@ def OnRedPitayaMessage():
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
-        #print('++++++ R e p l y +++++++++++++++++++++++++++++++++++++')
-        #print(txtReply)
-        #print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        print('++++++ R e p l y +++++++++++++++++++++++++++++++++++++')
+        print(txtReply)
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictReply = json.loads(txtReply)
         #d = dictReply
         print(dictReply.keys())
+        #if not dictReply['flag']:
+            #socket = open_socket()
+        socket = open_socket()
+        print('Socket opened')
+        txtReply = ''
+        part = 1
+        while not dictReply['flag']:
+            socket.send_string('go')
+            print('Waiting for message')
+            message = socket.recv();
+            print('Message part:\n')
+            print(message)
+            strMessage = message.decode('utf-8')
+            dictReply = json.loads(strMessage)
+            txtReply += dictReply['text']
+            print('Part {}:\n{}'.format(part, dictReply['text']))
+            part += 1
+
         """
         """
         #if 'pulses' in dictReply.keys():
@@ -164,6 +183,9 @@ def OnRedPitayaMessage():
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
         print(txtReply)
+    finally:
+        if socket != None:
+            socket.close()
     #print('----------------------------------------------')
     #print(txtReply)
     #print('----------------------------------------------')

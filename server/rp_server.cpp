@@ -190,12 +190,59 @@ int main ()
 		strReply = StringifyJson (jReply);
 		strReply = trimString (strReply);
 		//string str = strReply.substr (0, 80);
+		int nMessages = 1 + (int) (strReply.length() / g_rp_setup.GetPackageSize()), nCharsToSend, nTotalToSend;
+		printf ("\n+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
+		printf ("Package Size: %d\n", g_rp_setup.GetPackageSize());
+		printf ("Message Size: %ld\n", strReply.length());
+		printf ("Number of messages: %d\n", nMessages);
+		printf ("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
+		nTotalToSend = strReply.length();
+		string s;
+		int nStart=0;
+		while (nTotalToSend > 0) {
+			jReply.clear();
+			s = strReply.substr (nStart, 100);
+			nStart += 100;
+			jReply["text"] = s;
+			jReply["flag"] = nTotalToSend < 100;
+			s = StringifyJson (jReply);
+			//char *sz = new char[150];
+			//strncpy(sz, s.c_str(), 50);
+/*
+			nCharsToSend = min(g_rp_setup.GetPackageSize(), nTotalToSend);
+			const char *szSend = strReply.c_str();
+			char *szBuffer = new char [g_rp_setup.GetPackageSize()];
+			strncpy (szBuffer, szSend, nCharsToSend);
+			nTotalToSend -= nCharsToSend;
+			szSend += nCharsToSend;
+			jReply.clear();
+			jReply["text"] = szBuffer;
+			jReply["flag"] = nTotalToSend > 0;
+			string strMessage = StringifyJson (jReply);
+			//strMessage = trimString (strMessage);
+			//zmq_send (responder, "jjk", 3, 0);
+			char *sz = new char[strMessage.length()];
+			for (n=0 ; n < strMessage.length() ; n++)
+				sz[n] = strMessage[n];
+			printf ("strMessage: (%ld) '%s\n'", strMessage.length(), strMessage.c_str());
+			//zmq_send (responder, sz, strlen(sz), 0);
+*/
+			//zmq_send (responder, sz, strlen(sz), 0);
+			zmq_send (responder, s.c_str(), s.length(), 0);
+			printf ("Message sent:\n%s\n", s.c_str());
+			zmq_recv (responder, buffer, 1024, 0);
+			//zmq_send (responder, strMessage.c_str(), strMessage.length(), 0);
+			nTotalToSend -= 100;
+			//nTotalToSend = 0;
+/**/
+		}
+
 		printf ("======================================\n");
 		printf ("Message Length: %ld\n", strReply.length());
 		printf ("======================================\n");
 		if (strReply.length() == 0)
 			strReply += std::string("{}");
-		zmq_send (responder, strReply.c_str(), strReply.length(), 0);
+		//zmq_send (responder, strReply.c_str(), strReply.length(), 0);
 		//if (nBufferPoints > 0)
 			//zmq_send (responder, afBuffer, nBufferPoints * sizeof(float), 0);
 		fMessageRecieved = false;
