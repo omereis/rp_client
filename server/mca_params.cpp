@@ -1,6 +1,7 @@
 /******************************************************************************\
 |                              mca_params.cpp                                  |
 \******************************************************************************/
+#include <mutex>
 #include "mca_params.h"
 //-----------------------------------------------------------------------------
 TMcaParams::TMcaParams ()
@@ -37,9 +38,10 @@ bool TMcaParams::operator!= (const TMcaParams &other) const
 //-----------------------------------------------------------------------------
 void TMcaParams::Clear ()
 {
-   SetChannels (1024);
-   SetMinVoltage (0.0);
-   SetMaxVoltage (5.0);
+	SetChannels (1024);
+	SetMinVoltage (0.0);
+	SetMaxVoltage (5.0);
+	m_vPulses.clear();
 }
 //-----------------------------------------------------------------------------
 void TMcaParams::AssignAll (const TMcaParams &other)
@@ -47,6 +49,8 @@ void TMcaParams::AssignAll (const TMcaParams &other)
     SetChannels (other.GetChannels ());
     SetMinVoltage (other.GetMinVoltage ());
     SetMaxVoltage (other.GetMaxVoltage ());
+	m_vPulses = other.m_vPulses;
+
 }
 //-----------------------------------------------------------------------------
 uint TMcaParams::GetChannels () const
@@ -60,6 +64,7 @@ void TMcaParams::SetChannels (uint uiChannels)
 
     m_uiChannels = uiChannels;
 	m_vSpectrum.resize (uiChannels, 0);
+	m_vPulses.clear();
 	for (i=m_vSpectrum.begin() ; i != m_vSpectrum.end() ; i++)
 		*i = 0;
 }
@@ -91,6 +96,7 @@ void TMcaParams::SetMaxVoltage (double dMaxVoltage)
 void TMcaParams::ResetSpectrum ()
 {
 	m_vSpectrum.resize (m_vSpectrum.size(), 0);
+	m_vPulses.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -188,13 +194,13 @@ void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
         fMax = max (fMax, *i);
     }
 }
-*/
 
 //-----------------------------------------------------------------------------
 void TMcaParams::NewPulse (const TFloatVec &vPulse)
 {
     float fMin, fMax, fHeight;
 
+	m_vAllPulses.push_back (vPulse);
     GetVectorMinMax (vPulse, fMin, fMax);
     int idx = HeightIndex (fMin, fMax);
     if (idx >= 0) {
@@ -203,6 +209,19 @@ void TMcaParams::NewPulse (const TFloatVec &vPulse)
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
 	}
+}
+*/
+
+//-----------------------------------------------------------------------------
+int TMcaParams::GetMcaPulses() const
+{
+	mutex mtx;
+	int nCount;
+
+    mtx.lock();
+	nCount = (int) m_vPulses.size();
+    mtx.unlock();
+    return (nCount);
 }
 
 //-----------------------------------------------------------------------------
@@ -218,6 +237,8 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 	TFloatVec vPulse;
 	TFloatVec::const_iterator i;
 
+	
+	m_vPulses.push_back (pulse_info);
     if (m_vSpectrum.size() == 0)
         SetSpectrum (GetChannels());
         //ResetSpectrum (m_params.GetChannels());

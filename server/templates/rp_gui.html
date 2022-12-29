@@ -246,7 +246,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="button" value="Reset">
+                        <input type="button" value="Reset" onclick="onResetMca()">
                     </td>
                     <td>
                         <input type="button" value="Upload" onclick="onUploadMcaParams()">
@@ -263,7 +263,7 @@
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <input type="text" id="txtMcaFale" style="width:200px;text-align: center;" value=""> <input type="button" value="Save...">
+                        <input type="text" id="txtMcaBuffer" style="width:200px;text-align: center;" value=""> <input type="button" value="Save...">
                     </td>
                 </tr>
 
@@ -330,6 +330,7 @@
 						<td>
                         	<input type="button" value="Start" id="btnSignalStartStop" onclick="onSignalStartStopClick(this.id)">
                             <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
+                            <input type="button" value="Save..." id="btnQuitSampling" onclick="onSaveSampling()">
                         </td>
                         <td colspan="2">
                             Buffer

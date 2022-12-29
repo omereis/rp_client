@@ -22,9 +22,10 @@ public:
 	void ResetSpectrum ();
 	int HeightIndex (float fSignalMin, float fSignalMax);
 	void SetSpectrum (uint uiChannels);
-	void NewPulse (const TFloatVec &vPulse);
+	//void NewPulse (const TFloatVec &vPulse);
 	void NewPulse (const TPulseInfo &pulse_info);
 	void NewPulse (const TPulseInfoVec &vPulsesInfo);
+	int GetMcaPulses() const;
 //-----------------------------------------------------------------------------
     Json::Value LoadFromJson (Json::Value jMCA);
     Json::Value AsJson () const;
@@ -46,6 +47,7 @@ private:
     double m_dMinVoltage;
     double m_dMaxVoltage;
 	TFloatVec m_vSpectrum;
+	TPulseInfoVec m_vPulses;
 };
 //-----------------------------------------------------------------------------
 #endif

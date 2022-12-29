@@ -1,3 +1,6 @@
+#-----------------------------------------------------------------------------#
+# rp_flask.py                                                                 #
+#-----------------------------------------------------------------------------# 
 import zmq
 from flask import Flask,render_template, request
 from RedPitayaSetup import TRedPitayaSetup
@@ -91,7 +94,7 @@ def message_server(dictCommand):
             time.sleep(0.1)
             dtDelta = (datetime.now() - dtStart).total_seconds()
             print('Waiting {}'.format(dtDelta))
-        if (dtDelta < 1):
+        if (dtDelta < 5):
             prcSender.join()
             while qData.qsize() > 0:
                 msg_str += qData.get()
@@ -136,53 +139,22 @@ def OnRedPitayaMessage():
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
-        #print('++++++ R e p l y +++++++++++++++++++++++++++++++++++++')
-        #print(txtReply)
-        #print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictReply = json.loads(txtReply)
-        #d = dictReply
         print(dictReply.keys())
-        #if not dictReply['flag']:
-            #socket = open_socket()
         socket = open_socket()
-        #print('Socket opened')
         txtReply = dictReply['text']
+        print ('Flag: {}'.format(dictReply['flag']))
         part = 1
         while not dictReply['flag']:
             socket.send_string('go')
-            #print('Waiting for message')
+            #print ('GO send')
             message = socket.recv();
-            #print('Message part:\n')
-            #print(message)
             strMessage = message.decode('utf-8')
             dictReply = json.loads(strMessage)
+            #print ('Flag: {}'.format(dictReply['flag']))
             txtReply += dictReply['text']
-            #print('Part {}:\n{}'.format(part, dictReply['text']))
             part += 1
 
-        """
-        """
-        #f = open('msg_in.txt', 'w')
-        #f.write(txtReply)
-        #f.close()
-        #if 'pulses' in dictReply.keys():
-            #dictPulses = dictReply['pulses']
-            #if ('signal' in dictPulses.keys()):
-                #nSignalLength = int (dictReply['pulses']['signal']['signal_length'])
-                #nPackageSize = int (dictReply['pulses']['signal']['package_size'])
-                #aSignal = get_signal_from_hw (nSignalLength, nPackageSize)
-                ##print('===============================================')
-                #dictReply['pulses']['signal'] = aSignal#[0:5]
-                ##print('===============================================')
-                #txtReply = json.dumps(dictReply)#str(dictReply)
-                ##print(dictReply['pulses']['signal'])
-                ##print(txtReply)
-                ##print('===============================================')
-                ##print('===============================================')
-        """
-        """
-        #txtReply = str(d)
-        #print('+++++++++++++++++++++++++++++++++++++++++++++')
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
         print(txtReply)

@@ -520,6 +520,8 @@ function setupReadSignal (reply) {
 		}
         if (samples.pulses.hasOwnProperty('buffer_length'))
 			downloadBufferLength(samples.pulses.buffer_length);
+        if (samples.pulses.hasOwnProperty('mca_length'))
+			downloadMcaLength(samples.pulses.mca_length);
         if (aPulseData != null)
             plotSignal (aPulseData);
         if (aMcaData != null)
@@ -535,6 +537,12 @@ function setupReadSignal (reply) {
 //-----------------------------------------------------------------------------
 function downloadBufferLength(value) {
 	var txtbx = document.getElementById("txtCardBuffer");
+	txtbx.value = value;
+}
+
+//-----------------------------------------------------------------------------
+function downloadMcaLength(value) {
+	var txtbx = document.getElementById("txtMcaBuffer");
 	txtbx.value = value;
 }
 
@@ -709,6 +717,20 @@ function onSignalStartStopClick(id) {
     catch (exception) {
         console.log(exception);
     }
+}
+
+//-----------------------------------------------------------------------------
+function onSaveSampling() {
+    var chart = document.getElementById("chartMca");
+	var n, nChart=0, line = '';
+
+	if (chart.hasOwnProperty('data')) {
+		line = '';
+		for (n=0 ; n < chart.data[nChart].length ; n++) {
+			line = toString (chart.data[nChart].x[n]) + "," + toString(chart.data[nChart].y[n]);
+			line += ' ';
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1063,6 +1085,11 @@ function onUploadMcaParams() {
     msgCmd['command'] = 'read_mca_params';
     msg['setup'] = msgCmd;
     sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function onResetMca() {
+	onDownloadMcaParams();
 }
 
 //-----------------------------------------------------------------------------

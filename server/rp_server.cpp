@@ -71,7 +71,7 @@ void SafeSetMca (bool fOnOff);
 bool SafeGetMca ();
 TMcaParams SafeGetMcaParams ();
 void SafeSetMcaParams (const TMcaParams &params);
-void SafeAddToMca (const TFloatVec &vPulse);
+//void SafeAddToMca (const TFloatVec &vPulse);
 void SafeResetMca();
 void SafeReadMca (Json::Value &jResult);
 void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
@@ -88,6 +88,7 @@ Json::Value ReadMca ();
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
+string GetMcaCounts ();
 
 //-----------------------------------------------------------------------------
 std::string ret_str()
@@ -198,53 +199,35 @@ int main ()
 		//printf ("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
 		nTotalToSend = strReply.length();
 		string s;
-		int nStart=0;
+		int nStart=0, nPackSize = g_rp_setup.GetPackageSize();
+		fprintf (stderr, "\n++++++++++++++++++++++++++++++++++++++\n");
+		fprintf (stderr, "Send length: %d\n", nTotalToSend);
+		//fprintf (stderr, "++++++++++++++++++++++++++++++++++++++\n");
 		while (nTotalToSend > 0) {
 			jReply.clear();
-			s = strReply.substr (nStart, 100);
-			nStart += 100;
+			s = strReply.substr (nStart, nPackSize);
+			//fprintf (stderr, "Part length: %d\n", s.length());
+			//s = strReply.substr (nStart, 100);
+			nStart += nPackSize;//100;
 			jReply["text"] = s;
-			jReply["flag"] = nTotalToSend < 100;
+			jReply["flag"] = nTotalToSend < nPackSize;//100;
+			//fprintf(stderr, "JSON assigned\n");
 			s = StringifyJson (jReply);
-			//char *sz = new char[150];
-			//strncpy(sz, s.c_str(), 50);
-/*
-			nCharsToSend = min(g_rp_setup.GetPackageSize(), nTotalToSend);
-			const char *szSend = strReply.c_str();
-			char *szBuffer = new char [g_rp_setup.GetPackageSize()];
-			strncpy (szBuffer, szSend, nCharsToSend);
-			nTotalToSend -= nCharsToSend;
-			szSend += nCharsToSend;
-			jReply.clear();
-			jReply["text"] = szBuffer;
-			jReply["flag"] = nTotalToSend > 0;
-			string strMessage = StringifyJson (jReply);
-			//strMessage = trimString (strMessage);
-			//zmq_send (responder, "jjk", 3, 0);
-			char *sz = new char[strMessage.length()];
-			for (n=0 ; n < strMessage.length() ; n++)
-				sz[n] = strMessage[n];
-			printf ("strMessage: (%ld) '%s\n'", strMessage.length(), strMessage.c_str());
-			//zmq_send (responder, sz, strlen(sz), 0);
-*/
-			//zmq_send (responder, sz, strlen(sz), 0);
-			zmq_send (responder, s.c_str(), s.length(), 0);
-			//printf ("Message sent:\n%s\n", s.c_str());
-			zmq_recv (responder, buffer, 1024, 0);
-			//zmq_send (responder, strMessage.c_str(), strMessage.length(), 0);
-			nTotalToSend -= 100;
-			//nTotalToSend = 0;
-/**/
+			//fprintf (stderr, "Total before send: %d\n", nTotalToSend);
+			int rc = zmq_send (responder, s.c_str(), s.length(), 0);
+			//fprintf (stderr, "'zmq_send' return: %d\n", rc);
+			nTotalToSend -= nPackSize;//100;
+			if (nTotalToSend > 0) {
+				//fprintf (stderr, "Preparing to recieved\n");
+				rc = zmq_recv (responder, buffer, 1024, 0);
+				//fprintf (stderr, "'zmq_recv' return: %d\n", rc);
+			}
+			//fprintf (stderr, "Left to send: %d\n", nTotalToSend);
 		}
-
-		//printf ("======================================\n");
-		//printf ("Message Length: %ld\n", strReply.length());
-		//printf ("======================================\n");
+		//fprintf (stderr, "\n======================================\n");
+		fprintf (stderr, "======================================\n");
 		if (strReply.length() == 0)
 			strReply += std::string("{}");
-		//zmq_send (responder, strReply.c_str(), strReply.length(), 0);
-		//if (nBufferPoints > 0)
-			//zmq_send (responder, afBuffer, nBufferPoints * sizeof(float), 0);
 		fMessageRecieved = false;
     }
     return 0;
@@ -400,12 +383,30 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
         	}
 		}/**/
         jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
+        //jAllPulses["mca_length"] = to_string (g_rp_setup.GetMcaPulses());
+        jAllPulses["mca_length"] = GetMcaCounts ();
+
     }
     catch (std::exception &exp) {
         strReply = std::string("Runtime error in '': ") + std::string (exp.what());
     }
     strReply = StringifyJson(jAllPulses);
     return (jAllPulses);
+}
+
+//-----------------------------------------------------------------------------
+string GetMcaCounts ()
+{
+	TFloatVec vSpectrum;
+	TFloatVec::iterator i;
+	long lnSum=0;
+	char sz[100];
+
+	g_rp_setup.GetMcaSpectrum (vSpectrum);
+	for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
+		lnSum += *i;
+	sprintf (sz, "Pulses: %d, spectrum sum: %ld", g_rp_setup.GetMcaPulses(), lnSum);
+	return (string (sz));
 }
 
 //-----------------------------------------------------------------------------
@@ -697,19 +698,12 @@ void OnTimerTick ()
     TPulseInfoVec::iterator iPulseInfo;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
-		//fprintf (stderr, "OnTimerTick, before GetNextPulse\n");
         if (GetNextPulse (vPulse)) {
-			//PrintVector (vPulse, "new_pulse.csv");
             SafeQueueAdd (vPulse);
-			//size_t s = SafeQueueSize ();
-			//printf("Queue size: %ld\n", s);
             if (GetPulseParams (vPulse, piVec)) {
                 for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
                 	g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
             	g_rp_setup.NewPulse (piVec);
-            	//if (g_rp_setup.GetMcaOnOff()) {
-                	//g_mca_calculator.NewPulse (piVec);
-				//}
             }
         }
     }
@@ -990,6 +984,7 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
 */
 #endif
 
+/*
 //-----------------------------------------------------------------------------
 void SafeAddToMca (const TFloatVec &vPulse)
 {
@@ -1000,8 +995,9 @@ void SafeAddToMca (const TFloatVec &vPulse)
     //g_mca_calculator.NewPulse (vPulse);
     mtx.unlock ();
 }
-//-----------------------------------------------------------------------------
+*/
 
+//-----------------------------------------------------------------------------
 void ExportDebugPulse(TFloatVecQueue &qDebug)
 {
 /*

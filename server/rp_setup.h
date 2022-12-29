@@ -37,7 +37,8 @@ public:
 	Json::Value HandleBackground (Json::Value &jBkgnd);
 	void NewPulse (const TPulseInfoVec &vPulsesInfo);
 	void NewPulse (const TPulseInfo &pi);
-	void NewPulse (const TFloatVec &vPulse);
+	//void NewPulse (const TFloatVec &vPulse);
+	int GetMcaPulses() const;
 #ifdef	_RED_PITAYA_HW
 	bool LoadFromHardware (bool fInit=true);
 	bool SetHardwareTrigger();

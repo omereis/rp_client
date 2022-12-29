@@ -463,11 +463,19 @@ void TRedPitayaSetup::NewPulse (const TPulseInfoVec &vPulsesInfo)
 }
 
 //-----------------------------------------------------------------------------
+int TRedPitayaSetup::GetMcaPulses() const
+{
+	return (m_mca_params.GetMcaPulses());
+}
+
+/*
+//-----------------------------------------------------------------------------
 void TRedPitayaSetup::NewPulse (const TFloatVec &vPulse)
 {
 	if (GetMcaOnOff())
     	m_mca_params.NewPulse (vPulse);
 }
+*/
 
 //-----------------------------------------------------------------------------
 #ifdef	_RED_PITAYA_HW

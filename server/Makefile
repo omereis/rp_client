@@ -16,7 +16,7 @@ CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 
 
 OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o RedPitayaTrigger.o RedPitayaSampling.o
-INCLUDES = rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h
+INCLUDES = rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h bd_types.h
 SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp RedPitayaTrigger.cpp RedPitayaSampling.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp  -L/opt/redpitaya/lib -lrp
 
@@ -27,7 +27,7 @@ RP_INC =
 
 #all: read_json rp_server rp_client
 
-.cpp.o:
+.cpp.o: docker.mak
 	$(CPP) -c $(CFLAGS) $< -o $@
 
 rp_server: $(RP_OBJ)

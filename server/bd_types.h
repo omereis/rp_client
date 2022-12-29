@@ -20,6 +20,10 @@ typedef vector<string> TStringVec;
 typedef vector<float> TFloatVec;
 #endif
 //---------------------------------------------------------------------------
+#ifndef	TFloatVecVec
+typedef vector<TFloatVec> TFloatVecVec;
+#endif
+//---------------------------------------------------------------------------
 #ifndef	TFloatVecIterator
 typedef TFloatVec::iterator	TFloatVecIterator;
 #endif
