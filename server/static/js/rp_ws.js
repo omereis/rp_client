@@ -720,17 +720,29 @@ function onSignalStartStopClick(id) {
 }
 
 //-----------------------------------------------------------------------------
-function onSaveSampling() {
-    var chart = document.getElementById("chartMca");
-	var n, nChart=0, line = '';
+async function getNewFileHandle() {
+//async function getNewFileHandle() {
+	const opts = {
+		types: [{
+			description: 'Text file',
+			accept: {'text/plain': ['.txt']},
+		}],
+	};
+	return await window.showSaveFilePicker(opts);
+}
 
-	if (chart.hasOwnProperty('data')) {
-		line = '';
-		for (n=0 ; n < chart.data[nChart].length ; n++) {
-			line = toString (chart.data[nChart].x[n]) + "," + toString(chart.data[nChart].y[n]);
-			line += ' ';
-		}
-	}
+//-----------------------------------------------------------------------------
+function download(filename, text) {
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+	element.setAttribute('download', filename);
+
+	element.style.display = 'none';
+	document.body.appendChild(element);
+
+	element.click();
+
+	document.body.removeChild(element);
 }
 
 //-----------------------------------------------------------------------------
@@ -1108,4 +1120,49 @@ function uploadMcaParams() {
     msgMca['channels'] = uploadTextValue('txtMcaChannels');
 	return (msgMca);
 }
+
 //-----------------------------------------------------------------------------
+function uploadSignalChart() {
+	var n, ar=[];
+	for (n=0 ; n < 100 ; n++) {
+		var line = String (n+1) + "," + String(Math.random() * 100) + "\n";
+		ar.push(line);
+	}
+	return (ar);
+}
+
+//-----------------------------------------------------------------------------
+function uploadChartData(txtChartName) {
+    var chart = document.getElementById(txtChartName);
+	var n, nChart=0, line = '', aLines=[];
+
+	if (chart.hasOwnProperty('data')) {
+        aLines.push('x,y\n');
+	    for (n=0 ; n < chart.data[nChart].x.length ; n++) {
+		    line = String (chart.data[nChart].x[n]) + "," + String(chart.data[nChart].y[n]) + "\n";
+			aLines.push(line);
+		}
+	}
+	return (aLines);
+}
+
+//-----------------------------------------------------------------------------
+function onSaveFileClick() {
+/*
+Source:
+https://code.tutsplus.com/tutorials/how-to-save-a-file-with-javascript--cms-41105
+*/
+	var tempLink = document.createElement("a");
+	//var value = new Blob (uploadSignalChart());
+	var value = new Blob (uploadChartData('chartSignal'));
+	//var data = uploadChartData('chartSignal');
+	tempLink.setAttribute('href', URL.createObjectURL(value));
+	//tempLink.setAttribute('href', URL.createObjectURL(uploadChartData('chartSignal')));
+	tempLink.setAttribute('download', 'signal.csv');
+	tempLink.click();
+	URL.revokeObjectURL(tempLink.href);
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+

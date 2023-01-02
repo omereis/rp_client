@@ -6,6 +6,7 @@
 -->    <head>
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
         <link rel="stylesheet" href="{{ url_for ('static', filename='css/rp_gui.css') }}"/>
+        <script src="{{ url_for ('static', filename='js/FileIO.js') }}" charset="utf-8"></script>
         <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
         <script src="{{ url_for ('static', filename='js/rp_ws.js') }}" charset="utf-8"></script>
 
@@ -330,7 +331,7 @@
 						<td>
                         	<input type="button" value="Start" id="btnSignalStartStop" onclick="onSignalStartStopClick(this.id)">
                             <input type="button" value="Quit" id="btnQuitSampling" onclick="onQuitSampling()">
-                            <input type="button" value="Save..." id="btnQuitSampling" onclick="onSaveSampling()">
+                            <input type="button" value="Save..." id="btnQuitSampling" onclick="onSaveFileClick()">
                         </td>
                         <td colspan="2">
                             Buffer
