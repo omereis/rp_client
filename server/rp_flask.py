@@ -154,6 +154,9 @@ def OnRedPitayaMessage():
             #print ('Flag: {}'.format(dictReply['flag']))
             txtReply += dictReply['text']
             part += 1
+        #print('=====================================================')
+        #print('Done')
+        #print('=====================================================')
 
     except Exception as e:
         txtReply = "Runtime error in OnRedPitayaMessage:\n{}".format(e)
