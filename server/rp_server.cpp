@@ -52,6 +52,9 @@ TRedPitayaSetup g_rp_setup;
 //#endif
 //-----------------------------------------------------------------------------
 
+bool HandleMessage (const string &strJson, Json::Value &jReply);//string &strReply)
+//bool HandleMessage (const string &strJsoni, string &strReply);
+void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage);
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 //Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal); 
@@ -100,26 +103,7 @@ std::string ret_str()
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
-int main1 ()
-{
-#ifdef  _RED_PITAYA_HW
-	rp_Init();
-//#endif
-				PrintTriggerSource ("rp_server.cpp:139");
-	fprintf (stderr, "running\n");
-	std::string str = ret_str();
-	fprintf (stderr, "main, str: '%s'\n", str.c_str());
-	std::string strSrc = GetHardwareTriggerName (RP_TRIG_SRC_DISABLED);
-	fprintf (stderr, "main, strSrc: '%s'\n", strSrc.c_str());
-//#ifdef  _RED_PITAYA_HW
-	rp_Release();
-#endif
-	return (0);
-}
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int main ()
-//int main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 #ifdef  _RED_PITAYA_HW
 	rp_Init();
@@ -137,6 +121,7 @@ int main ()
     Timer t;
 	int n, nBufferPoints;
 	float *afBuffer;
+	char *szRecvBuffer = new char [1024];
 
 	fprintf (stderr, "Loading Setup\n");
 #ifdef	_RED_PITAYA_HW
@@ -148,30 +133,25 @@ int main ()
     g_rp_setup.LoadFromJson(g_szDefaultSetup);// "rp_setup.json");
     Json::Value jSetup = g_rp_setup.AsJson();
 	g_rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
-    //g_mca_calculator.SetParams (g_rp_setup.GetMcaParams());
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
     t.setInterval (OnTimerTick, 100);
     while (fRun) {
 		fMessageRecieved = false;
-        char buffer [1024];
-        zmq_recv (responder, buffer, 1024, 0);
-		std::string strJson = ToLower(buffer);
-		//fprintf (stderr, "-------------------------------\n");
-		//fprintf (stderr, "Received Message:\n%s\n", strJson.c_str());
-		//fprintf (stderr, "-------------------------------\n");
+        zmq_recv (responder, szRecvBuffer , 1024, 0);
+		std::string strJson = ToLower(szRecvBuffer);
 		strJson = ReplaceAll(strJson, "\'", "\"");
 
+		fRun = HandleMessage (strJson, jReply);
+/*
 		if (reader.parse (strJson, root)) {
+			fprintf (stderr, "Message Parsed\n");
 			fMessageRecieved = true;
 			jReply.clear();
-			//printf ("Message parsed\n");
 			strReply  = "";
 			if (!root["setup"].isNull()) {
-				//PrintTriggerSource ("rp_server.cpp:139");
 				string s = StringifyJson (root["setup"]);
 				printf ("Setup: %s\n", s.c_str());
 				jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
-				//jReply["setup"] = HandleSetup(root["setup"], g_rp_setup, g_mca_calculator);
 			}
 			if (!root[g_szReadData].isNull())
 				jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal);
@@ -188,49 +168,127 @@ int main ()
 			fprintf (stderr, "Parsing error\n");
 			strReply += strJson + "\nParsing Error";
 		}
+*/
+		SendReply (responder, szRecvBuffer, jReply);
+/*
+*/
+/*
+	fprintf (stderr, "Preparing Reply\n");
 		strReply = StringifyJson (jReply);
 		strReply = trimString (strReply);
-		//string str = strReply.substr (0, 80);
 		int nMessages = 1 + (int) (strReply.length() / g_rp_setup.GetPackageSize()), nCharsToSend, nTotalToSend;
-		//printf ("\n+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
-		//printf ("Package Size: %d\n", g_rp_setup.GetPackageSize());
-		//printf ("Message Size: %ld\n", strReply.length());
-		//printf ("Number of messages: %d\n", nMessages);
-		//printf ("+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=\n");
 		nTotalToSend = strReply.length();
 		string s;
 		int nStart=0, nPackSize = g_rp_setup.GetPackageSize();
 		fprintf (stderr, "\n++++++++++++++++++++++++++++++++++++++\n");
 		fprintf (stderr, "Send length: %d\n", nTotalToSend);
-		//fprintf (stderr, "++++++++++++++++++++++++++++++++++++++\n");
 		while (nTotalToSend > 0) {
 			jReply.clear();
 			s = strReply.substr (nStart, nPackSize);
-			//fprintf (stderr, "Part length: %d\n", s.length());
-			//s = strReply.substr (nStart, 100);
 			nStart += nPackSize;//100;
 			jReply["text"] = s;
 			jReply["flag"] = nTotalToSend < nPackSize;//100;
-			//fprintf(stderr, "JSON assigned\n");
 			s = StringifyJson (jReply);
-			//fprintf (stderr, "Total before send: %d\n", nTotalToSend);
 			int rc = zmq_send (responder, s.c_str(), s.length(), 0);
-			//fprintf (stderr, "'zmq_send' return: %d\n", rc);
 			nTotalToSend -= nPackSize;//100;
 			if (nTotalToSend > 0) {
-				//fprintf (stderr, "Preparing to recieved\n");
-				rc = zmq_recv (responder, buffer, 1024, 0);
-				//fprintf (stderr, "'zmq_recv' return: %d\n", rc);
+				rc = zmq_recv (responder, szRecvBuffer, 1024, 0);
 			}
-			//fprintf (stderr, "Left to send: %d\n", nTotalToSend);
 		}
-		//fprintf (stderr, "\n======================================\n");
 		fprintf (stderr, "======================================\n");
 		if (strReply.length() == 0)
 			strReply += std::string("{}");
 		fMessageRecieved = false;
+	fprintf (stderr, "Reply send\n");
+*/
     }
+	delete[] szRecvBuffer;
     return 0;
+}
+
+//-----------------------------------------------------------------------------
+bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strReply)
+{
+	bool fRun=true;
+	string strReply;
+
+	fprintf (stderr, "HandleMessage - Starting - Json message:\n%s\n", strJson.c_str());
+	try {
+		Json::Value root;//, jReply;
+		Json::Reader reader;
+		bool fMessageRecieved;
+    	TFloatVec vSignal;
+
+		if (reader.parse (strJson, root)) {
+			fprintf (stderr, "Message Parsed\n");
+			fMessageRecieved = true;
+			jReply.clear();
+			strReply  = "";
+			if (!root["setup"].isNull()) {
+				string s = StringifyJson (root["setup"]);
+				printf ("Setup: %s\n", s.c_str());
+				jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
+			}
+			if (!root[g_szReadData].isNull())
+				jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal);
+			if (!root[g_szSampling].isNull()) {
+				fprintf (stderr, "Reading sampling\n");
+				jReply[g_szSampling] = HandleSampling(root[g_szSampling], g_rp_setup, fRun);
+			}
+			if (!root[g_szMCA].isNull())
+				jReply[g_szMCA] = HandleMCA(root[g_szMCA], g_rp_setup);
+			if (!root["signal"].isNull())
+				jReply = ContinueReadSignal (root, vSignal);
+		}
+		else {
+			fprintf (stderr, "Parsing error\n");
+			strReply += strJson + "\nParsing Error";
+		}
+	}
+	catch (std::exception &err) {
+		fprintf (stderr, "Runtime error in 'HandleMessage':\n%s\n", err.what());
+	}
+	fprintf (stderr, "HandleMessage - End - fRun=%d\nstrReply=%s\n\n", (int) fRun, strReply.c_str());
+	return (fRun);
+}
+
+//-----------------------------------------------------------------------------
+void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage)
+{
+	try {
+		Json::Value jReply;
+		int nStart, nMessages, nPackSize, nCharsToSend, nTotalToSend;
+	//char *szRecvBuffer = new char[1024];
+
+			//fprintf (stderr, "Preparing Reply\n");
+		string s, strReply = StringifyJson (jReplyMessage);
+		strReply = trimString (strReply);
+		nMessages = 1 + (int) (strReply.length() / g_rp_setup.GetPackageSize());//, nCharsToSend, nTotalToSend;
+		nTotalToSend = strReply.length();
+		nPackSize = g_rp_setup.GetPackageSize();
+		while (nTotalToSend > 0) {
+			jReply.clear();
+			s = strReply.substr (nStart, nPackSize);
+			nStart += nPackSize;//100;
+			jReply["text"] = s;
+			jReply["flag"] = nTotalToSend < nPackSize;//100;
+			s = StringifyJson (jReply);
+			int rc = zmq_send (responder, s.c_str(), s.length(), 0);
+			nTotalToSend -= nPackSize;//100;
+			if (nTotalToSend > 0) {
+				//fprintf (stderr, "SendReply - Waiting...");
+        		zmq_recv (responder, szRecvBuffer , 1024, 0);
+				//fprintf (stderr, "SendReply - Message accepted\n");
+				//rc = zmq_recv (responder, szRecvBuffer, 1024, 0);
+			//rc = zmq_recv (responder, buffer, 1024, 0);
+			}
+		}
+	//delete[] szRecvBuffer;
+	}
+	catch (std::exception &err) {
+		fprintf (stderr, "Runtime error in 'SendReply':\n%s\n", err.what());
+	}
+	//fprintf (stderr, "End of sendReply: Reply send\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -320,7 +378,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 #ifdef  _RED_PITAYA_HW
 #endif
 		rp_setup.SaveToJson (g_szDefaultSetup);
-		fprintf (stderr, "Setup reply JSON:\n%s\n\n", strReply.c_str());
+		//fprintf (stderr, "Setup reply JSON:\n%s\n\n", strReply.c_str());
     }
     catch (std::exception &err) {
         jNew = rp_setup.AsJson();
