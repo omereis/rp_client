@@ -277,7 +277,7 @@ function sendMesssageThroughFlask(message, handler=null) {
                     reply = JSON.parse(response);
                 else
                     reply = response;
-                console.log(JSON.stringify(reply));
+                //console.log(JSON.stringify(reply));
                 if (handler != null)
                     handler(reply);
             }
@@ -508,7 +508,7 @@ function setupReadSignal (reply) {
         var txt, n, i, samples = JSON.parse(reply);
         var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
         var dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
-		var aPulseData = null;//samples.pulses.signal;//.pulse;
+		var aPulseData = null, aPulsesIndices=null;//samples.pulses.signal;//.pulse;
         var aMcaData = null;//samples.pulses.mca;
 
         var layout = {};
@@ -516,14 +516,19 @@ function setupReadSignal (reply) {
             aMcaData = samples.pulses.mca;
         if (samples.pulses.hasOwnProperty('signal')) {
 			console.log('signal accepted');
-            aPulseData = samples.pulses.signal;
+            aPulseData = samples.pulses.signal.data;
+            if (samples.pulses.signal.hasOwnProperty ('detector_pulse'))
+				aPulsesIndices = samples.pulses.signal.detector_pulse;
 		}
         if (samples.pulses.hasOwnProperty('buffer_length'))
 			downloadBufferLength(samples.pulses.buffer_length);
         if (samples.pulses.hasOwnProperty('mca_length'))
 			downloadMcaLength(samples.pulses.mca_length);
+        if (samples.pulses.hasOwnProperty('background'))
+			downloadBackground (samples.pulses.background);
+			//downloadMeasuredBackground(samples.background);
         if (aPulseData != null)
-            plotSignal (aPulseData);
+            plotSignal (aPulseData, aPulsesIndices);
         if (aMcaData != null)
             plotMca (aMcaData);
     }
@@ -547,11 +552,13 @@ function downloadMcaLength(value) {
 }
 
 //-----------------------------------------------------------------------------
-function plotSignal (aPulseData) {
+function plotSignal (aPulseData, aPulsesIndices=null){
 	var layout = {}, yData=[], t, yTrigger=[], yBackground=[];
-    var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
+    var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
     var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
 
+	if (aPulsesIndices != null)
+		yPulses = []
 	layout["title"] = "Signal";
 	layout["xaxis"] = {};
 	layout["yaxis"] = {};
@@ -569,12 +576,16 @@ function plotSignal (aPulseData) {
 	mrgn['t'] = 25;
 	mrgn['pad'] = 1;
 	layout['margin'] = mrgn;
+	var idxPulses=0;
     for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
         yData[n] = parseFloat (aPulseData[n]);
             //yRaw[n] = parseFloat (aPulseRaw[n]);
         xData[n] = t;
         yTrigger[n] = dTrigger;
 		yBackground[n] = dBackground;
+		if (yPulses != null) {
+			yPulses[n] = 0.01 * IsIndexInPulse (n, aPulsesIndices);
+		}
     }
         //var cbox = document.getElementById('cboxTrigger');
         //var fShowTrigger=false;
@@ -594,6 +605,10 @@ function plotSignal (aPulseData) {
         data.push(dataTrigger);
     if (fShowBackground)
         data.push(dataBackground);
+	if (yPulses != null) {
+    	var dataPulse = {x:xData, y:yPulses, name: "Pulse"};
+        data.push(dataPulse);
+	}
     var chart = document.getElementById("chartSignal");
     Plotly.newPlot(chart, data, layout);
 }
@@ -898,6 +913,18 @@ function plotMca (aMca) {
 		console.log(exception);
 		console.log(aMca.length);
 	}
+}
+
+//-----------------------------------------------------------------------------
+function IsIndexInPulse (idx, aPulsesIndices) {
+	var n, res=0;
+
+	if (aPulsesIndices != null) {
+		for (n=0 ; (n < aPulsesIndices.length) && (res == 0) ; n++)
+			if ((idx >= aPulsesIndices[n].start) && (idx < aPulsesIndices[n].start + aPulsesIndices[n].length))
+				res = 1;
+	}
+	return (res);
 }
 
 //-----------------------------------------------------------------------------
