@@ -34,7 +34,7 @@ public:
 	void GetMcaSpectrum (TFloatVec &vSpectrum);
 	void ResetMcaSpectrum ();
 
-	Json::Value HandleBackground (Json::Value &jBkgnd);
+	Json::Value HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal);
 	void NewPulse (const TPulseInfoVec &vPulsesInfo);
 	void NewPulse (const TPulseInfo &pi);
 	//void NewPulse (const TFloatVec &vPulse);

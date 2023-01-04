@@ -381,7 +381,7 @@ void TRedPitayaSetup::ResetMcaSpectrum ()
 
 #include "rp_server.h"
 //-----------------------------------------------------------------------------
-Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd)
+Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal)
 {
 	Json::Value jSetup;
 	Json::Value jSet = jBkgnd["set"];
@@ -393,15 +393,14 @@ Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd)
 		}
 		if (jBkgnd.isString()) {
 			string strCommand = ToLower (jBkgnd.asString());
-			//if (strCommand == "read")
-    			//jSetup["background"] = DoubleAsString (GetBackground());
-#ifdef	_RED_PITAYA_HW
 			if (strCommand == "measure") {
                 TFloatVec vPulse;
-                if (ReadHardwareSamples (*this, vPulse)) {
+        		//if (GetNextPulse (vPulse)) {
+                //if (ReadHardwareSamples (*this, vPulse)) {
                     SetBackground (VectorAverage (vPulse));
-                }
+                //}
             }
+#ifdef	_RED_PITAYA_HW
 #endif
 		}
 	}
