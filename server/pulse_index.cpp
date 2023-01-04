@@ -73,6 +73,19 @@ void TPulseIndex::SetSteps (int nSteps)
 {
 	m_nSteps = nSteps;
 }
-//---------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------
+Json::Value TPulseIndex::ToJson (const TPulseIndexVec &vIndices)
+{
+	TPulseIndexVec::const_iterator j;
+	Json::Value jPulses, js;
+
+	for (j=vIndices.begin() ; j != vIndices.end() ; j++) {
+		js["start"] = j->GetStart();
+		js["length"] = j->GetSteps();
+		jPulses.append(js);
+		js.clear();
+	}
+	return (jPulses);
+}
 

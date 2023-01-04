@@ -7,6 +7,7 @@
 #include "trim.h"
 
 #include <string.h>
+#include <cmath>
 
 using namespace std;
 
@@ -135,7 +136,7 @@ std::string ReplaceAll(const std::string &strSrc, const std::string& from, const
 }
 
 //-----------------------------------------------------------------------------
-float VectorAverage (const TFloatVec &vec)
+double VectorAverage (const TFloatVec &vec)
 {
     TFloatVec::const_iterator i;
     double dAverage=0;
@@ -146,6 +147,21 @@ float VectorAverage (const TFloatVec &vec)
     	dAverage /= (double) vec.size();
 	}
     return (dAverage);
+}
+
+//-----------------------------------------------------------------------------
+double VectorStdDev (const TFloatVec &vec, double dAvg)
+{
+	TFloatVec::const_iterator i;
+	double dStd = 0;
+
+	if (vec.size() > 0) {
+		for (i=vec.begin(), dStd=0 ; i != vec.end() ; i++)
+			dStd += pow(*i - dAvg, 2.0);
+			//dStd += (*i - dAvg, 2.0) * (*i - dAvg, 2.0);
+		dStd = sqrt (dStd / vec.size());
+	}
+	return (dStd);
 }
 
 //-----------------------------------------------------------------------------

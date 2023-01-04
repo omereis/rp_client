@@ -467,6 +467,33 @@ int TRedPitayaSetup::GetMcaPulses() const
 	return (m_mca_params.GetMcaPulses());
 }
 
+//-----------------------------------------------------------------------------
+size_t SubVector (const TFloatVec &vSource, int nLength, TFloatVec &vSub)
+{
+	TFloatVec::const_iterator iSrc;
+	TFloatVec::iterator iDest;
+	int n;
+
+	vSub.resize (nLength);
+	for (iSrc=vSource.begin(), n=0, iDest=vSub.begin() ; (iSrc != vSource.end()) && (n < nLength) ; iSrc++, n++, iDest++)
+		*iDest = *iSrc;
+	return (vSub.size());
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::CalculateBackground (const TFloatVec &vSource)
+{
+	TFloatVec vPulse;
+
+	SubVector (vSource, GetPreTriggerNs(), vPulse);
+	double dAvg = VectorAverage (vPulse);
+	//PrintVector (vPulse, "calc_bkgnd.csv");
+	double dStd = VectorStdDev (vPulse, dAvg);
+	SetBackground (dAvg - 3 * dStd);
+	//printf ("Background: %g\n", 1000.0 * GetBackground());
+	return (GetBackground());
+}
+
 /*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::NewPulse (const TFloatVec &vPulse)

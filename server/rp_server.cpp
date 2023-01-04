@@ -85,7 +85,7 @@ int CountInString (const std::string &strJson, int c);
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal);
 bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
-float VectorAverage (const TFloatVec &vec);
+//float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
 //bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2));
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd);
@@ -156,7 +156,7 @@ bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strRepl
 	bool fRun=true;
 	string strReply;
 
-	fprintf (stderr, "HandleMessage - Starting - Json message:\n%s\n", strJson.c_str());
+	//fprintf (stderr, "HandleMessage - Starting - Json message:\n%s\n", strJson.c_str());
 	try {
 		Json::Value root;//, jReply;
 		Json::Reader reader;
@@ -192,7 +192,7 @@ bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strRepl
 	catch (std::exception &err) {
 		fprintf (stderr, "Runtime error in 'HandleMessage':\n%s\n", err.what());
 	}
-	fprintf (stderr, "HandleMessage - End - fRun=%d\nstrReply=%s\n\n", (int) fRun, strReply.c_str());
+	//fprintf (stderr, "HandleMessage - End - fRun=%d\nstrReply=%s\n\n", (int) fRun, strReply.c_str());
 	return (fRun);
 }
 
@@ -457,6 +457,37 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 
 //-----------------------------------------------------------------------------
 Json::Value GetPulsesInSignal (const TFloatVec &vSignal)
+{
+	TFloatVec::const_iterator i, iPrev;
+	int n, nStart, nCount;
+	double dBackground = g_rp_setup.GetBackground();
+	TPulseIndexVec vIndices;
+	TPulseIndex pi;
+
+	for (i=vSignal.begin(), n=0 ; i != vSignal.end() ; i++, n++) {
+		if (*i < dBackground) {
+			if (nCount < 0) { // first sample below background
+				nCount = 0;
+				nStart = n;
+			}
+			else
+				nCount++;
+		}
+		else {
+			if (nCount >= 3) {
+				pi.SetStart (nStart);
+				pi.SetSteps (n - nStart);
+				vIndices.push_back (pi);
+			}
+			nCount = -1;
+		}
+	}
+	//printf ("'GetPulsesInSignal', Background: %g\n", 1000.0 * dBackground);
+	return (TPulseIndex::ToJson (vIndices));
+}
+
+//-----------------------------------------------------------------------------
+Json::Value GetPulsesInSignal1 (const TFloatVec &vSignal)
 {
 	TPulseIndexVec vIndices;
 	TPulseIndexVec::iterator j;
@@ -743,9 +774,13 @@ void OnTimerTick ()
     TFloatVec::iterator i;
     TPulseInfoVec piVec;
     TPulseInfoVec::iterator iPulseInfo;
+	static int nCount=1;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
         if (GetNextPulse (vPulse)) {
+			nCount++;
+			if (nCount % 10 == 0)
+				g_rp_setup.CalculateBackground (vPulse);
             SafeQueueAdd (vPulse);
             if (GetPulseParams (vPulse, piVec)) {
                 for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)

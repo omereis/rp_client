@@ -62,6 +62,7 @@ public:
     TRedPitayaSampling GetSampling () const;
     void SetSampling (const TRedPitayaSampling &sampling);
 
+	double CalculateBackground (const TFloatVec &vPulse);
     TMcaParams GetMcaParams () const;
     void SetMcaParams (const TMcaParams &mca_params);
     Json::Value AppsAsJson();
