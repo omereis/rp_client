@@ -8,6 +8,7 @@
 
 set ts=4
 set background=dark
+set number
 hi clear
 if exists("syntax_on")
   syntax reset
