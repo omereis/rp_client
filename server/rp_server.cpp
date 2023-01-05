@@ -82,7 +82,7 @@ void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
 //size_t ReadSignal (double dLen, TFloatVec &vSignal);
-Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal);
+Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug);
 bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 //float VectorAverage (const TFloatVec &vec);
@@ -361,13 +361,12 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 		}
 		else {
 			if (jRead["signal"].isNull() == false) {
+				bool fDebug = !jRead["debug"].isNull();
 				string strSignalLength = jRead["signal"].asString();
 				fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
 				double dLen = stod (strSignalLength);
             	if (dLen > 0) {
-            		jAllPulses["signal"] = ReadSignal (rp_setup, dLen, vSignal);
-            		//strReply = StringifyJson(jAllPulses);
-            		//ExportDebugPulse(g_qDebug);
+            		jAllPulses["signal"] = ReadSignal (rp_setup, dLen, vSignal, fDebug);
             	}
 			}
         		if (!jRead["mca"].isNull()) {
@@ -377,7 +376,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
             			jAllPulses["mca"] = ReadMca ();
 				}
         	}
-		}/**/
+		}
         jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
         jAllPulses["mca_length"] = GetMcaCounts ();
         jAllPulses["background"] = g_rp_setup.GetBackground();
@@ -407,7 +406,7 @@ string GetMcaCounts ()
 
 //-----------------------------------------------------------------------------
 //size_t ReadSignal (double dLen, TFloatVec &vSignal)
-Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal)
+Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug)
 {
     Json::Value jSignal, jSignalData;
 	int nVectorPoints;
@@ -443,7 +442,8 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
 		jSignalData["data"] = jSignal;
-		jSignalData["detector_pulse"] = GetPulsesInSignal (vSignal);
+		if (fDebug)
+			jSignalData["detector_pulse"] = GetPulsesInSignal (vSignal);
     }
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
@@ -458,6 +458,43 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 //-----------------------------------------------------------------------------
 Json::Value GetPulsesInSignal (const TFloatVec &vSignal)
 {
+	TFloatVec::const_iterator i;
+	bool fInPulse;
+	double dBackground = g_rp_setup.GetBackground();
+	TPulseIndex pi;
+	TPulseIndexVec vIndices;
+	int n, nBelow, nAbove;
+
+	fInPulse = false;
+	for (i=vSignal.begin(), n=0 ; i != vSignal.end() ; i++, n++) {
+		if (*i < dBackground) { // below background
+			nBelow++;
+			nAbove = 0;
+		}
+		else {
+			nBelow = 0;
+			nAbove++;
+		}
+		if (nBelow >= 3) {
+			if (fInPulse == false) {
+				// pulse start
+				fInPulse = true;
+				pi.SetStart (n);
+			}
+		}
+		else if (nAbove >= 3) {
+			if (fInPulse) {
+				// pulse end
+				fInPulse = false;
+				pi.SetSteps (n - pi.GetStart() - 3);
+				vIndices.push_back (pi);
+				pi.Clear ();
+			}
+		}
+	}
+
+	return (TPulseIndex::ToJson (vIndices));
+/*
 	TFloatVec::const_iterator i, iPrev;
 	int n, nStart, nCount;
 	double dBackground = g_rp_setup.GetBackground();
@@ -475,15 +512,18 @@ Json::Value GetPulsesInSignal (const TFloatVec &vSignal)
 		}
 		else {
 			if (nCount >= 3) {
-				pi.SetStart (nStart);
-				pi.SetSteps (n - nStart);
-				vIndices.push_back (pi);
+				if (nEnd >= 3) {
+					pi.SetStart (nStart);
+					pi.SetSteps (n - nStart);
+					vIndices.push_back (pi);
+				}
 			}
 			nCount = -1;
 		}
 	}
 	//printf ("'GetPulsesInSignal', Background: %g\n", 1000.0 * dBackground);
 	return (TPulseIndex::ToJson (vIndices));
+*/
 }
 
 //-----------------------------------------------------------------------------

@@ -378,8 +378,11 @@ function handleSignalMeasure (reply) {
 //-----------------------------------------------------------------------------
 function onReadSignalClick() {
     var msg = new Object, msgSignal = new Object;
-    if (uploadSignalRead())
+    if (uploadSignalRead()) {
         msgSignal['signal'] = uploadSignalLength();
+		if (GetDebugChecked())
+        	msgSignal['debug'] = true;
+	}
     //if (uploadMcaRead())
         msgSignal['mca'] = uploadMcaRead();
     //if (uploadPsdRead())
@@ -387,6 +390,16 @@ function onReadSignalClick() {
     msg['read_data'] = msgSignal;
     if (Object.keys(msgSignal).length > 0)
         sendMesssageThroughFlask(msg, setupReadSignal);
+}
+
+//-----------------------------------------------------------------------------
+function GetDebugChecked()
+{
+	var fChecked = false;
+	var cbox = document.getElementById ("cboxDebug");
+	if (cbox != null)
+		fChecked = cbox.checked;
+	return (fChecked);
 }
 
 //-----------------------------------------------------------------------------
@@ -555,10 +568,8 @@ function downloadMcaLength(value) {
 function plotSignal (aPulseData, aPulsesIndices=null){
 	var layout = {}, yData=[], t, yTrigger=[], yBackground=[];
     var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
-    var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
+    var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground(), dMin;
 
-	if (aPulsesIndices != null)
-		yPulses = []
 	layout["title"] = "Signal";
 	layout["xaxis"] = {};
 	layout["yaxis"] = {};
@@ -577,14 +588,21 @@ function plotSignal (aPulseData, aPulsesIndices=null){
 	mrgn['pad'] = 1;
 	layout['margin'] = mrgn;
 	var idxPulses=0;
-    for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
+    for (var n=0 ; n < aPulseData.length ; n++)
         yData[n] = parseFloat (aPulseData[n]);
+	if (aPulsesIndices != null) {
+		yPulses = []
+		dMin = vector_min (yData);
+	}
+    for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
+        //yData[n] = parseFloat (aPulseData[n]);
             //yRaw[n] = parseFloat (aPulseRaw[n]);
         xData[n] = t;
         yTrigger[n] = dTrigger;
 		yBackground[n] = dBackground;
 		if (yPulses != null) {
-			yPulses[n] = 0.01 * IsIndexInPulse (n, aPulsesIndices);
+			//yPulses[n] = 0.01 * IsIndexInPulse (n, aPulsesIndices);
+			yPulses[n] = dMin * IsIndexInPulse (n, aPulsesIndices);
 		}
     }
         //var cbox = document.getElementById('cboxTrigger');
@@ -611,6 +629,19 @@ function plotSignal (aPulseData, aPulsesIndices=null){
 	}
     var chart = document.getElementById("chartSignal");
     Plotly.newPlot(chart, data, layout);
+}
+
+//-----------------------------------------------------------------------------
+function vector_min (yData)
+{
+	var n, dMin=0;
+	if (yData.length > 0) {
+		dMin = yData[0];
+		for (n=1 ; n < yData.length ; n++)
+			if (yData[n] < dMin)
+				dMin = yData[n];
+	}
+	return (dMin);
 }
 
 //-----------------------------------------------------------------------------
