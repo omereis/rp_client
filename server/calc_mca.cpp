@@ -2,6 +2,7 @@
 |                                calc_mca.cpp                                  |
 \******************************************************************************/
 //-----------------------------------------------------------------------------
+#include <math.h>
 #include "calc_mca.h"
 //-----------------------------------------------------------------------------
 TCalcMca::TCalcMca ()
@@ -44,7 +45,15 @@ TMcaParams TCalcMca::GetParams () const
 int TCalcMca::HeightIndex (float fSignalMin, float fSignalMax)
 {
     int idx;
+	double dMaxAmp = fabs (m_params.GetMaxVoltage() - m_params.GetMinVoltage());
+	double dAmplitude = fabs (fSignalMax - fSignalMin);
 
+	if (dMaxAmp > 0)
+		idx = (int) ((double) m_params.GetChannels()) * (dAmplitude /dMaxAmp);
+	else
+		idx = -1;
+
+/*
     if ((m_params.GetMaxVoltage() > m_params.GetMinVoltage()) && (fSignalMax > fSignalMin)) {
         float fIndex = (fSignalMax - fSignalMin) / (m_params.GetMaxVoltage() - m_params.GetMinVoltage());
         idx = (int) (fIndex * m_params.GetChannels());
@@ -53,6 +62,7 @@ int TCalcMca::HeightIndex (float fSignalMin, float fSignalMax)
     }
     else
         idx = -1;
+*/
     return (idx);
 }
 
@@ -94,7 +104,8 @@ void TCalcMca::NewPulse (const TPulseInfo &pulse_info)
 
     if (m_vSpectrum.size() == 0)
         ResetSpectrum (m_params.GetChannels());
-    int idx = HeightIndex (0, pulse_info.GetMaxVal ());
+    int idx = HeightIndex (pulse_info.GetBackground(), pulse_info.GetMinVal ());
+    //int idx = HeightIndex (0, pulse_info.GetMaxVal ());
     if (idx >= 0) {
 		if (idx >= m_vSpectrum.size())  {
 			idx = m_vSpectrum.size() - 1;

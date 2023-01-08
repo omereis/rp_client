@@ -2,6 +2,7 @@
 |                              mca_params.cpp                                  |
 \******************************************************************************/
 #include <mutex>
+#include <math.h>
 #include "mca_params.h"
 //-----------------------------------------------------------------------------
 TMcaParams::TMcaParams ()
@@ -161,6 +162,13 @@ size_t TMcaParams::GetSpectrum (TFloatVec &vSpectrum)
 int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
 {
     int idx;
+	double dMaxAmp = fabs (GetMaxVoltage() - GetMinVoltage());
+	double dAmplitude = fabs (fSignalMax - fSignalMin);
+
+	if (dMaxAmp > 0)
+		idx = (int) ((double) GetChannels()) * (dAmplitude /dMaxAmp);
+	else
+		idx = -1;
 
 /*
     if ((m_params.GetMaxVoltage() > m_params.GetMinVoltage()) && (fSignalMax > fSignalMin)) {
@@ -169,7 +177,6 @@ int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
 		if (idx >= m_params.GetChannels())
 			idx >= m_params.GetChannels();
     }
-*/
     if ((GetMaxVoltage() > GetMinVoltage()) && (fSignalMax > fSignalMin)) {
         float fIndex = (fSignalMax - fSignalMin) / (GetMaxVoltage() - GetMinVoltage());
         idx = (int) (fIndex * GetChannels());
@@ -179,6 +186,7 @@ int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
     else
         idx = -1;
     return (idx);
+*/
 }
 
 /*
@@ -242,7 +250,8 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
     if (m_vSpectrum.size() == 0)
         SetSpectrum (GetChannels());
         //ResetSpectrum (m_params.GetChannels());
-    int idx = HeightIndex (0, pulse_info.GetMaxVal ());
+    int idx = HeightIndex (pulse_info.GetBackground(), pulse_info.GetMinVal ());
+    //int idx = HeightIndex (0, pulse_info.GetMaxVal ());
     if (idx >= 0) {
 		if (idx >= m_vSpectrum.size())  {
 			idx = m_vSpectrum.size() - 1;
