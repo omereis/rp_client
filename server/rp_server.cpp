@@ -477,7 +477,8 @@ size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices)
 {
 	TFloatVec::const_iterator i;
 	bool fInPulse;
-	double dBackground = g_rp_setup.GetBackground();
+	double dBackground = g_rp_setup.GetSignalBackground(vSignal);
+	//double dBackground = g_rp_setup.GetBackground();
 	TPulseIndex pi;
 	int n, nBelow, nAbove;
 
@@ -495,13 +496,13 @@ size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices)
 		if (nBelow >= 3) {
 			if (fInPulse == false) { // pulse start
 				fInPulse = true;
-				pi.SetStart (n);
+				pi.SetStart (n - 2);
 			}
 		}
 		else if (nAbove >= 3) {
 			if (fInPulse) { // pulse end
 				fInPulse = false;
-				pi.SetSteps (n - pi.GetStart() - 3);
+				pi.SetSteps (n - pi.GetStart());
 				vIndices.push_back (pi);
 				pi.Clear ();
 			}
