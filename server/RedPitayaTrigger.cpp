@@ -83,6 +83,22 @@ string TRedPitayaTrigger::GetLevel () const
 }
 
 //-----------------------------------------------------------------------------
+double TRedPitayaTrigger::GetTriggerLevel () const
+{
+	double dLevel;
+
+	try {
+		std::string s = GetLevel();
+		dLevel = atof (s.c_str());
+	}
+	catch (std::exception &exp) {
+		dLevel = 0;
+		fprintf (stderr, "Error converting string trigger level:\n%s\n", exp.what());
+	}
+	return (dLevel);
+}
+
+//-----------------------------------------------------------------------------
 void TRedPitayaTrigger::SetLevel (float fLevel)
 {
 	try {

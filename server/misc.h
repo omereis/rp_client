@@ -22,6 +22,8 @@ std::string ReadFileAsString (const std::string &strFile);
 std::string ToLower (const std::string &str);
 bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vDate);
 std::string ReplaceAll(const std::string &strSrc, const std::string& from, const std::string& to);
+double VectorAverage (TFloatVec::const_iterator iBegin, TFloatVec::const_iterator iEnd);
+double VectorStdDev (TFloatVec::const_iterator iBegin, TFloatVec::const_iterator iEnd, double dAvg);
 double VectorAverage (const TFloatVec &vec);
 double VectorStdDev (const TFloatVec &vec, double dAvg);
 void PrintRuntimeError (const char szMessage[], FILE *file=stderr);

@@ -59,6 +59,7 @@ public:
 	Json::Value AsJson();
     Json::Value UpdateFromJson(Json::Value &jSetup);
 
+    double GetTriggerLevel () const;
     string GetLevel () const;
 	void SetLevel (float fLevel);
     void SetLevel (const string &strLevel);

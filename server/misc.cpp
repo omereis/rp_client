@@ -138,6 +138,8 @@ std::string ReplaceAll(const std::string &strSrc, const std::string& from, const
 //-----------------------------------------------------------------------------
 double VectorAverage (const TFloatVec &vec)
 {
+	return (VectorAverage (vec.begin(), vec.end()));
+/*
     TFloatVec::const_iterator i;
     double dAverage=0;
 
@@ -147,11 +149,14 @@ double VectorAverage (const TFloatVec &vec)
     	dAverage /= (double) vec.size();
 	}
     return (dAverage);
+*/
 }
 
 //-----------------------------------------------------------------------------
 double VectorStdDev (const TFloatVec &vec, double dAvg)
 {
+	return (VectorStdDev (vec.begin(), vec.end(), dAvg));
+/*
 	TFloatVec::const_iterator i;
 	double dStd = 0;
 
@@ -161,6 +166,35 @@ double VectorStdDev (const TFloatVec &vec, double dAvg)
 			//dStd += (*i - dAvg, 2.0) * (*i - dAvg, 2.0);
 		dStd = sqrt (dStd / vec.size());
 	}
+	return (dStd);
+*/
+}
+
+//-----------------------------------------------------------------------------
+double VectorAverage (TFloatVec::const_iterator iBegin, TFloatVec::const_iterator iEnd)
+{
+    TFloatVec::const_iterator i;
+    double dAverage=0;
+	int n;
+
+    for (i=iBegin, n=0 ; i != iEnd ; i++, n++)
+		dAverage += (double) *i;
+	if (n > 0)
+    	dAverage /= (double) n;
+    return (dAverage);
+}
+
+//-----------------------------------------------------------------------------
+double VectorStdDev (TFloatVec::const_iterator iBegin, TFloatVec::const_iterator iEnd, double dAvg)
+{
+	TFloatVec::const_iterator i;
+	double dStd = 0;
+	int n=0;
+
+	for (i=iBegin, dStd=0, n=0 ; i != iEnd ; i++, n++)
+		dStd += pow(*i - dAvg, 2.0);
+	if (n > 0)
+		dStd = sqrt (dStd / (double) n);
 	return (dStd);
 }
 
