@@ -494,6 +494,52 @@ double TRedPitayaSetup::CalculateBackground (const TFloatVec &vSource)
 	return (GetBackground());
 }
 
+//-----------------------------------------------------------------------------
+TFloatVec::const_iterator TRedPitayaSetup::FindFirstTrigger(const TFloatVec &vSignal)
+{
+	TFloatVec::const_iterator i, iFound = vSignal.end();
+	int idx=0;
+	double dTrigger = m_trigger.GetTriggerLevel ();
+
+	for (i=vSignal.begin() ; (i != vSignal.end()) && (iFound == vSignal.end()) ; i++, idx++)
+		if (*i < dTrigger)
+			iFound = i;
+	return (iFound);
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetSignalBackground(const TFloatVec &vSignal)
+{
+	double dSum = 0;
+	int n;
+	TFloatVec::const_iterator i, iTrigger = FindFirstTrigger(vSignal);
+	//static bool nCount=0;
+
+	if (iTrigger != vSignal.end()) {
+		//iTrigger -= 5;
+		for (n=0 ; (n < 5) && (iTrigger != vSignal.begin()) ; n++)
+			iTrigger--;
+		if (iTrigger != vSignal.begin()) {
+			double dAvg = VectorAverage (vSignal.begin(), iTrigger);
+			double dStdDev = VectorStdDev (vSignal.begin(), iTrigger, dAvg);
+/*
+		if (nCount < 1) {
+			nCount++;
+			FILE *file = fopen ("bksignal.csv", "w+");
+			fprintf (file, "Average,%g\n", dAvg);
+			fprintf (file, "Standard Deviation,%g\n", dStdDev);
+			fprintf (file, "Background,%g\n", dAvg - 3 * dStdDev);
+			for (TFloatVec::const_iterator i=vSignal.begin() ; i != iTrigger ; i++)
+				fprintf (file, "%g\n", *i);
+			fclose (file);
+		}
+*/
+			SetBackground (dAvg - 3 * dStdDev);
+		}
+	}
+	return (GetBackground());
+}
+
 /*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::NewPulse (const TFloatVec &vPulse)

@@ -63,6 +63,10 @@ public:
     void SetSampling (const TRedPitayaSampling &sampling);
 
 	double CalculateBackground (const TFloatVec &vPulse);
+
+	TFloatVec::const_iterator FindFirstTrigger(const TFloatVec &vSignal);
+	double GetSignalBackground(const TFloatVec &vSignal);
+
     TMcaParams GetMcaParams () const;
     void SetMcaParams (const TMcaParams &mca_params);
     Json::Value AppsAsJson();
