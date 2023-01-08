@@ -38,10 +38,11 @@
 		enableItemsByTrigger(false);
 		if (divChart != null)
 			divChart.style.height = 400;
+		localStorage.removeItem ("chart_debug");
 	}
 </script>
         
-    </body>
+    </body onresize="onWindowResize()">
 	<h3><p id="pTarget"></p></h3>
 <!-- Running on {_ target _} -->
     <table style="background-color: #8ec7eb;width:100%">
@@ -324,6 +325,7 @@
                         <td colspan="2" style="width:35%;">
                             <input type="button" value="Read from Card" onclick="onReadSignalClick()">
                             <input type="checkbox" id="cboxDebug">Debug
+                            <!-- <input type="checkbox" id="cboxDebug" onclick="onDebugCboxClick()">Debug -->
                         </td>
                         <td>
                             <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal
