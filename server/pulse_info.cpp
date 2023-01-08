@@ -21,6 +21,7 @@ void TPulseInfo::Clear ()
     m_vRawPulse.clear ();
     SetArea (0);
     SetMaxVal (0);
+    SetMinVal (0);
     SetLength (0);
     SetPrompt (0);
     SetDelayed (0);
@@ -35,6 +36,7 @@ void TPulseInfo::AssignAll (const TPulseInfo &other)
     SetRawPulse (other.GetRawPulse());
     SetArea (other.GetArea ());
     SetMaxVal (other.GetMaxVal ());
+    SetMinVal (other.GetMinVal ());
     SetLength (other.GetLength ());
     SetPrompt (other.GetPrompt ());
     SetDelayed (other.GetDelayed ());
@@ -66,6 +68,17 @@ void TPulseInfo::SetMaxVal (double dMaxVal)
     m_dMaxVal = dMaxVal;
 }
 
+//-----------------------------------------------------------------------------
+void TPulseInfo::SetMinVal (double dMinVal)
+{
+	m_dMinVal = dMinVal;
+}
+
+//-----------------------------------------------------------------------------
+double TPulseInfo::GetMinVal () const
+{
+	return (m_dMinVal);
+}
 //-----------------------------------------------------------------------------
 double TPulseInfo::GetLength () const
 {
@@ -189,4 +202,4 @@ void TPulseInfo::AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd)
     m_vRawPulse.clear();
 	m_vRawPulse.insert (m_vRawPulse.begin(), iStart, iEnd);
 }
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------p

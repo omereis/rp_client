@@ -23,6 +23,8 @@ public:
     double GetArea () const;
     void SetMaxVal (double dMaxVal);
     double GetMaxVal () const;
+    void SetMinVal (double dMinVal);
+    double GetMinVal () const;
     void SetLength (double dLength);
     double GetLength () const;
     void SetPrompt (double m_dPrompt);
@@ -49,6 +51,7 @@ private:
     TFloatVec m_vRawPulse;
     double m_dArea;
     double m_dMaxVal;
+	double m_dMinVal;
     double m_dLength;
     double m_dPrompt;
     double m_dDelayed;
