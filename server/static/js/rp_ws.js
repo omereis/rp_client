@@ -388,8 +388,10 @@ function onReadSignalClick() {
     //if (uploadPsdRead())
         msgSignal['psd'] = uploadPsdRead();
     msg['read_data'] = msgSignal;
-    if (Object.keys(msgSignal).length > 0)
+    if (Object.keys(msgSignal).length > 0) {
+		localStorage.removeItem ("chart_debug");
         sendMesssageThroughFlask(msg, setupReadSignal);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -624,9 +626,10 @@ function plotSignal (aPulseData, aPulsesIndices=null){
     if (fShowBackground)
         data.push(dataBackground);
 	if (yPulses != null) {
-    	var dataPulse = {x:xData, y:yPulses, name: "Pulse"};
+    	var dataPulse = {x:xData, y:yPulses, name: "Debug"};
         data.push(dataPulse);
 	}
+	localStorage.setItem ("chart_debug", yPulses);
     var chart = document.getElementById("chartSignal");
     Plotly.newPlot(chart, data, layout);
 }
@@ -903,8 +906,10 @@ function mcaSetupHandler (reply) {
 function downloadMca (dictMca) {
 	try {
         donwloadText ('txtMcaChannels', dictMca.channels);
-        donwloadText ('txtMcaMin', parseFloat(dictMca.min_voltage) / 1000.0);
-        donwloadText ('txtMcaMax', parseFloat(dictMca.max_voltage) / 1000.0);
+        donwloadText ('txtMcaMin', parseFloat(dictMca.min_voltage));
+        donwloadText ('txtMcaMax', parseFloat(dictMca.max_voltage));
+        //donwloadText ('txtMcaMin', parseFloat(dictMca.min_voltage) / 1000.0);
+        //donwloadText ('txtMcaMax', parseFloat(dictMca.max_voltage) / 1000.0);
 	}
 	catch (exception) {
 		console.log(exception);
@@ -1173,8 +1178,10 @@ function uploadTextValue(txtInputId) {
 //-----------------------------------------------------------------------------
 function uploadMcaParams() {
     var msgMca = new Object;
-    msgMca['max_voltage'] = 1000.0 * uploadTextValue('txtMcaMax');
-    msgMca['min_voltage'] = 1000.0 * uploadTextValue('txtMcaMin');
+    //msgMca['max_voltage'] = 1000.0 * uploadTextValue('txtMcaMax');
+    //msgMca['min_voltage'] = 1000.0 * uploadTextValue('txtMcaMin');
+    msgMca['max_voltage'] = uploadTextValue('txtMcaMax');
+    msgMca['min_voltage'] = uploadTextValue('txtMcaMin');
     msgMca['channels'] = uploadTextValue('txtMcaChannels');
 	return (msgMca);
 }
@@ -1211,16 +1218,60 @@ Source:
 https://code.tutsplus.com/tutorials/how-to-save-a-file-with-javascript--cms-41105
 */
 	var tempLink = document.createElement("a");
-	//var value = new Blob (uploadSignalChart());
 	var value = new Blob (uploadChartData('chartSignal'));
-	//var data = uploadChartData('chartSignal');
 	tempLink.setAttribute('href', URL.createObjectURL(value));
-	//tempLink.setAttribute('href', URL.createObjectURL(uploadChartData('chartSignal')));
 	tempLink.setAttribute('download', 'signal.csv');
 	tempLink.click();
 	URL.revokeObjectURL(tempLink.href);
 }
 
 //-----------------------------------------------------------------------------
+function onDebugCboxClick() {
+    var chart = document.getElementById("chartSignal");
+    var fDebug = uploadCheckBox ("cboxDebug");
+	if (fDebug) {
+		var yPulses = localStorage.getItem ("chart_debug");
+		if (yPulses != null) {
+			//var x=[];
+			//for (var n=0 ; n < chart.data[0].x.length ; n++)
+				//x[n] = chart.data[0].x[n];
+    		var dataPulses = {x:chart.data[0].x, y:yPulses, name: "Debug"};
+			chart.data.push(dataPulses);
+			Plotly.redraw('chartSignal');
+		}
+	}
+	else {
+		if (chart.hasOwnProperty ('data')) {
+			var idx = findLineChartByTitle (chart.data, "Debug");
+			if (idx >= 0) {
+				chart.data.splice(idx,1);
+				Plotly.redraw('chartSignal');
+			}
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
+function findLineChartByTitle (chart_data, strTitle) {
+	var n, idx=-1;
+
+	try {
+		for (n=0 ; (n < chart_data.length) && (idx < 0) ; n++) {
+			var plot = chart_data[n];
+			if (plot.name == strTitle)
+				idx = n;
+		}
+	}
+    catch (exception) {
+		console.log(exception);
+    }
+	return (idx);
+}
+
+//-----------------------------------------------------------------------------
+function onWindowResize() {
+	Plotly.redraw('chartSignal');
+}
+//-----------------------------------------------------------------------------
+
 
