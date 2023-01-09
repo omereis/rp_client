@@ -19,7 +19,7 @@ using namespace std;
 #include "misc.h"
 #include "timer.h"
 #include "bd_types.h"
-#include "calc_mca.h"
+//#include "calc_mca.h"
 #include "pulse_info.h"
 #include "rp_server.h"
 #include "trim.h"
@@ -33,7 +33,6 @@ TFloatVec g_vRawSignal;
 
 TPulseInfoVec g_vPulsesInfo;
 bool g_fRunning = false;
-//TCalcMca g_mca_calculator;
 static const char *g_szReadData = "read_data";
 static const char *g_szBufferLength = "buffer_length";
 static const char *g_szReadMca   = "rea_dmca";
@@ -58,7 +57,6 @@ bool HandleMessage (const string &strJson, Json::Value &jReply);//string &strRep
 //bool HandleMessage (const string &strJsoni, string &strReply);
 void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage);
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
-//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
@@ -394,20 +392,13 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 //-----------------------------------------------------------------------------
 string GetMcaCounts ()
 {
-	TFloatVec vSpectrum;
-	TFloatVec::iterator i;
-	long lnSum=0;
 	char sz[100];
 
-	g_rp_setup.GetMcaSpectrum (vSpectrum);
-	for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
-		lnSum += *i;
-	sprintf (sz, "Pulses: %d, spectrum sum: %ld", g_rp_setup.GetMcaPulses(), lnSum);
+	sprintf (sz, "%d Pulses", g_rp_setup.GetMcaPulses());
 	return (string (sz));
 }
 
 //-----------------------------------------------------------------------------
-//size_t ReadSignal (double dLen, TFloatVec &vSignal)
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug)
 {
     Json::Value jSignal, jSignalData;
@@ -432,15 +423,10 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 						rValue += 0;
 					vSignal.push_back (rValue);
 					jSignal.append(*it);
-					//vSignal.push_back (1000.0 * rValue);
-					//strNumber = to_string (1000.0 * rValue);
 				}
 			}
 			rValue += 0;
         }
-        //jSignal["signal_length"] = to_string (vSignal.size());
-        //jSignal["package_size"] = to_string(rp_setup.GetPackageSize());
-		//PrintVector (vSignal, "out_debug.csv");
 		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
 		jSignalData["data"] = jSignal;
@@ -450,10 +436,7 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
     }
-	//printf ("rp_server.cpp:315, signal length:%d\n", jSignal.size());
-    //return (vSignal.size());
 	strNumber = StringifyJson (jSignal);
-	//fprintf (stderr, "ReadSignal, reply:\n%s\n", strNumber.c_str());
     return (jSignalData);
 }
 
