@@ -577,7 +577,7 @@ function plotSignal (aPulseData, aPulsesIndices=null){
 	layout["yaxis"] = {};
 	layout['autosize'] = true;
 		//layout.xaxis["title"] = "Time [uSec]";
-	layout.yaxis["title"] = "Voltage [mV]";
+	layout.yaxis["title"] = "Voltage [Volts]";
 	var mrgn = {};
 	var left_title = {};
 	left_title ['text'] = "Time [uSec]";
@@ -937,10 +937,11 @@ function plotMca (aMca) {
 	    var layout = {};
         var data=[];
         data[0] = dataMca;
-    	layout["title"] = "MCA";
+		var dMcaChannels = uploadTextReal ('txtMcaChannels');
+    	layout["title"] = "MCA (" + dMcaChannels.toString() + ")";
     	layout["xaxis"] = {};
     	layout["yaxis"] = {};
-    	layout.xaxis["title"] = "Energy";
+    	layout.xaxis["title"] = "Channel";
     	layout.yaxis["title"] = "Count";
     	var chart = document.getElementById("chartMca");
     	Plotly.newPlot(chart, data, layout);
