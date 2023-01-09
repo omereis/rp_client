@@ -23,26 +23,21 @@ endif
 
 BASIC_CFLAGS = -std=c++14 -g -I/usr/include/modern/include/
 CFLAGS = $(BASIC_CFLAGS)
-#ifeq ($(TARGET),'RED_PITAYA_HW'))
 ifeq ($(TARGET),$(DEFAULT_TARGET))
 	CPP_DEF = '_RED_PITAYA_HW'
 	CFLAGS = -std=c++14 -g -I/usr/include/modern/include/ -D_RED_PITAYA_HW
 else
 	CPP_DEF = 'docker'
-	#CFLAGS = $(BASIC_CFLAGS)
 endif
 
-OBJECTS = read_json.o rp_setup.o trim.o misc.o mca_params.o RedPitayaTrigger.o RedPitayaSampling.o pulse_info.o pulse_index.o
-INCLUDES = rp_server.h rp_setup.h misc.h timer.h pulse_info.h RedPitayaTrigger.h RedPitayaSampling.h bd_types.h docker.mak pulse_index.h
-SOURCES = read_json.cpp rp_setup.cpp trim.cpp misc.cpp RedPitayaTrigger.cpp RedPitayaSampling.cpp pulse_index.cpp
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp -lm
 
-RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o calc_mca.o pulse_info.o RedPitayaTrigger.o RedPitayaSampling.o pulse_index.o
+RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o pulse_info.o RedPitayaTrigger.o RedPitayaSampling.o pulse_index.o
 RP_CLIENTS = rp_client.o
-RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp calc_mca.cpp pulse_info.cpp
+RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp pulse_info.cpp
 RP_INC = 
 
-all: read_json rp_server rp_client
+all: rp_server 
 
 .cpp.o:
 	$(CPP) -c $(CFLAGS) $< -o $@
@@ -50,15 +45,7 @@ all: read_json rp_server rp_client
 rp_server: $(RP_OBJ)
 	$(CPP) -g $(RP_OBJ) $(LDFLAGS) -o $@
 
-rp_client: $(RP_CLIENTS)
-	$(CPP) -g $(RP_OBJ) $(LDFLAGS) -o $@
-
-read_json: $(OBJECTS)
-	$(CPP) -g $(OBJECTS) $(LDFLAGS) -o $@
-
 clean:
-	rm *.o rp_client rp_server read_json
+	rm *.o rp_server 
 
-clean_all:
-	rm *.o rp_client rp_server read_json
 
