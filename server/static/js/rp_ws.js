@@ -853,43 +853,6 @@ function uploadPulseDir() {
 	return (txtDir);
 }
 
-/*
-//-----------------------------------------------------------------------------
-function onMcaUpdateClick() {
-    var msg = new Object, msgMca = new Object, msgCmd = new Object;
-    //msgCmd['command'] = 'update';
-    msgCmd['mca'] = uploadMcaParams ();
-    msgCmd['command'] = 'update';
-    msg['setup'] = msgCmd;//'update';
-	console.log(JSON.stringify(msg));
-    sendMesssageThroughFlask(msg, mcaSetupHandler);
-}
-
-//-----------------------------------------------------------------------------
-function uploadMcaParams () {
-    var msgMca = new Object;
-    msgMca['channels'] = uploadMcaChannels();
-    msgMca['min_voltage'] = uploadMcaMinVoltage();
-    msgMca['max_voltage'] = uploadMcaMaxVoltage();
-    return (msgMca);
-}
-
-//-----------------------------------------------------------------------------
-function uploadMcaChannels() {
-    return (uploadTextReal ('txtMcaChannels'));
-}
-
-//-----------------------------------------------------------------------------
-function uploadMcaMinVoltage() {
-    return (uploadTextReal ('txtMcaMin'));
-}
-
-//-----------------------------------------------------------------------------
-function uploadMcaMaxVoltage() {
-    return (uploadTextReal ('txtMcaMax'));
-}
-*/
-
 //-----------------------------------------------------------------------------
 function uploadTextReal (txtId) {
     var val = null;
@@ -901,11 +864,6 @@ function uploadTextReal (txtId) {
 
 //-----------------------------------------------------------------------------
 function mcaSetupHandler (reply) {
-/*
-    var txt = document.getElementById("txtReply");
-    if (txt != null)
-        txt.value = reply;
-*/
     try {
         dictSetup = JSON.parse(reply).setup.mca;
 		downloadMca (dictSetup.mca);
@@ -919,10 +877,8 @@ function mcaSetupHandler (reply) {
 function downloadMca (dictMca) {
 	try {
         donwloadText ('txtMcaChannels', dictMca.channels);
-        donwloadText ('txtMcaMin', parseFloat(dictMca.min_voltage));
-        donwloadText ('txtMcaMax', parseFloat(dictMca.max_voltage));
-        //donwloadText ('txtMcaMin', parseFloat(dictMca.min_voltage) / 1000.0);
-        //donwloadText ('txtMcaMax', parseFloat(dictMca.max_voltage) / 1000.0);
+		downloadTextVoltage ('txtMcaMin', parseFloat(dictMca.min_voltage));
+		downloadTextVoltage ('txtMcaMax', parseFloat(dictMca.max_voltage));
 	}
 	catch (exception) {
 		console.log(exception);
@@ -945,7 +901,6 @@ function plotMca (aMca) {
             xData[n] = n + 1;
             yData[n] = aMca[n];
         }
-		//console.log('Maximum: ' + fMax + ', at ' + iMax);
         var dataMca = {x:xData, y:yData, type: 'bar'};
 	    var layout = {};
         var data=[];
@@ -1190,10 +1145,10 @@ function uploadTextValue(txtInputId) {
 //-----------------------------------------------------------------------------
 function uploadMcaParams() {
     var msgMca = new Object;
-    //msgMca['max_voltage'] = 1000.0 * uploadTextValue('txtMcaMax');
-    //msgMca['min_voltage'] = 1000.0 * uploadTextValue('txtMcaMin');
-    msgMca['max_voltage'] = uploadTextValue('txtMcaMax');
-    msgMca['min_voltage'] = uploadTextValue('txtMcaMin');
+    //msgMca['max_voltage'] = uploadTextValue('txtMcaMax');
+    msgMca['max_voltage'] = uploadTextBoxVoltage ('txtMcaMax');
+    msgMca['min_voltage'] = uploadTextBoxVoltage ('txtMcaMin');
+    //msgMca['min_voltage'] = uploadTextValue('txtMcaMin');
     msgMca['channels'] = uploadTextValue('txtMcaChannels');
 	return (msgMca);
 }
@@ -1375,6 +1330,15 @@ function downloadTextByFunction (value, idTxt, func) {
 }
 
 //-----------------------------------------------------------------------------
+function uploadTextBoxVoltage (idTxt) {
+	var txtbx = document.getElementById (idTxt);
+	if (txtbx != null)
+		return (uploadTextVoltage(txtbx));
+	else
+		return (null);
+}
+
+//-----------------------------------------------------------------------------
 function uploadTextVoltage (txt) {
 	var val = parseFloat (txt.value);
 	if (isMillivolts ())
@@ -1395,6 +1359,8 @@ function onVoltsMilliClick(idClickedRadio) {
 	convertVoltageUnits (idClickedRadio, 'txtSignalMax');
 	convertVoltageUnits (idClickedRadio, 'txtBackground');
 	updateSignalPlot (idClickedRadio == 'radioVolts');
+	convertVoltageUnits (idClickedRadio, 'txtMcaMax');
+	convertVoltageUnits (idClickedRadio, 'txtMcaMin');
 }
 
 //-----------------------------------------------------------------------------
@@ -1420,10 +1386,10 @@ function updateSignalPlot (fToVolts)
 				d *= 1000;
 			yNew[n] = d;
 		}
+		chart.data[0].y = yNew;
+		chart.layout.yaxis.title.text = getVoltageTitle (!fToVolts);
+		Plotly.redraw('chartSignal');
 	}
-	chart.data[0].y = yNew;
-	chart.layout.yaxis.title.text = getVoltageTitle (!fToVolts);
-	Plotly.redraw('chartSignal');
 	console.log(yNew.length);
 }
 
