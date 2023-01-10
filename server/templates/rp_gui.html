@@ -262,10 +262,11 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="button" value="Start">
+                        Time Limit <input type="text" id="txtMcaTimeLimit" style="width:50px;text-align:center;" value="10"> Minutes
                     </td>
                     <td>
-                        <input type="button" value="Stop">
+                        <input type="button" id="btnStartMca" value="Start">
+                        <input type="button" id="btnStopMca" value="Stop">
                     </td>
                 </tr>
                 <tr>
@@ -312,7 +313,7 @@
                             <b>Signal</b>
                         </td>
                         <td style="width:20%;text-align:right;">
-                            <input type="checkbox" value="Background" id="cboxBackground"><label for="cboxBackgriound">Background</label>
+							<input type="checkbox" value="Background" id="cboxBackground" onclick="onBackgroundClick()"><label for="cboxBackground">Background</label>
                         </td>
                     </tr>
                     <tr>
@@ -334,6 +335,18 @@
                             <input type="checkbox" id="cboxReadMCA" value="MCA" checked="true">MCA
                             <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true">PSD
                         </td>
+                    </tr>
+                    <tr>
+						<td>
+							Display Units<br>
+							<input type="radio" name="display_units" id="radioVolts" onclick="onVoltsMilliClick(id)" checked="true">Volts
+							<input type="radio" name="display_units" id="radioMillivolts" onclick="onVoltsMilliClick(id)">Millivolts
+						</td>
+						<td colspan="2">
+							Minimum <input type="text" id="txtSignalMin" style="width:75px;text-align: center;" readonly>
+							Maximum <input type="text" id="txtSignalMax" style="width:75px;text-align: center;" readonly>
+							Frequency <input type="text" id="txtSignalFreq" style="width:75px;text-align: center;" readonly>
+						</td>
                     </tr>
                     <tr>
 						<td>
