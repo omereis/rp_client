@@ -306,6 +306,7 @@ Json::Value TRedPitayaTrigger::LoadFromJson (Json::Value &jTrigger)
     }
     return (jNew);
 }
+
 //-----------------------------------------------------------------------------
 Json::Value TRedPitayaTrigger::AsJson()
 {
@@ -319,31 +320,30 @@ Json::Value TRedPitayaTrigger::AsJson()
     jTrigger["now"] = GetNow();
     return(jTrigger);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
 Json::Value TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
 {
     Json::Value jNew;
 
     try {
-		fprintf (stderr, "Setup Json:\n%s\n", StringifyJson(jSetup).c_str());
-        SetLevel (jSetup["level"].asString());
-        SetDir (jSetup["dir"].asString());
-        SetSrc (jSetup["src"].asString());
-		SetNow (jSetup["now"].asBool());
-    	SetTrigger (jSetup["enabled"]);
-    	//SetTrigger (jSetup["trigger"]);
-		//Print ("From 'TRedPitayaTrigger::UpdateFromJson', before AsJson");
+		if (!jSetup.isNull()) {
+			//fprintf (stderr, "Setup Json:\n%s\n", StringifyJson(jSetup).c_str());
+        	SetLevel (jSetup["level"].asString());
+        	SetDir (jSetup["dir"].asString());
+        	SetSrc (jSetup["src"].asString());
+			SetNow (jSetup["now"].asBool());
+    		SetTrigger (jSetup["enabled"]);
+		}
         jNew = AsJson();
-		//Print ("From 'TRedPitayaTrigger::UpdateFromJson', AFTER AsJson");
     }
     catch (std::exception exp) {
         jNew["error"] = exp.what();
     }
     return (jNew);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
 string TRedPitayaTrigger::GetType() const
 {
 	return (m_strType);
