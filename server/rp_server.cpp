@@ -427,9 +427,13 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 			}
 			rValue += 0;
         }
+		float dMin, dMax;
+		GetVectorMinMax (vSignal, dMin, dMax);
 		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
 		jSignalData["data"] = jSignal;
+		jSignalData["data_min"] = dMin;
+		jSignalData["data_max"] = dMax;
 		if (fDebug)
 			jSignalData["detector_pulse"] = GetPulsesInSignal (vSignal);
     }
@@ -852,6 +856,7 @@ bool IsF1LessThenF2 (float f1, float f2)
 	return (f1 >= f2);
 }
 
+/*
 //-----------------------------------------------------------------------------
 bool GetVectorMinMax (TFloatVec &vBuffer, double &dMin, double &dMax)
 {
@@ -874,6 +879,7 @@ bool GetVectorMinMax (TFloatVec &vBuffer, double &dMin, double &dMax)
     }
 	return (fMinMax);
 }
+*/
 
 //-----------------------------------------------------------------------------
 void Normalize (TFloatVec &vSource, double dMin, double dMax, TFloatVec &vResult)
