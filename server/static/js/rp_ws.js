@@ -179,7 +179,7 @@ function downloadTriggerSrc (src) {
 function downloadBackground (dBackground) {
 	var txt = document.getElementById ('txtBackground');
 	if (txt != null)
-		txt.value = dBackground;
+		txt.value = toDisplayVolt (dBackground);
 }
 
 //-----------------------------------------------------------------------------
@@ -427,7 +427,6 @@ function uploadSignalRead() {
 
 //-----------------------------------------------------------------------------
 function uploadMcaRead() {
-    //return (uploadCheckBox ("cboxStartMCA"));
     return (uploadCheckBox ("cboxReadMCA"));
 }
 
@@ -532,6 +531,7 @@ function setupReadSignal (reply) {
         if (samples.pulses.hasOwnProperty('signal')) {
 			console.log('signal accepted');
             aPulseData = samples.pulses.signal.data;
+			downloadSignalMinMax (samples.pulses.signal);
             if (samples.pulses.signal.hasOwnProperty ('detector_pulse'))
 				aPulsesIndices = samples.pulses.signal.detector_pulse;
 		}
@@ -568,16 +568,71 @@ function downloadMcaLength(value) {
 
 //-----------------------------------------------------------------------------
 function plotSignal (aPulseData, aPulsesIndices=null){
-	var layout = {}, yData=[], t, yTrigger=[], yBackground=[];
-    var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
+	var yData=[], t, yTrigger=[], yBackground=[];
+    var yData=[], yRaw=[], xData=[], xBackground=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
     var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground(), dMin;
+	var fIsMilli = uploadRadio ('radioMillivolts');
 
+	var idxPulses=0;
+    for (var n=0 ; n < aPulseData.length ; n++) {
+		var y = parseFloat (aPulseData[n]);
+		if (fIsMilli)
+			y *= 1000;
+        yData[n] = y;
+	}
+	if (aPulsesIndices != null) {
+		yPulses = []
+		dMin = vector_min (yData);
+	}
+    for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
+        xData[n] = t;
+        yTrigger[n] = dTrigger;
+		if (yPulses != null) {
+			yPulses[n] = dMin * IsIndexInPulse (n, aPulsesIndices);
+		}
+    }
+	xBackground[0] = xData[0];
+	xBackground[1] = xData[xData.length - 1];
+	yBackground[0] = yBackground[1] = dBackground;
+
+	var fShowTrigger = uploadCheckbox ('cboxTrigger');
+	var fShowBackground = uploadCheckbox ('cboxBackground');
+    var dataPulse = {x:xData, y:yData, name: "Filtered"};
+
+    var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
+    var dataBackground = {x:xBackground, y:yBackground, name: "Background"};
+
+    var data=[];
+    data[0] = dataPulse;
+    if (fShowTrigger)
+        data.push(dataTrigger);
+    if (fShowBackground)
+        data.push(dataBackground);
+	if (yPulses != null) {
+    	var dataPulse = {x:xData, y:yPulses, name: "Debug"};
+        data.push(dataPulse);
+	}
+	localStorage.setItem ("chart_debug", yPulses);
+    var chart = document.getElementById("chartSignal");
+    Plotly.newPlot(chart, data, GetSignalChartLayout(fIsMilli));
+}
+
+//-----------------------------------------------------------------------------
+function GetSignalChartLayout(fIsMilli) {
+	var layout = {};
+
+	if (fIsMilli)
+		strLeft = "milli";
+	else
+		strLeft = "";
+	strLeft += "Volts";
 	layout["title"] = "Signal";
 	layout["xaxis"] = {};
 	layout["yaxis"] = {};
 	layout['autosize'] = true;
 		//layout.xaxis["title"] = "Time [uSec]";
-	layout.yaxis["title"] = "Voltage [Volts]";
+	layout.yaxis["title"] = "Voltage [" + strLeft + "]";
+	//layout.yaxis["title"] = "Voltage [Volts]";
 	var mrgn = {};
 	var left_title = {};
 	left_title ['text'] = "Time [uSec]";
@@ -589,49 +644,7 @@ function plotSignal (aPulseData, aPulsesIndices=null){
 	mrgn['t'] = 25;
 	mrgn['pad'] = 1;
 	layout['margin'] = mrgn;
-	var idxPulses=0;
-    for (var n=0 ; n < aPulseData.length ; n++)
-        yData[n] = parseFloat (aPulseData[n]);
-	if (aPulsesIndices != null) {
-		yPulses = []
-		dMin = vector_min (yData);
-	}
-    for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
-        //yData[n] = parseFloat (aPulseData[n]);
-            //yRaw[n] = parseFloat (aPulseRaw[n]);
-        xData[n] = t;
-        yTrigger[n] = dTrigger;
-		yBackground[n] = dBackground;
-		if (yPulses != null) {
-			//yPulses[n] = 0.01 * IsIndexInPulse (n, aPulsesIndices);
-			yPulses[n] = dMin * IsIndexInPulse (n, aPulsesIndices);
-		}
-    }
-        //var cbox = document.getElementById('cboxTrigger');
-        //var fShowTrigger=false;
-	var fShowTrigger = uploadCheckbox ('cboxTrigger');
-	var fShowBackground = uploadCheckbox ('cboxBackground');
-        //if (cbox)
-            //fShowTrigger = cbox.checked;
-    var dataPulse = {x:xData, y:yData, name: "Filtered"};
-        //var dataRaw = {x:xData, y:yRaw, name: "Raw"};
-    var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
-    var dataBackground = {x:xData, y:yBackground, name: "Background"};
-    var data=[];
-        //data[0] = dataRaw;//dataPulse;
-    data[0] = dataPulse;
-		//data.push(dataPulse);
-    if (fShowTrigger)
-        data.push(dataTrigger);
-    if (fShowBackground)
-        data.push(dataBackground);
-	if (yPulses != null) {
-    	var dataPulse = {x:xData, y:yPulses, name: "Debug"};
-        data.push(dataPulse);
-	}
-	localStorage.setItem ("chart_debug", yPulses);
-    var chart = document.getElementById("chartSignal");
-    Plotly.newPlot(chart, data, layout);
+	return (layout);
 }
 
 //-----------------------------------------------------------------------------
@@ -943,8 +956,15 @@ function plotMca (aMca) {
     	layout["yaxis"] = {};
     	layout.xaxis["title"] = "Channel";
     	layout.yaxis["title"] = "Count";
+		//layout.xaxis.autorange = false;
+		//layout.xaxis.range[0] = 0;
+		//layout.xaxis.range[1] = dMcaChannels;// 2050;
     	var chart = document.getElementById("chartMca");
     	Plotly.newPlot(chart, data, layout);
+		chart.layout.xaxis.autorange = false;
+		chart.layout.xaxis.range[0] = 0;
+		chart.layout.xaxis.range[1] = dMcaChannels;// 2050;
+		Plotly.redraw('chartMca');
 	}
 	catch (exception) {
 		console.log(exception);
@@ -979,15 +999,6 @@ function onTriggerEnabledClick() {
 	try {
     	var fTriggerEnabled = uploadCheckBox ("cboxTriggerEnabled");
 		enableItemsByTrigger(fTriggerEnabled);
-/*
-		enableItem ("comboTriggerDir", fTriggerEnabled);
-		enableItem ("comboTriggerIn", fTriggerEnabled);
-		enableItem ("comboTriggerType", fTriggerEnabled);
-		enableItem ("txtTriggerLevel", fTriggerEnabled);
-		enableItem ("comboTriggerVoltage", fTriggerEnabled);
-		enableItem ("btnUpdateTrigger", fTriggerEnabled);
-		enableItem ("btnTriggerNow", fTriggerEnabled);
-*/
 	}
 	catch (exception) {
 		console.log(exception);
@@ -1273,6 +1284,158 @@ function findLineChartByTitle (chart_data, strTitle) {
 function onWindowResize() {
 	Plotly.redraw('chartSignal');
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+function getBackgroundLine() {
+	var xBackground=[], yBackground=[], dataBackground=null;
+	var dBackground = uploadBackground();
+    var chart = document.getElementById("chartSignal");
+	if (chart.hasOwnProperty('data')) {
+		var data_x = chart.data[0].x;
+		xBackground[0] = data_x[0];
+		xBackground[1] = data_x[data_x.length - 1];
+		yBackground[0] = yBackground[1] = dBackground;
+    	dataBackground = {x:xBackground, y:yBackground, name: "Background"};
+	}
+	return (dataBackground);
+}
+
+//-----------------------------------------------------------------------------
+function onBackgroundClick() {
+    var chart = document.getElementById("chartSignal");
+    var fBkgnd = uploadCheckBox ("cboxBackground");
+
+	if (fBkgnd) {
+		var dataBackground = getBackgroundLine();
+		if (dataBackground != null) {
+			chart.data.push(dataBackground);
+			Plotly.redraw('chartSignal');
+		}
+	}
+	else {
+		var idx = findLineChartByTitle (chart.data, "Background");
+		if (idx >= 0) {
+			chart.data.splice(idx,1);
+			Plotly.redraw('chartSignal');
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+function uploadRadio (idRadio) {
+	var radio = document.getElementById (idRadio);
+	var fRadio = false;
+
+	if (radio != null)
+		fRadio = radio.checked;
+	return (fRadio);
+}
+			
+//-----------------------------------------------------------------------------
+function downloadSignalMinMax (dictSignal) {
+	if (dictSignal.hasOwnProperty('data_min'))
+		downloadTextByFunction (dictSignal.data_min, 'txtSignalMin', Math.min);
+	if (dictSignal.hasOwnProperty('data_max'))
+		downloadTextByFunction (dictSignal.data_max, 'txtSignalMax', Math.max);
+}
+
+//-----------------------------------------------------------------------------
+function toDisplayVolt (dValue) {
+	var dDisplay;
+
+	if (isMillivolts ())
+		dDisplay = (dValue * 1000).toFixed(3);
+	else
+		dDisplay = dValue;
+	return (dDisplay);
+}
+
+//-----------------------------------------------------------------------------
+function isMillivolts () {
+	return (uploadRadio ('radioMillivolts'));
+}
+			
+//-----------------------------------------------------------------------------
+function downloadTextByFunction (value, idTxt, func) {
+	try {
+		var dNew = parseFloat(value);
+		var txt = document.getElementById (idTxt);
+		if (txt != null) {
+			var d, val = uploadTextVoltage (txt);//txt.value;
+			if (val.length > 0)
+				d = func (dNew, parseFloat(val));
+			else
+				d = dNew;
+			txt.value = toDisplayVolt (d);
+		}
+	}
+    catch (exception) {
+		console.log('Runtime error in "downloadTextByFunction":\n' + exception);
+    }
+}
+
+//-----------------------------------------------------------------------------
+function uploadTextVoltage (txt) {
+	var val = parseFloat (txt.value);
+	if (isMillivolts ())
+		val /= 1000;
+	return (val);
+}
+
+//-----------------------------------------------------------------------------
+function downloadTextVoltage (idTxt, dValue) {
+	var txt = document.getElementById (idTxt);
+	if (txt != null)
+		txt.value = toDisplayVolt (dValue);
+}
+
+//-----------------------------------------------------------------------------
+function onVoltsMilliClick(idClickedRadio) {
+	convertVoltageUnits (idClickedRadio, 'txtSignalMin');
+	convertVoltageUnits (idClickedRadio, 'txtSignalMax');
+	convertVoltageUnits (idClickedRadio, 'txtBackground');
+	updateSignalPlot (idClickedRadio == 'radioVolts');
+}
+
+//-----------------------------------------------------------------------------
+function convertVoltageUnits (idClickedRadio, idTxt) {
+	var dValue = uploadTextReal (idTxt);
+	if (idClickedRadio == 'radioVolts')
+		dValue /= 1000;
+	downloadTextVoltage (idTxt, dValue);
+}
+
+//-----------------------------------------------------------------------------
+function updateSignalPlot (fToVolts)
+{
+    var chart = document.getElementById("chartSignal");
+	var yNew=[], n, d;
+
+	if (chart.hasOwnProperty('data')) {
+	    for (n=0 ; n < chart.data[0].x.length ; n++) {
+		    d = chart.data[0].y[n];
+			if (fToVolts)
+				d /= 1000;
+			else
+				d *= 1000;
+			yNew[n] = d;
+		}
+	}
+	chart.data[0].y = yNew;
+	chart.layout.yaxis.title.text = getVoltageTitle (!fToVolts);
+	Plotly.redraw('chartSignal');
+	console.log(yNew.length);
+}
+
+//-----------------------------------------------------------------------------
+function getVoltageTitle (fToMilliVolts) {
+	var sz = "Voltage [";
+	if (fToMilliVolts)
+		sz += "milli";
+	sz += "volts]";
+	return (sz);
+}
+//-----------------------------------------------------------------------------
+/*
+*/
 
