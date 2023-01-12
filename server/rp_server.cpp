@@ -408,7 +408,9 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 	std::string strNumber;
 	size_t sPulse;
 	static int nCount=0;
+	//static int nTime=0;
 	float rValue;
+	static TDoubleVec vTimes;
 
     try {
 		nVectorPoints = int ((dLen / 8e-9) + 0.5);
@@ -434,8 +436,18 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSign
 		jSignalData["data"] = jSignal;
 		jSignalData["data_min"] = dMin;
 		jSignalData["data_max"] = dMax;
-		if (fDebug)
+		if (fDebug) {
+			//clock_t cStart = clock();
 			jSignalData["detector_pulse"] = GetPulsesInSignal (vSignal);
+			//double dTime = (((double) (clock() - cStart)) / (double) CLOCKS_PER_SEC);
+			//vTimes.push_back (dTime);
+			//if (vTimes.size() >= 10) {
+				//for (int n=0, dTime=0 ; n < (int) vTimes.size() ; n++)
+					//dTime += vTimes[n];
+				//printf ("\nExecution Time: %g\n", dTime / 10);
+				//vTimes.clear();
+			//}
+		}
     }
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
@@ -703,19 +715,14 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
         fCommandOK = true;
 		string str = StringifyJson(jSampling);
 		strResult = trimString (str);
-		//fprintf (stderr, "HandleSampling, JSON='%s'\n", strResult.c_str());
 		if (!jSampling["signal"].isNull()) {
 			bool fOnOff = jSampling["signal"].asBool();
-			//fprintf (stderr, "HandleSampling, 385\n");
-			//fprintf (stderr, "signal command: %d\n", jSampling.asBool());
-			//bool fSignal = str_to_bool (ToLower (jSampling["signal"].asString()));
-			//fprintf (stderr, "HandleSampling, 415\n");
 			rp_setup.SetSamplingOnOff (fOnOff);
-			//rp_setup.SetSamplingOnOff (str_to_bool (ToLower (jSampling["signal"].asString())));
-			//fprintf (stderr, "HandleSampling, Sampling is '%s'\n", BoolToString (fOnOff).c_str());
 		}
 		if (!jSampling["mca"].isNull()) {
-			rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));
+			rp_setup.SetMcaOnOff (jSampling);
+			//rp_setup.SetMcaOnOff (jSampling["mca"]);
+			//rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));
 		}
 		if (!jSampling["psd"].isNull()) {
 			rp_setup.SetPsdOnOff (str_to_bool (ToLower (jSampling["psd"].asString())));
@@ -730,7 +737,6 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		jStatus["psd"] = rp_setup.GetPsdOnOff ();
 		jResult["status"] = jStatus;
 		jResult["buffer"] = to_string(g_vRawSignal.size());
-		//fprintf (stderr, "HandleSampling, 405\n");
     }
     catch (std::exception &exp) {
 		fprintf (stderr, "Runtime error in 'HandleSampling':\n%s\n", exp.what());
@@ -828,6 +834,7 @@ void OnTimerTick ()
     TPulseInfoVec piVec;
     TPulseInfoVec::iterator iPulseInfo;
 	static int nCount=1;
+	//static TDoubleVec vTimes;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
         if (GetNextPulse (vPulse)) {
@@ -836,12 +843,18 @@ void OnTimerTick ()
 				g_rp_setup.CalculateBackground (vPulse);
             SafeQueueAdd (vPulse);
             if (GetPulseParams (vPulse, piVec)) {
-                //for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
-                	//g_vPulsesInfo.push_back (*iPulseInfo);
             	g_rp_setup.NewPulse (piVec);
             }
         }
     }
+	if (g_rp_setup.GetMcaOnOff()) {
+		if (g_rp_setup.GetMcaTimeLimit () > 0) {
+			if (g_rp_setup.GetMcaMeasureTime () >= g_rp_setup.GetMcaTimeLimit ()) {
+				g_rp_setup.SetMcaOnOff(false);
+				g_rp_setup.SetSamplingOnOff (false);
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
