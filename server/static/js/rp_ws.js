@@ -467,9 +467,15 @@ function uploadMcaOp() {
 
 //-----------------------------------------------------------------------------
 function onReadStatusClick () {
-    var msgStatus = new Object;
-    msgStatus['op'] = 'status';
-    sendSamplingCommand (msgStatus);
+    //var msgStatus = new Object;
+    //msgStatus['op'] = 'status';
+    //sendSamplingCommand (msgStatus);
+    var msgSignal = new Object;
+    //msgSignal['signal'] = uploadSignalOnOff ();
+    //msgSignal['mca'] = uploadMcaOnOff ();
+    //msgSignal['mca_time'] = uploadTextReal ('txtMcaTimeLimit');
+    //msgSignal['psd'] = uploadPsdOnOff ();
+    sendSamplingCommand (msgSignal);
 }
 
 //-----------------------------------------------------------------------------
@@ -487,6 +493,7 @@ function onSamplingUpdate () {
     var msgSignal = new Object;
     msgSignal['signal'] = uploadSignalOnOff ();
     msgSignal['mca'] = uploadMcaOnOff ();
+    msgSignal['mca_time'] = uploadTextReal ('txtMcaTimeLimit');
     msgSignal['psd'] = uploadPsdOnOff ();
     sendSamplingCommand (msgSignal);
 }
@@ -701,8 +708,6 @@ function readSamplingStatus (reply) {
 		downloadCheckBox (jReply.sampling.status.signal, "cboxStartSignal");
 		downloadCheckBox (jReply.sampling.status.mca, "cboxStartMCA");
 		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
-		var t=document.getElementById("txtBufferLength");
-		t.value = jReply.sampling.buffer;
         var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
@@ -1400,6 +1405,40 @@ function getVoltageTitle (fToMilliVolts) {
 		sz += "milli";
 	sz += "volts]";
 	return (sz);
+}
+
+//-----------------------------------------------------------------------------
+function onMcaStartClick() {
+    var msgSignal = new Object;
+    msgSignal['signal'] = true;//uploadSignalOnOff ();
+    msgSignal['mca'] = true;//uploadMcaOnOff ();
+    msgSignal['mca_time'] = uploadMcaTimeLimit();
+    //msgSignal['mca_time'] = uploadTextReal ('txtMcaTimeLimit');
+    sendSamplingCommand (msgSignal);
+}
+
+//-----------------------------------------------------------------------------
+function uploadMcaTimeLimit() {
+    var dSec = uploadTextReal ('txtMcaTimeLimit');
+	try {
+		var radio = document.getElementById ('radioMcaTimeMin');
+		if (radio != null)
+			if (radio.checked)
+				dSec *= 60;
+	}
+    catch (exception) {
+		console.log('Runtime error in "uploadMcaTimeLimit":\n' + exception);
+    }
+	return (dSec);
+	consol.log(dSec);
+}
+
+//-----------------------------------------------------------------------------
+function onMcaStopClick() {
+    var msgSignal = new Object;
+    msgSignal['signal'] = false;//uploadSignalOnOff ();
+    msgSignal['mca'] = false;//uploadMcaOnOff ();
+    sendSamplingCommand (msgSignal);
 }
 //-----------------------------------------------------------------------------
 /*
