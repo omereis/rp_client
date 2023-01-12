@@ -6,6 +6,8 @@
 #include "bd_types.h"
 #include "misc.h"
 
+#include "trim.h"
+
 #include <mutex>
 
 static const char *g_szPackageSize = "package_size";
@@ -53,6 +55,7 @@ void TRedPitayaSetup::Clear ()
     SetBackground (0.1);
     SetPackageSize (g_nDefaultPackageSize);
     SetPreTriggerNs (100);
+	SetMcaTimeLimit (0);
 }
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
@@ -66,6 +69,7 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetBackground (other.GetBackground());
     SetPackageSize (other.GetPackageSize());
     SetPreTriggerNs (other.GetPreTriggerNs());
+	SetMcaTimeLimit (other.GetMcaTimeLimit ());
 }
 //-----------------------------------------------------------------------------
 TRedPitayaTrigger TRedPitayaSetup::GetTrigger() const
@@ -268,11 +272,42 @@ bool TRedPitayaSetup::GetSamplingOnOff () const
 }
 
 //-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaOnOff (Json::Value &jMcaCmd)
+{
+	if (!jMcaCmd.isNull()) {
+		string strMcaTime, str = StringifyJson (jMcaCmd);
+		if (jMcaCmd["mca_time"].isNull() == false) {
+			string s = StringifyJson (jMcaCmd["mca_time"]);
+			strMcaTime = jMcaCmd["mca_time"].asString();
+		}
+		SetMcaTimeLimit (strMcaTime);
+		if (jMcaCmd["mca"].isString())
+			SetMcaOnOff (jMcaCmd["mca"].asString());
+		else if (jMcaCmd["mca"].isBool())
+			SetMcaOnOff (jMcaCmd["mca"].asBool());
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaOnOff (const string &str)
+{
+	try {
+		bool f = to_bool (str);
+		SetMcaOnOff (f);
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error on 'SetMcaOnOff:\n%s\n", exp.what());
+	}
+}
+
+//-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaOnOff (bool fMca)
 {
     mutex mtx;
 
     mtx.lock();
+	if ((fMca == true) && (m_fMcaOnOff == false)) // starting
+		SetMcaStartTime ();
     m_fMcaOnOff = fMca;
     mtx.unlock();
 }
@@ -527,17 +562,71 @@ double TRedPitayaSetup::GetSignalBackground(const TFloatVec &vSignal)
 }
 
 //-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaTimeLimit (const string &strTime)
+{
+	try {
+		string str (strTime);
+		double d;
+		try {
+			str = trimString (str);
+			d = atof  (str.c_str());
+		}
+		catch (...) {
+			d = 0;
+		}
+		SetMcaTimeLimit (d);
+	}
+    catch (std::exception &exp) {
+        fprintf (stderr, "Runtime error in 'SetMcaTimeLimit':\n%s\n", exp.what());
+    }
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaTimeLimit (double dMcaSeconds)
+{
+	m_dMcaTimeLimit = dMcaSeconds;
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetMcaTimeLimit () const
+{
+	return (m_dMcaTimeLimit);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaStartTime (const chrono_clock &crnStart)
+{
+	m_crnMcaStart = crnStart;
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetMcaMeasureTime () const
+{
+	chrono_clock end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end - GetMcaStartTime();
+	return (elapsed_seconds.count());
+}
+
+//-----------------------------------------------------------------------------
+chrono_clock TRedPitayaSetup::GetMcaStartTime() const
+{
+	return (m_crnMcaStart);
+}
+
+//-----------------------------------------------------------------------------
+chrono_clock TRedPitayaSetup::SetMcaStartTime ()
+{
+	SetMcaStartTime (std::chrono::system_clock::now());
+	return (GetMcaStartTime());
+}
+
+//-----------------------------------------------------------------------------
 #ifdef	_RED_PITAYA_HW
 bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 {
 	bool fLoad;
-	//fprintf (stderr, "rp_setup.cpp:326, before calling rp_AcqGetTriggerSrc\n");
-	//if (fInit)
-		////rp_Init();
 	rp_acq_trig_src_t dir;
 
-	//fprintf (stderr, "rp_setup.cpp:326, before calling rp_AcqGetTriggerSrc\n");
-	//rp_Init();
 	try {
 		rp_AcqGetTriggerSrc(&dir);
     	m_trigger.LoadFromHardware();
@@ -547,13 +636,6 @@ bool TRedPitayaSetup::LoadFromHardware (bool fInit)
 		fprintf (stderr, "Runtime error in 'TRedPitayaSetup::LoadFromHardware':\n%s", exp.what());
 		fLoad = false;
 	}
-	//fprintf (stderr, "rp_setup.cpp:329, AFTER calling rp_AcqGetTriggerSrc\n");
-	//string strDir = m_trigger.GetHardwareTriggerSource (dir);
-	//fprintf (stderr, "rp_setup.cpp:331, AFTER calling GetHardwareTriggerSource \n");
-	//fprintf (stderr, "'TRedPitayaTrigger::LoadFromHardware', after calling 'rp_AcqGetTriggerSrc', trigger source: %s\n", m_trigger.GetHardwareTriggerSource (dir).c_str());
-	//m_trigger.Print("'TRedPitayaSetup::LoadFromHardware', before LoadFromhardware");
-	//PrintTriggerSource ("rp_setup.cpp:336");
-	//m_trigger.Print("'TRedPitayaSetup::LoadFromHardware', AFTER LoadFromhardware");
 	return (fLoad);
 }
 

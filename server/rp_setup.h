@@ -10,6 +10,9 @@
 #include "RedPitayaSampling.h"
 
 #include <string>
+#include <iostream>
+#include <chrono>
+#include <ctime>
 
 #include "mca_params.h"
 #include "pulse_info.h"
@@ -74,6 +77,8 @@ public:
     float GetTriggerLevel ();
     void SetSamplingOnOff (bool fSampling);
     bool GetSamplingOnOff () const;
+	void SetMcaOnOff (const string &str);
+	void SetMcaOnOff (Json::Value &jMcaCmd);
     void SetMcaOnOff (bool fMca);
     bool GetMcaOnOff () const;
     void SetPsdOnOff (bool fPsd);
@@ -89,6 +94,15 @@ public:
     void SetPreTriggerNs (float fDelayNs);
     void SetPreTriggerNs (const std::string &str);
     void SetPreTriggerNs (Json::Value jPreTrigger);
+
+	void SetMcaTimeLimit (double dMinutes);
+	void SetMcaTimeLimit (const string &strTime);
+	double GetMcaTimeLimit () const;
+	double GetMcaMeasureTime () const;
+	void SetMcaStartTime (const chrono_clock &crnStart);
+	void ResetMcaStartTime ();
+	chrono_clock GetMcaStartTime() const;
+	chrono_clock SetMcaStartTime ();
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
@@ -103,6 +117,8 @@ private:
     bool m_fPsdOnOff;
     int m_nPackageSize;
     float m_fPreTriggerNs;
+	chrono_clock m_crnMcaStart;
+	double m_dMcaTimeLimit;
 };
 //-----------------------------------------------------------------------------
 #endif
