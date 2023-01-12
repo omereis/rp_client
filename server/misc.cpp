@@ -305,6 +305,22 @@ void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
     }
 }
 
+#include <sstream>
+#include <string>
+#include <iomanip>
+#include <algorithm>
+#include <cctype>
+
+bool to_bool(const std::string &strSrc)
+{
+	std::string str(strSrc);
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+	std::istringstream is(str);
+	bool b;
+	is >> std::boolalpha >> b;
+	return b;
+}
+
 
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------
