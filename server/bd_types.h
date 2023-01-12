@@ -9,11 +9,19 @@
 #include <queue>
 #include <string>
 
+#include <iostream>
+#include <chrono>
+#include <ctime>
+
 using namespace std;
 
 //---------------------------------------------------------------------------
 #ifndef	TStringVec
 typedef vector<string> TStringVec;
+#endif
+//---------------------------------------------------------------------------
+#ifndef	TDoubleVec
+typedef vector<double> TDoubleVec;
 #endif
 //---------------------------------------------------------------------------
 #ifndef	TFloatVec
@@ -44,4 +52,7 @@ typedef queue<float> TFloatQueue;
 typedef	unsigned int	uint;
 #endif
 //---------------------------------------------------------------------------
+#ifndef	chrono_clock
+typedef	std::chrono::time_point<std::chrono::system_clock> chrono_clock;
+#endif
 #endif
