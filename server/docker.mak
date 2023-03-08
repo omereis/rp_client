@@ -32,14 +32,14 @@ endif
 
 LDFLAGS = -pthread -ljsoncpp -lzmq -lstdc++ -ljsoncpp -lm
 
-RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o pulse_info.o RedPitayaTrigger.o RedPitayaSampling.o pulse_index.o
+RP_OBJ = rp_server.o rp_setup.o trim.o misc.o mca_params.o pulse_info.o RedPitayaTrigger.o RedPitayaSampling.o pulse_index.o TrpzInfo.o
 RP_CLIENTS = rp_client.o
-RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp pulse_info.cpp
-RP_INC = 
+#RP_SRC = rp_server.cpp rp_setup.cpp trim.cpp misc.cpp mca_params.cpp pulse_info.cpp
+RP_INC = rp_setup.h
 
 all: rp_server 
 
-.cpp.o:
+.cpp.o: $(RP_INC) docker.mak
 	$(CPP) -c $(CFLAGS) $< -o $@
 
 rp_server: $(RP_OBJ)
