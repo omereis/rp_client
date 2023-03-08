@@ -49,6 +49,7 @@ void TRedPitayaSetup::Clear ()
     m_trigger.Clear();
     m_sampling.Clear ();
     m_mca_params.Clear();
+	m_trapez.Clear();
     SetSamplingOnOff (false);
     SetMcaOnOff (false);
     SetPsdOnOff (false);
@@ -63,6 +64,7 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetTrigger (other.GetTrigger());
     SetSampling (other.GetSampling());
     m_mca_params = other.m_mca_params;
+	m_trapez = TTRapezInfo (other.m_trapez);
     SetSamplingOnOff (other.GetSamplingOnOff ());
     SetMcaOnOff (other.GetMcaOnOff ());
     SetPsdOnOff (other.GetPsdOnOff ());
@@ -130,7 +132,6 @@ bool TRedPitayaSetup::LoadFromJson(const string &strFile)
         jResult = UpdateFromJson(root);
     }
 	fprintf (stderr, "'TRedPitayaSetup::LoadFromJson' end:\n");
-    //m_trigger.Print("Called from rp_setup.cpp:123");
     return (true);
 }
 
@@ -168,18 +169,13 @@ Json::Value TRedPitayaSetup::AsJson()
 {
     Json::Value jSetup;
 
-	//fprintf (stderr, "TRedPitayaSetup::AsJson\n");
     jSetup["sampling"] = m_sampling.AsJson();
     jSetup["trigger"] = m_trigger.AsJson();
-	//fprintf (stderr, "TRedPitayaSetup::AsJson, trigger read\n");
     jSetup["mca"] = m_mca_params.AsJson();
-	//fprintf (stderr, "TRedPitayaSetup::AsJson, MCA read\n");
     jSetup["background"] = DoubleAsString (GetBackground());
     jSetup["package_size"] = to_string (GetPackageSize());
 	jSetup["pre_trigger_ns"] = PreTriggerAsString (GetPreTriggerNs());// to_string (GetPreTriggerNs());
-	//fprintf (stderr, "TRedPitayaSetup::AsJson, Setup set\n");
-	//fprintf (stderr, "TRedPitayaSetup::AsJson, sampling read\n%s\n\n", StringifyJson (jSetup["sampling"]).c_str());
-    //fprintf (stderr, "TRedPitayaSetup::AsJson\n%s\n\n", StringifyJson (jSetup).c_str());
+	jSetup["trapez"] = m_trapez.AsJson();
     return (jSetup);
 }
 
@@ -192,14 +188,12 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 		std::string str = StringifyJson (jSetup);
         jNewSetup["sampling"] = m_sampling.UpdateFromJson(jSetup["sampling"]);
         jNewSetup["trigger"] = m_trigger.UpdateFromJson(jSetup["trigger"]);
-        //m_trigger.Print("Called from UpdateFromJson #165");
         jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
+		jNewSetup["trapez"] = m_trapez.LoadFromJson (jSetup["trapez"]);
 		if (!jSetup["background"].isNull()) {
 			std::string strBkgnd = jSetup["background"].asString();
-			//fprintf (stderr, "UpdateFromJson, #170, strBkgnd: %s\n", strBkgnd.c_str());
 			double d = stod (strBkgnd);
 			SetBackground (d);
-			//fprintf (stderr, "New Background: %g\n", GetBackground());
 		}
         if (!jSetup[g_szPackageSize].isNull()) {
 			int nPkgSize=GetPackageSize();
@@ -210,8 +204,6 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 			SetPackageSize (nPkgSize);
 		}
         SetPreTriggerNs (jSetup["pre_trigger_ns"]);
-/*
-*/
 		if (fUpdateHardware) {
 #ifdef	_RED_PITAYA_HW
 			//fprintf (stderr, "=================++++++++++++++++++++==================\n");
@@ -230,6 +222,11 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
     return (jNewSetup);
 }
 
+//-----------------------------------------------------------------------------
+Json::Value TRedPitayaSetup::GetTrapezAsJson()
+{
+	return (m_trapez.AsJson());
+}
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::SaveToJson (const std::string &strFile)
 {

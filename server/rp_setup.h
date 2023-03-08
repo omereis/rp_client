@@ -18,6 +18,7 @@
 #include "pulse_info.h"
 using namespace std;
 
+#include "TrpzInfo.h"
 //-----------------------------------------------------------------------------
 
 class TRedPitayaSetup {
@@ -54,6 +55,7 @@ public:
 	rp_acq_trig_src_t GetHardwareTriggerSource() const;
 #endif
     bool LoadFromJson(const string &strFile);
+	Json::Value GetTrapezAsJson();
     bool SaveToJson (const std::string &strFile);
     Json::Value AsJson();
 	Json::Value TriggerAsJson();
@@ -108,6 +110,7 @@ protected:
 private:
 /*
 */
+    TTRapezInfo m_trapez;
     TRedPitayaTrigger m_trigger;
     TRedPitayaSampling m_sampling;
     TMcaParams m_mca_params;
