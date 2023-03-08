@@ -26,6 +26,7 @@ function onUpdateRedPitayaSetupClick() {
 	msgCmd['background'] = uploadBackground();
 	msgCmd['package_size'] = uploadPackageSize();
     msgCmd['pre_trigger_ns'] = uploadPreTrigger();
+	msgCmd['trapez'] = uploadTrapezParams();
     msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
@@ -133,6 +134,8 @@ function setupHandler (reply) {
 			downloadMca (dictSetup.mca);
         if (dictSetup.hasOwnProperty('pre_trigger_ns'))
             downloadPreTrigger(dictSetup.pre_trigger_ns);
+		if (dictSetup.hasOwnProperty('trapez'))
+            downloadTrapez(dictSetup.trapez);
     }
     catch (err) {
         console.log(err);
@@ -1440,7 +1443,107 @@ function onMcaStopClick() {
     msgSignal['mca'] = false;//uploadMcaOnOff ();
     sendSamplingCommand (msgSignal);
 }
-//-----------------------------------------------------------------------------
-/*
-*/
 
+//-----------------------------------------------------------------------------
+function onTrapezoidOnOff() {
+	var btn = document.getElementById("btnTrapezOnOff");
+	if (btn != null)
+		if (btn.value.toLowerCase() == "on")
+			btn.value = "Off";
+		else
+			btn.value = "On";
+}
+
+//-----------------------------------------------------------------------------
+function onTrapezoidApply() {
+    var msg = new Object, msgCmd = new Object;
+    msgCmd['command'] = 'update';
+	msgCmd["trapez"] = uploadTrapezParams ();
+    msg['setup'] = msgCmd;//'update';
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function onTrapezoidLoad() {
+    var msg = new Object, msgCmd = new Object;
+    msgCmd['command'] = 'read_trapez';
+    msg['setup'] = msgCmd;
+    sendMesssageThroughFlask(msg, setupHandler);
+}
+
+//-----------------------------------------------------------------------------
+function uploadTrapezParams () {
+	var msgTrapez = new Object;
+	msgTrapez["rise"] = uploadRiseTime ();
+	msgTrapez["fall"] = uploadFallTime ();
+	msgTrapez["on"] = uploadOnTime ();
+	msgTrapez["height"] = uploadHeight ();
+	return (msgTrapez);
+}
+
+//-----------------------------------------------------------------------------
+function uploadDouble (id_txt) {
+	var d, txtbx = document.getElementById(id_txt);
+	if (txtbx != null)
+		d = parseFloat (txtbx.value);
+	else
+		d = 0;
+	return (d);
+}
+
+//-----------------------------------------------------------------------------
+function uploadRiseTime () {
+	return (uploadDouble ("txtbxTrapezRise"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadFallTime () {
+	return (uploadDouble ("txtbxTrapezFall"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadOnTime () {
+	return (uploadDouble ("txtbxTrapezOn"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadHeight () {
+	return (uploadDouble ("txtbxTrapezHeight"));
+}
+
+//-----------------------------------------------------------------------------
+function handleTrapez (reply) {
+    var p = document.getElementById("cellStatus");
+    try {
+		var jReply = JSON.parse(reply);//.sampling;
+    }
+    catch (exception) {
+		var p = document.getElementById ("txtReply");
+		if (p != null)
+			p.value = reply;
+        console.log(exception);
+    }
+}
+
+//-----------------------------------------------------------------------------
+function downloadTrapez(dictTrapez) {
+	try {
+		downloadRealValue ('txtbxTrapezRise', dictTrapez.rise);
+		downloadRealValue ('txtbxTrapezFall', dictTrapez.fall);
+		downloadRealValue ('txtbxTrapezOn', dictTrapez.on);
+		downloadRealValue ('txtbxTrapezHeight', dictTrapez.height);
+	}
+    catch (exception) {
+		var p = document.getElementById ("txtReply");
+		if (p != null)
+			p.value = reply;
+        console.log(exception);
+    }
+}
+
+//-----------------------------------------------------------------------------
+function downloadRealValue (idTxt, dValue) {
+	var txtbx = document.getElementById(idTxt);
+	if (txtbx != null)
+		txtbx.value = dValue;
+}
