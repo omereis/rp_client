@@ -335,9 +335,9 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
         jNew["error"] = err.what();
     }
 	strReply = StringifyJson (jNew);
-	fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
-	fprintf (stderr, "Setup:\n%s\n", strReply.c_str());
-	fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
+	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
+	//fprintf (stderr, "Setup:\n%s\n", strReply.c_str());
+	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
     return (jNew);
 }
 //-----------------------------------------------------------------------------
