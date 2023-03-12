@@ -281,6 +281,18 @@ std::string PulseDirName (EPulseDir pulse_dir)
 }
 
 //-----------------------------------------------------------------------------
+void PrintVector (const TDoubleVec &vBuffer, const char szName[])
+{
+	TDoubleVec::const_iterator i;
+	FILE *file = fopen (szName, "a+");
+	fprintf (file, "------------------------------------\n");
+	for (i=vBuffer.begin() ; i < vBuffer.end() ; i++)
+		fprintf (file, "%g\n", *i);
+	fprintf (file, "++++++++++++++++++++++++++++++++++++\n");
+	fclose (file);
+}
+
+//-----------------------------------------------------------------------------
 void PrintVector (const TFloatVec &vBuffer, const char szName[])
 {
 	TFloatVec::const_iterator i;

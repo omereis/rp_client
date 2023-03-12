@@ -34,6 +34,7 @@ std::string BoolToString (bool f);
 //float VectorAverage (const TFloatVec &vPulse);
 std::string PulseDirName (EPulseDir pulse_dir);
 EPulseDir PulseDirFromString (const std::string &strSource);
+void PrintVector (const TDoubleVec &vBuffer, const char szName[]);
 void PrintVector (const TFloatVec &vBuffer, const char szName[]);
 void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax);
 bool to_bool(const std::string &str);
