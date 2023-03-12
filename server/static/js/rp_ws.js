@@ -1474,9 +1474,9 @@ function onTrapezoidLoad() {
 //-----------------------------------------------------------------------------
 function uploadTrapezParams () {
 	var msgTrapez = new Object;
-	msgTrapez["rise"] = uploadRiseTime ();
-	msgTrapez["fall"] = uploadFallTime ();
-	msgTrapez["on"] = uploadOnTime ();
+	msgTrapez["rise"]   = uploadRiseTime ();
+	msgTrapez["fall"]   = uploadFallTime ();
+	msgTrapez["on"]     = uploadOnTime ();
 	msgTrapez["height"] = uploadHeight ();
 	return (msgTrapez);
 }
@@ -1493,17 +1493,17 @@ function uploadDouble (id_txt) {
 
 //-----------------------------------------------------------------------------
 function uploadRiseTime () {
-	return (uploadDouble ("txtbxTrapezRise"));
+	return (uploadDouble ("txtbxTrapezRise") * 1e-9);
 }
 
 //-----------------------------------------------------------------------------
 function uploadFallTime () {
-	return (uploadDouble ("txtbxTrapezFall"));
+	return (uploadDouble ("txtbxTrapezFall") * 1e-9);
 }
 
 //-----------------------------------------------------------------------------
 function uploadOnTime () {
-	return (uploadDouble ("txtbxTrapezOn"));
+	return (uploadDouble ("txtbxTrapezOn") * 1e-9);
 }
 
 //-----------------------------------------------------------------------------
