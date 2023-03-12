@@ -2,6 +2,7 @@
 |                             pulse_indices.cpp                                |
 \******************************************************************************/
 #include "TrpzInfo.h"
+#include "misc.h"
 //-----------------------------------------------------------------------------
 TTRapezInfo::TTRapezInfo ()
 {
@@ -15,10 +16,11 @@ TTRapezInfo::TTRapezInfo (const TTRapezInfo &other)
 //-----------------------------------------------------------------------------
 void TTRapezInfo::Clear ()
 {
-    SetRise (10);
-    SetFall (10);
-    SetOn (50);
+    SetRise (10e-9);
+    SetFall (10e-9);
+    SetOn (50e-9);
     SetHeight (1);
+    m_vTrapez.clear ();
 }
 //-----------------------------------------------------------------------------
 double TTRapezInfo::GetRise() const
@@ -73,6 +75,7 @@ void TTRapezInfo::AssignAll (const TTRapezInfo &other)
     SetFall (other.GetFall());
     SetOn (other.GetOn());
     SetHeight (other.GetHeight());
+    m_vTrapez = other.m_vTrapez;
 }
 //-----------------------------------------------------------------------------
 Json::Value TTRapezInfo::AsJson()
@@ -85,6 +88,7 @@ Json::Value TTRapezInfo::AsJson()
     jTrapez["height"] = GetHeight();
     return (jTrapez);
 }
+
 //-----------------------------------------------------------------------------
 Json::Value TTRapezInfo::LoadFromJson(Json::Value jTrapez)
 {
@@ -93,25 +97,51 @@ Json::Value TTRapezInfo::LoadFromJson(Json::Value jTrapez)
         SetFall (jTrapez["fall"]);
         SetOn (jTrapez["on"]);
         SetHeight(jTrapez["height"]);
+        GenerateTrapez ();
     }
     catch (std::exception &exp) {
         jTrapez["error"] = exp.what();
     }
     return (jTrapez);
 }
+
 //-----------------------------------------------------------------------------
 void TTRapezInfo::SetHeight (Json::Value &jHeight)
 {
     SetHeight(jHeight.asFloat());
 }
+
 //-----------------------------------------------------------------------------
 void TTRapezInfo::SetOn (Json::Value &jOn)
 {
     SetOn(jOn.asFloat());
 }
+
 //-----------------------------------------------------------------------------
 void TTRapezInfo::SetFall (Json::Value &jFall)
 {
     SetFall(jFall.asFloat());
+}
+
+//-----------------------------------------------------------------------------
+void TTRapezInfo::GenerateTrapez ()
+{
+    m_vTrapez.clear ();
+    double d=0, delta, delta_t = 1e-9, dValue=0;
+	int N = (int) (GetRise() / delta_t + 0.5);
+	delta = GetHeight() / N;
+    while (d < GetRise()) {
+        m_vTrapez.push_back (dValue);
+        dValue += delta;
+        d += delta_t;
+    }
+	for (d=0 ; d < GetOn() ; d += delta_t)
+        m_vTrapez.push_back (dValue);
+	for (d=0 ; d < GetFall() ; d += delta_t) {
+        m_vTrapez.push_back (dValue);
+		dValue -= delta;
+	}
+    m_vTrapez.push_back (0);
+    PrintVector (m_vTrapez, "trpz.csv");
 }
 //-----------------------------------------------------------------------------

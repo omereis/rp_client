@@ -5,12 +5,15 @@
 #define	_TRAPZE_INFO_H
 //-----------------------------------------------------------------------------
 #include "jsoncpp/json/json.h"
+#include "bd_types.h"
 //-----------------------------------------------------------------------------
 class TTRapezInfo {
 public:
     TTRapezInfo ();
     TTRapezInfo (const TTRapezInfo &other);
     void Clear ();
+
+    void GenerateTrapez ();
 
     Json::Value AsJson();
     Json::Value LoadFromJson(Json::Value jTrapez);
@@ -31,6 +34,7 @@ public:
 protected:
     void AssignAll (const TTRapezInfo &other);
 private:
+    TDoubleVec m_vTrapez;
     double m_dRise;
     double m_dFall;
     double m_dOn;
