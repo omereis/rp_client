@@ -533,6 +533,7 @@ function setupReadSignal (reply) {
         var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
         var dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
 		var aPulseData = null, aPulsesIndices=null;//samples.pulses.signal;//.pulse;
+		var aFiltered = null;
         var aMcaData = null;//samples.pulses.mca;
 
         var layout = {};
@@ -541,6 +542,7 @@ function setupReadSignal (reply) {
         if (samples.pulses.hasOwnProperty('signal')) {
 			console.log('signal accepted');
             aPulseData = samples.pulses.signal.data;
+			aFiltered = samples.pulses.signal.filtered;
 			downloadSignalMinMax (samples.pulses.signal);
             if (samples.pulses.signal.hasOwnProperty ('detector_pulse'))
 				aPulsesIndices = samples.pulses.signal.detector_pulse;
@@ -553,33 +555,33 @@ function setupReadSignal (reply) {
 			downloadBackground (samples.pulses.background);
 			//downloadMeasuredBackground(samples.background);
         if (aPulseData != null)
-            plotSignal (aPulseData, aPulsesIndices);
-        if (aMcaData != null)
-            plotMca (aMcaData);
-    }
-    catch (exception) {
-        var txt = cell.innerText;
-        txt = exception;
-        console.log(exception);
-    }
-}
+					plotSignal (aPulseData, aFiltered, aPulsesIndices);
+				if (aMcaData != null)
+					plotMca (aMcaData);
+			}
+			catch (exception) {
+				var txt = cell.innerText;
+				txt = exception;
+				console.log(exception);
+			}
+		}
+
+		//-----------------------------------------------------------------------------
+		function downloadBufferLength(value) {
+			var txtbx = document.getElementById("txtCardBuffer");
+			txtbx.value = value;
+		}
+
+		//-----------------------------------------------------------------------------
+		function downloadMcaLength(value) {
+			var txtbx = document.getElementById("txtMcaBuffer");
+			txtbx.value = value;
+		}
 
 //-----------------------------------------------------------------------------
-function downloadBufferLength(value) {
-	var txtbx = document.getElementById("txtCardBuffer");
-	txtbx.value = value;
-}
-
-//-----------------------------------------------------------------------------
-function downloadMcaLength(value) {
-	var txtbx = document.getElementById("txtMcaBuffer");
-	txtbx.value = value;
-}
-
-//-----------------------------------------------------------------------------
-function plotSignal (aPulseData, aPulsesIndices=null){
+function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
 	var yData=[], t, yTrigger=[], yBackground=[];
-    var yData=[], yRaw=[], xData=[], xBackground=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
+    var yRaw=[], xData=[], xBackground=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
     var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground(), dMin;
 	var fIsMilli = uploadRadio ('radioMillivolts');
 
@@ -608,12 +610,14 @@ function plotSignal (aPulseData, aPulsesIndices=null){
 	var fShowTrigger = uploadCheckbox ('cboxTrigger');
 	var fShowBackground = uploadCheckbox ('cboxBackground');
     var dataPulse = {x:xData, y:yData, name: "Filtered"};
+    var dataFiltered = {x:xData, y:aFiltered, name: "Signal"};
 
     var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
     var dataBackground = {x:xBackground, y:yBackground, name: "Background"};
 
     var data=[];
     data[0] = dataPulse;
+    data[1] = dataFiltered;
     if (fShowTrigger)
         data.push(dataTrigger);
     if (fShowBackground)
@@ -621,6 +625,7 @@ function plotSignal (aPulseData, aPulsesIndices=null){
 	if (yPulses != null) {
     	var dataPulse = {x:xData, y:yPulses, name: "Debug"};
         data.push(dataPulse);
+        data.push(dataFiltered);
 	}
 	localStorage.setItem ("chart_debug", yPulses);
     var chart = document.getElementById("chartSignal");
@@ -711,6 +716,8 @@ function readSamplingStatus (reply) {
 		downloadCheckBox (jReply.sampling.status.signal, "cboxStartSignal");
 		downloadCheckBox (jReply.sampling.status.mca, "cboxStartMCA");
 		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
+		if (jReply.sampling.hasOwnProperty('buffer'))
+			downloadBufferLength(jReply.sampling.buffer);
         var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
@@ -719,9 +726,6 @@ function readSamplingStatus (reply) {
             cl = 'red';
         }
         p.style.backgroundColor = cl;
-		//if (jReply.hasOwnProperty("pulse_count"))
-			//txt += " (" + jReply.pulse_count.toString() + ")";
-        //p.innerText = txt;
     }
     catch (exception) {
 		var p = document.getElementById ("txtReply");
@@ -1528,10 +1532,11 @@ function handleTrapez (reply) {
 //-----------------------------------------------------------------------------
 function downloadTrapez(dictTrapez) {
 	try {
-		downloadRealValue ('txtbxTrapezRise', dictTrapez.rise);
-		downloadRealValue ('txtbxTrapezFall', dictTrapez.fall);
-		downloadRealValue ('txtbxTrapezOn', dictTrapez.on);
-		downloadRealValue ('txtbxTrapezHeight', dictTrapez.height);
+		downloadRealValue ('txtbxTrapezRise', parseInt ((dictTrapez.rise * 1e9) + 0.5));
+		downloadRealValue ('txtbxTrapezFall', parseInt ((dictTrapez.fall * 1e9) + 0.5));
+		downloadRealValue ('txtbxTrapezOn', parseInt ((dictTrapez.on * 1e9) + 0.5));
+		//downloadRealValue ('txtbxTrapezHeight', parseInt (dictTrapez.height + 0.5));
+		downloadRealValue ('txtbxTrapezHeight', dictTrapez.height.toFixed(2));
 	}
     catch (exception) {
 		var p = document.getElementById ("txtReply");
