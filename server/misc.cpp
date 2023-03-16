@@ -333,6 +333,31 @@ bool to_bool(const std::string &strSrc)
 	return b;
 }
 
+//---------------------------------------------------------------------------
+size_t consv(const TFloatVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult)
+{
+	int nconv;
+	int i, j, i1;
+	float tmp;
+	//float *C;
+
+	//allocated convolution array	
+	nconv = vSource.size() + vKernel.size() - 1;
+    vResult.resize (nconv, 0);
+    for (i=0 ; i < nconv ; i++) {
+		i1 = i;
+		tmp = 0.0;
+		for (j=0 ; j < vKernel.size() ; j++) {
+			if ((i1 >= 0) && (i1 < vSource.size()))
+				tmp = tmp + (vSource[i1] * vKernel[j]);
+			i1 = i1 - 1;
+			vResult[i] = tmp;
+		}
+    }
+    return (vResult.size());
+}
+
+
 
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------

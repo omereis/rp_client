@@ -37,6 +37,7 @@ EPulseDir PulseDirFromString (const std::string &strSource);
 void PrintVector (const TDoubleVec &vBuffer, const char szName[]);
 void PrintVector (const TFloatVec &vBuffer, const char szName[]);
 void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax);
+size_t consv(const TFloatVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult);
 bool to_bool(const std::string &str);
 #ifdef	_RED_PITAYA_HW
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src);
