@@ -570,6 +570,8 @@ function setupReadSignal (reply) {
 		function downloadBufferLength(value) {
 			var txtbx = document.getElementById("txtCardBuffer");
 			txtbx.value = value;
+			txtbx.style.background = 'Yellow';
+			setInterval (clearBufferBkgnd, 1000);
 		}
 
 		//-----------------------------------------------------------------------------
@@ -577,6 +579,12 @@ function setupReadSignal (reply) {
 			var txtbx = document.getElementById("txtMcaBuffer");
 			txtbx.value = value;
 		}
+
+//-----------------------------------------------------------------------------
+function clearBufferBkgnd () {
+	var txtbx = document.getElementById("txtCardBuffer");
+	txtbx.style.background = 'White';
+}
 
 //-----------------------------------------------------------------------------
 function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
@@ -609,8 +617,8 @@ function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
 
 	var fShowTrigger = uploadCheckbox ('cboxTrigger');
 	var fShowBackground = uploadCheckbox ('cboxBackground');
-    var dataPulse = {x:xData, y:yData, name: "Filtered"};
-    var dataFiltered = {x:xData, y:aFiltered, name: "Signal"};
+    var dataPulse = {x:xData, y:yData, name: "Signal"};
+    var dataFiltered = {x:xData, y:aFiltered, name: "Filtered"};
 
     var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
     var dataBackground = {x:xBackground, y:yBackground, name: "Background"};
@@ -1482,6 +1490,7 @@ function uploadTrapezParams () {
 	msgTrapez["fall"]   = uploadFallTime ();
 	msgTrapez["on"]     = uploadOnTime ();
 	msgTrapez["height"] = uploadHeight ();
+	msgTrapez["factor"] = uploadTrapezFactor();
 	return (msgTrapez);
 }
 
@@ -1516,6 +1525,10 @@ function uploadHeight () {
 }
 
 //-----------------------------------------------------------------------------
+function uploadTrapezFactor() {
+	return (uploadDouble ("txtbxTrapezFactor"));
+}
+//-----------------------------------------------------------------------------
 function handleTrapez (reply) {
     var p = document.getElementById("cellStatus");
     try {
@@ -1537,6 +1550,7 @@ function downloadTrapez(dictTrapez) {
 		downloadRealValue ('txtbxTrapezOn', parseInt ((dictTrapez.on * 1e9) + 0.5));
 		//downloadRealValue ('txtbxTrapezHeight', parseInt (dictTrapez.height + 0.5));
 		downloadRealValue ('txtbxTrapezHeight', dictTrapez.height.toFixed(2));
+		downloadRealValue ('txtbxTrapezFactor', dictTrapez.factor);
 	}
     catch (exception) {
 		var p = document.getElementById ("txtReply");
