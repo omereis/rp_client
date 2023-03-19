@@ -20,6 +20,7 @@ void TTRapezInfo::Clear ()
     SetFall (10e-9);
     SetOn (50e-9);
     SetHeight (1);
+    SetFactor (1);
     m_vTrapez.clear ();
 }
 //-----------------------------------------------------------------------------
@@ -75,6 +76,7 @@ void TTRapezInfo::AssignAll (const TTRapezInfo &other)
     SetFall (other.GetFall());
     SetOn (other.GetOn());
     SetHeight (other.GetHeight());
+    SetFactor (other.GetFactor());
     m_vTrapez = other.m_vTrapez;
 }
 //-----------------------------------------------------------------------------
@@ -86,6 +88,7 @@ Json::Value TTRapezInfo::AsJson()
     jTrapez["fall"] = GetFall();
     jTrapez["on"] = GetOn();
     jTrapez["height"] = GetHeight();
+    jTrapez["factor"] = GetFactor();
     return (jTrapez);
 }
 
@@ -97,6 +100,7 @@ Json::Value TTRapezInfo::LoadFromJson(Json::Value jTrapez)
         SetFall (jTrapez["fall"]);
         SetOn (jTrapez["on"]);
         SetHeight(jTrapez["height"]);
+        SetFactor (jTrapez["factor"]);
         GenerateTrapez ();
     }
     catch (std::exception &exp) {
@@ -124,10 +128,35 @@ void TTRapezInfo::SetFall (Json::Value &jFall)
 }
 
 //-----------------------------------------------------------------------------
+size_t TTRapezInfo::GetTrapez (TDoubleVec &vTrapez)
+{
+    vTrapez = m_vTrapez;
+    return (vTrapez.size());
+}
+
+//-----------------------------------------------------------------------------
+double TTRapezInfo::GetFactor() const
+{
+    return (m_dFactor);
+}
+
+//-----------------------------------------------------------------------------
+void TTRapezInfo::SetFactor (Json::Value &jFactor)
+{
+    SetFactor (jFactor.asFloat());
+}
+//-----------------------------------------------------------------------------
+void TTRapezInfo::SetFactor (double dFactor)
+{
+    m_dFactor = dFactor;
+}
+
+//-----------------------------------------------------------------------------
 void TTRapezInfo::GenerateTrapez ()
 {
     m_vTrapez.clear ();
     double d=0, delta, delta_t = 1e-9, dValue=0;
+	double dA1=0, dArea = 0;
 	int N = (int) (GetRise() / delta_t + 0.5);
 	delta = GetHeight() / N;
     while (d < GetRise()) {
@@ -135,13 +164,21 @@ void TTRapezInfo::GenerateTrapez ()
         dValue += delta;
         d += delta_t;
     }
-	for (d=0 ; d < GetOn() ; d += delta_t)
+	for (d=0 ; d < GetOn() ; d += delta_t) {
         m_vTrapez.push_back (dValue);
+	}
 	for (d=0 ; d < GetFall() ; d += delta_t) {
         m_vTrapez.push_back (dValue);
 		dValue -= delta;
 	}
     m_vTrapez.push_back (0);
-    PrintVector (m_vTrapez, "trpz.csv");
+	TDoubleVec::iterator i;
+	size_t n;
+	//dArea *= 1e-9;
+    //PrintVector (m_vTrapez, "trpz_src.csv");
+	for (i=m_vTrapez.begin() ; i != m_vTrapez.end() ; i++)
+		*i = *i * GetFactor();/// (dArea * 0.100);
+	printf ("\n\nArea: %g\nA1=%g\n%d items\n\n", dArea, dA1, (int) m_vTrapez.size());
+    //PrintVector (m_vTrapez, "trpz.csv");
 }
 //-----------------------------------------------------------------------------

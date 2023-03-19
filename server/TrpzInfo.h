@@ -13,6 +13,7 @@ public:
     TTRapezInfo (const TTRapezInfo &other);
     void Clear ();
 
+    size_t GetTrapez (TDoubleVec &vTrapez);
     void GenerateTrapez ();
 
     Json::Value AsJson();
@@ -31,6 +32,10 @@ public:
     double GetHeight () const;
     void SetHeight (double dHeight);
     void SetHeight (Json::Value &jHeight);
+
+    double GetFactor() const;
+    void SetFactor (double dFactor);
+    void SetFactor (Json::Value &jFactor);
 protected:
     void AssignAll (const TTRapezInfo &other);
 private:
@@ -39,6 +44,7 @@ private:
     double m_dFall;
     double m_dOn;
     double m_dHeight;
+    double m_dFactor;
 };
 //-----------------------------------------------------------------------------
 #endif
