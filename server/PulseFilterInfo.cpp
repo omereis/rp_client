@@ -29,7 +29,8 @@ TPulseFilter::TPulseFilter (const TPulseFilter &other)
 }
 
 //---------------------------------------------------------------------------
-void TPulseFilter::SetPulse (const TFloatVec &vPulse)
+void TPulseFilter::SetPulse (const TDoubleVec &vPulse)
+//void TPulseFilter::SetPulse (const TFloatVec &vPulse)
 {
     mutex mtx;
 
@@ -86,10 +87,18 @@ void TPulseFilter::SetFiltered (const TDoubleVec &vFiltered)
 //---------------------------------------------------------------------------
 void TPulseFilter::Filter ()
 {
-    consv(m_vPulse, m_vKernel, m_vFiltered);
+    convolution(m_vPulse, m_vKernel, m_vFiltered);
+    //consv(m_vPulse, m_vKernel, m_vFiltered);
 // perform convolution
 }
 
+//---------------------------------------------------------------------------
+void TPulseFilter::SetData (const TDoubleVec &vPulse, const TDoubleVec &vFiltered, const TDoubleVec &vKernel)
+{
+    SetPulse (vPulse);
+    SetKernel (vKernel);
+    SetFiltered (vFiltered);
+}
 //---------------------------------------------------------------------------
 size_t TPulseFilter::GetFiltered (TFloatVec &vFiltered) const
 {
@@ -99,7 +108,8 @@ size_t TPulseFilter::GetFiltered (TFloatVec &vFiltered) const
 
     //if (m_vFilter.size() == 0)
         //Filter ();
-    consv(m_vPulse, m_vKernel, vResult);//vFiltered);
+    //consv(m_vPulse, m_vKernel, vResult);//vFiltered);
+    convolution (m_vPulse, m_vKernel, vResult);//vFiltered);
 	vFiltered.resize (vResult.size());
 	i = vFiltered.begin();
 	for (iv=vResult.begin() ; iv != vResult.end() ; iv++, i++)
@@ -120,15 +130,16 @@ size_t TPulseFilter::GetFiltered (TDoubleVec &vFiltered) const
 {
     //TDoubleVec vFiltered;
 
-    consv(m_vPulse, m_vKernel, vFiltered);
+    //consv(m_vPulse, m_vKernel, vFiltered);
     //if (m_vFilter.size() == 0)
         //Filter ();
-    //vFiltered = m_vFiltered;
+    vFiltered = m_vFiltered;
     return (vFiltered.size());
 }
 
 //---------------------------------------------------------------------------
-size_t TPulseFilter::GetPulse (TFloatVec &vPulse) const
+size_t TPulseFilter::GetPulse (TDoubleVec &vPulse) const
+//size_t TPulseFilter::GetPulse (TFloatVec &vPulse) const
 {
     mutex mtx;
 
@@ -141,8 +152,8 @@ size_t TPulseFilter::GetPulse (TFloatVec &vPulse) const
 //---------------------------------------------------------------------------
 void TPulseFilter::AssignAll (const TPulseFilter &other)
 {
-    TFloatVec vPulse;
-    TDoubleVec vKernel, vFiltered;
+    //TFloatVec vPulse;
+    TDoubleVec vKernel, vFiltered, vPulse;
     
     other.GetPulse(vPulse);
     SetPulse (vPulse);

@@ -72,8 +72,10 @@ void SafeStartStop (bool fCommand);
 bool SafeGetStatus ();
 size_t SafeQueueSize ();
 void SafeQueueClear ();
-size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered);
-void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered);
+size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered);
+//size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered);
+//void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered);
+void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered);
 
 void SafeSetMca (bool fOnOff);
 bool SafeGetMca ();
@@ -88,14 +90,16 @@ int CountInString (const std::string &strJson, int c);
 //size_t ReadSignal (double dLen, TFloatVec &vSignal);
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug);
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug);
-bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
+//bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
+bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 //float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
 //bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2));
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
-void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
+//void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
+void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
 string GetMcaCounts ();
 size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices);
 size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices);
@@ -296,7 +300,8 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 		}
 		else if (!jBkgnd .isNull()) {
 			fprintf (stderr, "\n\nBackground Command\n");
-			TFloatVec vSignal;
+			//TFloatVec vSignal;
+			TDoubleVec vSignal;
 			GetNextPulse (vSignal);
 			jNew = rp_setup.HandleBackground (jBkgnd, vSignal);
 			if (jBkgnd.isString()) {
@@ -423,8 +428,10 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 {
     Json::Value jSignal, jSignalData, jFiltered;
 	int nVectorPoints;
-	TFloatVec vPulse, vFiltered;
-	TFloatVec::iterator it;
+	TDoubleVec vPulse, vFiltered;
+	TDoubleVec::iterator it;
+	//TFloatVec vPulse, vFiltered;
+	//TFloatVec::iterator it;
 	std::string strNumber;
 	size_t sPulse;
 	static int nCount=0;
@@ -664,7 +671,8 @@ Json::Value GetPulsesInSignal1 (const TFloatVec &vSignal)
 }
 
 //-----------------------------------------------------------------------------
-size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered)
+size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered)
+//size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered)
 {
 	TPulseFilter pulse_filter;
     mutex mtx;
@@ -683,7 +691,28 @@ size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered)
 }
 
 //-----------------------------------------------------------------------------
-void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered)
+void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter pulse_filter)
+//void FilterPulse (const TFloatVec &vPulse,double dBackground, TPulseFilter pulse_filter)
+{
+	//TFloatVec vFiltered;
+	TDoubleVec vSrc, vFiltered;
+	TDoubleVec v, vTrapez;
+	TDoubleVec::iterator id;
+	TDoubleVec::const_iterator i;
+
+	pulse_filter.Clear();
+	g_rp_setup.GetTrapez(vTrapez);
+	pulse_filter.SetKernel (vTrapez);
+	vSrc.resize (vPulse.size());
+	for (i=vPulse.begin(), id=vSrc.begin() ; i != vPulse.end() ; i++, id++)
+		*id = *i - dBackground;
+	convolution(vSrc, vTrapez, vFiltered);
+	pulse_filter.SetData (vSrc, vTrapez, vFiltered);
+}
+
+//-----------------------------------------------------------------------------
+void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
+//void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered)
 {
 	TDoubleVec v, vTrapez;
 	TPulseFilter pulse_filter;
@@ -914,7 +943,8 @@ float VectorMax (const TFloatVec &v)
 //-----------------------------------------------------------------------------
 void OnTimerTick ()
 {
-    TFloatVec vPulse, vFiltered;
+    TDoubleVec vPulse, vFiltered;
+    //TFloatVec vPulse, vFiltered;
     TFloatVec::iterator i;
     TPulseInfoVec piVec;
     TPulseInfoVec::iterator iPulseInfo;
@@ -1036,11 +1066,12 @@ bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
 */
 
 //-----------------------------------------------------------------------------
-bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec)
+bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
+//bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 {
 	TPulseIndexVec vIndices;
 	TPulseIndexVec::iterator iPulse;
-	TFloatVec::iterator iStart, iEnd;
+	TDoubleVec::iterator iStart, iEnd;
 
 	CountPulsesInSignal (vBuffer, vIndices);
 	for (iPulse=vIndices.begin() ; iPulse != vIndices.end() ; iPulse++) {
@@ -1049,6 +1080,8 @@ bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 		AddPulse (iStart, iEnd, g_rp_setup.GetBackground(), piVec);
 	}
 }
+
+/*
 //-----------------------------------------------------------------------------
 bool GetPulseParams1 (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 {
@@ -1077,8 +1110,11 @@ bool GetPulseParams1 (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 	g_rp_setup.SetBackground (dBkgnd);
 	return (piVec.size() > 0);
 }
+*/
 
 
+
+/*
 //-----------------------------------------------------------------------------
 bool GetPulseParams_norm (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 {
@@ -1106,13 +1142,16 @@ bool GetPulseParams_norm (TFloatVec &vBuffer, TPulseInfoVec &piVec)
 	} while (iBufferStart != vSignal.end());
 	return (piVec.size() > 0);
 }
+*/
 
 //-----------------------------------------------------------------------------
-void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec)
+void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec)
+//void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec)
 {
 	TPulseInfo pi;
 	double dArea, dMax;
-	TFloatVec::iterator i;
+	TDoubleVec::iterator i;
+	//TFloatVec::iterator i;
 
 	pi.AddPulse (iStart, iEnd);
 	dArea = dMax = *iStart - dBkgnd;
@@ -1185,7 +1224,8 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
 
 //-----------------------------------------------------------------------------
 
-bool GetNextPulse (TFloatVec &vPulse)
+bool GetNextPulse (TDoubleVec &vPulse)
+//bool GetNextPulse (TFloatVec &vPulse)
 {
     bool fPulse = false;
 #ifdef  _RED_PITAYA_HW

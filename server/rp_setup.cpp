@@ -420,7 +420,8 @@ void TRedPitayaSetup::ResetMcaSpectrum ()
 
 #include "rp_server.h"
 //-----------------------------------------------------------------------------
-Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal)
+Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd, const TDoubleVec &vSignal)
+//Json::Value TRedPitayaSetup::HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal)
 {
 	Json::Value jSetup;
 	Json::Value jSet = jBkgnd["set"];
@@ -506,6 +507,7 @@ int TRedPitayaSetup::GetMcaPulses() const
 	return (m_mca_params.GetMcaPulses());
 }
 
+/*
 //-----------------------------------------------------------------------------
 size_t SubVector (const TFloatVec &vSource, int nLength, TFloatVec &vSub)
 {
@@ -518,18 +520,19 @@ size_t SubVector (const TFloatVec &vSource, int nLength, TFloatVec &vSub)
 		*iDest = *iSrc;
 	return (vSub.size());
 }
+*/
 
 //-----------------------------------------------------------------------------
-double TRedPitayaSetup::CalculateBackground (const TFloatVec &vSource)
+double TRedPitayaSetup::CalculateBackground (const TDoubleVec &vSource)
+//double TRedPitayaSetup::CalculateBackground (const TFloatVec &vSource)
 {
-	TFloatVec vPulse;
+	TDoubleVec vPulse;
 
 	SubVector (vSource, GetPreTriggerNs(), vPulse);
 	double dAvg = VectorAverage (vPulse);
-	//PrintVector (vPulse, "calc_bkgnd.csv");
-	double dStd = VectorStdDev (vPulse, dAvg);
-	SetBackground (dAvg - 3 * dStd);
-	//printf ("Background: %g\n", 1000.0 * GetBackground());
+	//double dStd = VectorStdDev (vPulse, dAvg);
+	//SetBackground (dAvg - 3 * dStd);
+	SetBackground (dAvg);
 	return (GetBackground());
 }
 

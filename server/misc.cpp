@@ -93,20 +93,20 @@ string ToLower (const std::string &str)
 		strLower += tolower(str[n]);
 	return (strLower);
 }
-//-----------------------------------------------------------------------------
 
-bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vDate)
+//-----------------------------------------------------------------------------
+bool ReadVectorFromFile (const std::string &strFile, TDoubleVec &vData)
 {
 	bool fRead;
 
 	try {
-		vDate.clear();
+		vData.clear();
 		char *szLine, szBuf[1024];
 		FILE *file = fopen (strFile.c_str(), "r");
 		if (file != NULL) {
 			while ((szLine = fgets(szBuf, 1024, file)) != NULL) {
 				float r = (float) atof (szLine);
-				vDate.push_back (r);
+				vData.push_back (r);
 			}
 			fRead = true;
 		}
@@ -121,8 +121,36 @@ bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vDate)
 	}
 	return (fRead);
 }
-//---------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vData)
+{
+	bool fRead;
+
+	try {
+		vData.clear();
+		char *szLine, szBuf[1024];
+		FILE *file = fopen (strFile.c_str(), "r");
+		if (file != NULL) {
+			while ((szLine = fgets(szBuf, 1024, file)) != NULL) {
+				float r = (float) atof (szLine);
+				vData.push_back (r);
+			}
+			fRead = true;
+		}
+		else {
+			fprintf (stderr, "Could not open file %s\n", strFile.c_str());
+			fRead = false;
+		}
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error in 'ReadVectorFromFile':\n%s\n", exp.what());
+		fRead = false;
+	}
+	return (fRead);
+}
+
+//---------------------------------------------------------------------------
 std::string ReplaceAll(const std::string &strSrc, const std::string& from, const std::string& to)
 {
 	size_t start_pos = 0;
@@ -136,20 +164,15 @@ std::string ReplaceAll(const std::string &strSrc, const std::string& from, const
 }
 
 //-----------------------------------------------------------------------------
+double VectorAverage (const TDoubleVec &vec)
+{
+	return (VectorAverage (vec.begin(), vec.end()));
+}
+
+//-----------------------------------------------------------------------------
 double VectorAverage (const TFloatVec &vec)
 {
 	return (VectorAverage (vec.begin(), vec.end()));
-/*
-    TFloatVec::const_iterator i;
-    double dAverage=0;
-
-	if (vec.size() > 0) {
-    	for (i=vec.begin() ; i != vec.end() ; i++)
-       		dAverage += (double) *i;
-    	dAverage /= (double) vec.size();
-	}
-    return (dAverage);
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -168,6 +191,20 @@ double VectorStdDev (const TFloatVec &vec, double dAvg)
 	}
 	return (dStd);
 */
+}
+
+//-----------------------------------------------------------------------------
+double VectorAverage (TDoubleVec::const_iterator iBegin, TDoubleVec::const_iterator iEnd)
+{
+    TDoubleVec::const_iterator i;
+    double dAverage=0;
+	int n;
+
+    for (i=iBegin, n=0 ; i != iEnd ; i++, n++)
+		dAverage += (double) *i;
+	if (n > 0)
+    	dAverage /= (double) n;
+    return (dAverage);
 }
 
 //-----------------------------------------------------------------------------
@@ -334,6 +371,30 @@ bool to_bool(const std::string &strSrc)
 }
 
 //---------------------------------------------------------------------------
+size_t convolution(const TDoubleVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult)
+{
+	int nconv;
+	int i, j, i1;
+	float tmp;
+	//float *C;
+
+	//allocated convolution array	
+	nconv = vSource.size() + vKernel.size() - 1;
+    vResult.resize (nconv, 0);
+    for (i=0 ; i < nconv ; i++) {
+		i1 = i;
+		tmp = 0.0;
+		for (j=0 ; j < vKernel.size() ; j++) {
+			if ((i1 >= 0) && (i1 < vSource.size()))
+				tmp = tmp + (vSource[i1] * vKernel[j]);
+			i1 = i1 - 1;
+			vResult[i] = tmp;
+		}
+    }
+    return (vResult.size());
+}
+
+//---------------------------------------------------------------------------
 size_t consv(const TFloatVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult)
 {
 	int nconv;
@@ -357,7 +418,31 @@ size_t consv(const TFloatVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vR
     return (vResult.size());
 }
 
+//-----------------------------------------------------------------------------
+size_t SubVector (const TDoubleVec &vSource, int nLength, TDoubleVec &vSub)
+{
+	TDoubleVec::const_iterator iSrc;
+	TDoubleVec::iterator iDest;
+	int n;
 
+	vSub.resize (nLength);
+	for (iSrc=vSource.begin(), n=0, iDest=vSub.begin() ; (iSrc != vSource.end()) && (n < nLength) ; iSrc++, n++, iDest++)
+		*iDest = *iSrc;
+	return (vSub.size());
+}
+
+//-----------------------------------------------------------------------------
+size_t SubVector (const TFloatVec &vSource, int nLength, TFloatVec &vSub)
+{
+	TFloatVec::const_iterator iSrc;
+	TFloatVec::iterator iDest;
+	int n;
+
+	vSub.resize (nLength);
+	for (iSrc=vSource.begin(), n=0, iDest=vSub.begin() ; (iSrc != vSource.end()) && (n < nLength) ; iSrc++, n++, iDest++)
+		*iDest = *iSrc;
+	return (vSub.size());
+}
 
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------

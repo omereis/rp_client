@@ -18,7 +18,8 @@ public:
 
 	string asString() const;
 
-	void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd);
+	void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd);
+	//void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd);
     void SetArea (double dArea);
     double GetArea () const;
     void SetMaxVal (double dMaxVal);
@@ -31,24 +32,38 @@ public:
     double GetPrompt () const;
     void SetDelayed (double dDelayed);
     double GetDelayed () const;
+    void SetPulse (const TDoubleVec &vPulse);
+    TDoubleVec GetPulse() const;
+    void SetRawPulse (const TDoubleVec &vRawPulse);
+    TDoubleVec GetRawPulse() const;
+/*
     void SetPulse (const TFloatVec &vPulse);
     TFloatVec GetPulse() const;
     void SetRawPulse (const TFloatVec &vRawPulse);
     TFloatVec GetRawPulse() const;
+*/
 
 	void SetBackground (double dBkgnd);
 	double GetBackground () const;
 	void SetPulseID (int id);
 	int GetPulseID () const;
+    TDoubleVec::const_iterator GetPulseBegin() const;
+    TDoubleVec::const_iterator GetPulseEnd() const;
+    TDoubleVec::const_iterator GetRawPulseBegin() const;
+    TDoubleVec::const_iterator GetRawPulseEnd() const;
+/*
     TFloatVec::const_iterator GetPulseBegin() const;
     TFloatVec::const_iterator GetPulseEnd() const;
     TFloatVec::const_iterator GetRawPulseBegin() const;
     TFloatVec::const_iterator GetRawPulseEnd() const;
+*/
 protected:
     void AssignAll (const TPulseInfo &other);
 private:
-    TFloatVec m_vPulse;
-    TFloatVec m_vRawPulse;
+    TDoubleVec m_vPulse;
+    TDoubleVec m_vRawPulse;
+    //TFloatVec m_vPulse;
+    //TFloatVec m_vRawPulse;
     double m_dArea;
     double m_dMaxVal;
 	double m_dMinVal;

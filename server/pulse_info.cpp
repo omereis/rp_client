@@ -79,6 +79,7 @@ double TPulseInfo::GetMinVal () const
 {
 	return (m_dMinVal);
 }
+
 //-----------------------------------------------------------------------------
 double TPulseInfo::GetLength () const
 {
@@ -116,13 +117,14 @@ void TPulseInfo::SetDelayed (double dDelayed)
 }
 
 //-----------------------------------------------------------------------------
-void TPulseInfo::SetRawPulse (const TFloatVec &vPulse)
+void TPulseInfo::SetRawPulse (const TDoubleVec &vPulse)
+//void TPulseInfo::SetRawPulse (const TFloatVec &vPulse)
 {
     m_vRawPulse = vPulse;
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec TPulseInfo::GetRawPulse() const
+TDoubleVec TPulseInfo::GetRawPulse() const
 {
     return (m_vRawPulse);
 }
@@ -141,37 +143,43 @@ double TPulseInfo::GetBackground () const
 }
 
 //-----------------------------------------------------------------------------
-void TPulseInfo::SetPulse (const TFloatVec &vPulse)
+void TPulseInfo::SetPulse (const TDoubleVec &vPulse)
+//void TPulseInfo::SetPulse (const TFloatVec &vPulse)
 {
     m_vPulse = vPulse;
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec TPulseInfo::GetPulse() const
+TDoubleVec TPulseInfo::GetPulse() const
+//TFloatVec TPulseInfo::GetPulse() const
 {
     return (m_vPulse);
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec::const_iterator TPulseInfo::GetPulseBegin() const
+TDoubleVec::const_iterator TPulseInfo::GetPulseBegin() const
+//TFloatVec::const_iterator TPulseInfo::GetPulseBegin() const
 {
     return (m_vPulse.begin());
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec::const_iterator TPulseInfo::GetPulseEnd() const
+TDoubleVec::const_iterator TPulseInfo::GetPulseEnd() const
+//TFloatVec::const_iterator TPulseInfo::GetPulseEnd() const
 {
     return (m_vPulse.end());
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec::const_iterator TPulseInfo::GetRawPulseBegin() const
+TDoubleVec::const_iterator TPulseInfo::GetRawPulseBegin() const
+//TFloatVec::const_iterator TPulseInfo::GetRawPulseBegin() const
 {
     return (m_vRawPulse.begin());
 }
 
 //-----------------------------------------------------------------------------
-TFloatVec::const_iterator TPulseInfo::GetRawPulseEnd() const
+TDoubleVec::const_iterator TPulseInfo::GetRawPulseEnd() const
+//TFloatVec::const_iterator TPulseInfo::GetRawPulseEnd() const
 {
     return (m_vRawPulse.end());
 }
@@ -197,7 +205,7 @@ int TPulseInfo::GetPulseID () const
 	return (m_id);
 }
 
-void TPulseInfo::AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd)
+void TPulseInfo::AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd)
 {
     m_vRawPulse.clear();
 	m_vRawPulse.insert (m_vRawPulse.begin(), iStart, iEnd);

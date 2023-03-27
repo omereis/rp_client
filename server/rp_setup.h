@@ -38,7 +38,8 @@ public:
 	void GetMcaSpectrum (TFloatVec &vSpectrum);
 	void ResetMcaSpectrum ();
 
-	Json::Value HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal);
+	Json::Value HandleBackground (Json::Value &jBkgnd, const TDoubleVec &vSignal);
+	//Json::Value HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal);
 	void NewPulse (const TPulseInfoVec &vPulsesInfo);
 	void NewPulse (const TPulseInfo &pi);
 	//void NewPulse (const TFloatVec &vPulse);
@@ -68,7 +69,8 @@ public:
     TRedPitayaSampling GetSampling () const;
     void SetSampling (const TRedPitayaSampling &sampling);
 
-	double CalculateBackground (const TFloatVec &vPulse);
+	double CalculateBackground (const TDoubleVec &vPulse);
+	//double CalculateBackground (const TFloatVec &vPulse);
 
 	TFloatVec::const_iterator FindFirstTrigger(const TFloatVec &vSignal);
 	double GetSignalBackground(const TFloatVec &vSignal);

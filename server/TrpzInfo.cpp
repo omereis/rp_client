@@ -155,7 +155,7 @@ void TTRapezInfo::SetFactor (double dFactor)
 void TTRapezInfo::GenerateTrapez ()
 {
     m_vTrapez.clear ();
-    double d=0, delta, delta_t = 1e-9, dValue=0;
+    double d=0, delta, delta_t = 8e-9, dValue=0;
 	double dA1=0, dArea = 0;
 	int N = (int) (GetRise() / delta_t + 0.5);
 	delta = GetHeight() / N;

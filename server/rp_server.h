@@ -14,6 +14,7 @@
 #include "rp.h"
 bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 #endif
-bool GetNextPulse (TFloatVec &vPulse);
+//bool GetNextPulse (TFloatVec &vPulse);
+bool GetNextPulse (TDoubleVec &vPulse);
 //---------------------------------------------------------------------------
 #endif
