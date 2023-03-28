@@ -136,6 +136,8 @@ function setupHandler (reply) {
             downloadPreTrigger(dictSetup.pre_trigger_ns);
 		if (dictSetup.hasOwnProperty('trapez'))
             downloadTrapez(dictSetup.trapez);
+		if (dictSetup.hasOwnProperty('version'))
+            downloadVersion(dictSetup.version);
     }
     catch (err) {
         console.log(err);
@@ -1551,6 +1553,21 @@ function downloadTrapez(dictTrapez) {
 		//downloadRealValue ('txtbxTrapezHeight', parseInt (dictTrapez.height + 0.5));
 		downloadRealValue ('txtbxTrapezHeight', dictTrapez.height.toFixed(2));
 		downloadRealValue ('txtbxTrapezFactor', dictTrapez.factor);
+	}
+    catch (exception) {
+		var p = document.getElementById ("txtReply");
+		if (p != null)
+			p.value = reply;
+        console.log(exception);
+    }
+}
+
+//-----------------------------------------------------------------------------
+function downloadVersion(txtVersion) {
+	try {
+		var pr = document.getElementById ("parVersion");
+		pr.innerText = txtVersion;
+		//pr.innerText = "(Version " + txtVersion + ")";
 	}
     catch (exception) {
 		var p = document.getElementById ("txtReply");
