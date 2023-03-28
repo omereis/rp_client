@@ -36,6 +36,7 @@ TFloatVec g_vRawSignal;
 TPulseQueue g_qFilteredPulses;
 TPulseInfoVec g_vPulsesInfo;
 bool g_fRunning = false;
+string g_strAppDate;
 //TCalcMca g_mca_calculator;
 static const char *g_szReadData = "read_data";
 static const char *g_szBufferLength = "buffer_length";
@@ -58,10 +59,8 @@ TRedPitayaSetup g_rp_setup;
 //-----------------------------------------------------------------------------
 
 bool HandleMessage (const string &strJson, Json::Value &jReply);//string &strReply)
-//bool HandleMessage (const string &strJsoni, string &strReply);
 void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage);
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
-//Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup, TCalcMca &mca_calculator);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal); 
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
@@ -104,6 +103,7 @@ string GetMcaCounts ();
 size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices);
 size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices);
 Json::Value GetPulsesInSignal (const TFloatVec &vSignal);
+void GetAppDateTime (char *szFileName);
 
 //-----------------------------------------------------------------------------
 std::string ret_str()
@@ -113,6 +113,10 @@ std::string ret_str()
 	return (s);
 }
 
+#include <sys/stat.h>
+#include <time.h>
+#include <stdio.h>
+
 //-----------------------------------------------------------------------------
 string SaveMCA ();
 //-----------------------------------------------------------------------------
@@ -121,6 +125,8 @@ int main (int argc, char *argv[])
 #ifdef  _RED_PITAYA_HW
 	rp_Init();
 #endif
+	GetAppDateTime (argv[0]);
+
     bool fRun=true, fUpdateHardware=false, fMessageRecieved;
     TFloatVec vSignal;
     //  Socket to talk to clients
@@ -330,6 +336,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
             jNew = rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
 		else {
         	jNew = rp_setup.AsJson();
+			jNew["version"] = g_strAppDate;
 			//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
 			//fprintf (stderr, "Reading setup\n");
 			//fprintf (stderr, "+++++++++++++++++++++++++++\n\n");
@@ -701,7 +708,7 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter puls
 	TDoubleVec::const_iterator i;
 
 	pulse_filter.Clear();
-	g_rp_setup.GetTrapez(vTrapez);
+	vTrapez = g_rp_setup.GetTrapez();
 	pulse_filter.SetKernel (vTrapez);
 	vSrc.resize (vPulse.size());
 	for (i=vPulse.begin(), id=vSrc.begin() ; i != vPulse.end() ; i++, id++)
@@ -710,6 +717,21 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter puls
 	pulse_filter.SetData (vSrc, vTrapez, vFiltered);
 }
 
+//-----------------------------------------------------------------------------
+void FilterPulse (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
+{
+	TDoubleVec vSrc, vTrapez;
+	TDoubleVec::const_iterator iSrc;
+	TDoubleVec::iterator i;
+
+	vTrapez = g_rp_setup.GetTrapez();
+	vFiltered.resize (vPulse.size());
+	double dBackground = g_rp_setup.CalculateBackground (vPulse);
+	vTrapez = g_rp_setup.GetTrapez();
+	for (iSrc=vPulse.begin(), i=vFiltered.begin() ; iSrc != vPulse.end() ; iSrc++, i++)
+		*i = *iSrc - dBackground;
+	convolution (vSrc, vTrapez, vFiltered);
+}
 //-----------------------------------------------------------------------------
 void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
 //void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered)
@@ -720,7 +742,7 @@ void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
 	TDoubleVec::iterator iv;
 
 	pulse_filter.SetPulse (vPulse);
-	g_rp_setup.GetTrapez(vTrapez);
+	vTrapez = g_rp_setup.GetTrapez();
 	pulse_filter.SetKernel (vTrapez);
 	pulse_filter.Filter();
 
@@ -1409,4 +1431,13 @@ Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal)
 	fprintf (stderr, "+----------------------------------------------------+\n");
 */
 	return (jReply);
+}
+
+//-----------------------------------------------------------------------------
+void GetAppDateTime (char *szFileName)
+{
+	struct stat t_stat;
+	stat (szFileName, &t_stat);
+	struct tm *timeinfo = localtime (&t_stat.st_ctime);
+	g_strAppDate = asctime (timeinfo);
 }
