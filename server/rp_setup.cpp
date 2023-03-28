@@ -223,10 +223,11 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 }
 
 //-----------------------------------------------------------------------------
-size_t TRedPitayaSetup::GetTrapez(TDoubleVec &vTrapez)
+TDoubleVec TRedPitayaSetup::GetTrapez() const
 {
+	TDoubleVec vTrapez;
 	m_trapez.GetTrapez (vTrapez);
-	return (vTrapez.size());
+	return (vTrapez);
 }
 
 //-----------------------------------------------------------------------------
