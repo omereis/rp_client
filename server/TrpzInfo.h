@@ -13,7 +13,7 @@ public:
     TTRapezInfo (const TTRapezInfo &other);
     void Clear ();
 
-    size_t GetTrapez (TDoubleVec &vTrapez);
+    size_t GetTrapez (TDoubleVec &vTrapez) const;
     void GenerateTrapez ();
 
     Json::Value AsJson();

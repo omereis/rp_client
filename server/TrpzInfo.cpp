@@ -128,7 +128,7 @@ void TTRapezInfo::SetFall (Json::Value &jFall)
 }
 
 //-----------------------------------------------------------------------------
-size_t TTRapezInfo::GetTrapez (TDoubleVec &vTrapez)
+size_t TTRapezInfo::GetTrapez (TDoubleVec &vTrapez) const
 {
     vTrapez = m_vTrapez;
     return (vTrapez.size());
