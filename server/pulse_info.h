@@ -4,6 +4,7 @@
 #ifndef  __RP_DATA_H
 #define  __RP_DATA_H
 //-----------------------------------------------------------------------------
+#include "pulse_index.h"
 #include "bd_types.h"
 class TPulseInfo;
 #ifndef TPulseInfoVec
@@ -47,6 +48,8 @@ public:
 	double GetBackground () const;
 	void SetPulseID (int id);
 	int GetPulseID () const;
+    void SetIndices (const TPulseIndex &indices);
+    TPulseIndex GetIndices() const;
     TDoubleVec::const_iterator GetPulseBegin() const;
     TDoubleVec::const_iterator GetPulseEnd() const;
     TDoubleVec::const_iterator GetRawPulseBegin() const;
@@ -72,6 +75,7 @@ private:
     double m_dDelayed;
     double m_dBackground;
 	int m_id;
+    TPulseIndex m_indices;
 };
 //-----------------------------------------------------------------------------
 #endif

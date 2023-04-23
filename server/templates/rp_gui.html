@@ -283,8 +283,8 @@
                                 <input type="text" id="txtbxTrapezHeight" value="1" size="7" style="text-align: center;">
                             </td>
                             <td colspan="2">
-                                Factor
-                                <input type="text" id="txtbxTrapezFactor" value="1" size="7" style="text-align: center;">
+                                Offset
+                                <input type="text" id="txtbxTrapezFactor" value="0" size="7" style="text-align: center;">
                             </td>
                         </tr>
                     </tr>
@@ -399,6 +399,7 @@
                         <td colspan="2" style="width:35%;">
                             <input type="button" value="Read from Card" onclick="onReadSignalClick()">
                             <input type="checkbox" id="cboxDebug">Debug
+                            <input type="checkbox" id="cboxKernel">kernel
                         </td>
                         <td>
                             <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal
@@ -406,7 +407,12 @@
                             <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true">PSD
                         </td>
                     </tr>
-                    <tr>
+                    <td id="cellSignal" colspan="3">
+						<div id="chartKernalParent">
+                        	<div id="chartKernel" style="resize:both;overflow:auto;"></div>
+						</div>
+                    </td>
+                <tr>
 						<td>
 							Display Units<br>
 							<input type="radio" name="display_units" id="radioVolts" onclick="onVoltsMilliClick(id)" checked="true">Volts

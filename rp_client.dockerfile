@@ -15,6 +15,10 @@ RUN apt install -y curl zip unzip tar
 RUN apt update && apt install -y software-properties-common && add-apt-repository -y ppa:deadsnakes/ppa
 RUN apt update && apt install -y python3.5
 
+RUN ln -fs /usr/share/zoneinfo/Asia/Jerusalem /etc/localtime
+RUN apt-get install -y tzdata
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+
 ENV HOME=/home/oe
 
 WORKDIR /home/oe/server

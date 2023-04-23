@@ -40,7 +40,7 @@ EPulseDir PulseDirFromString (const std::string &strSource);
 void PrintVector (const TDoubleVec &vBuffer, const char szName[]);
 void PrintVector (const TFloatVec &vBuffer, const char szName[]);
 void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax);
-size_t convolution(const TDoubleVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult);
+size_t convolution(const TDoubleVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult, size_t szi=0);
 size_t consv(const TFloatVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vResult);
 bool to_bool(const std::string &str);
 size_t SubVector (const TDoubleVec &vSource, int nLength, TDoubleVec &vSub);

@@ -19,8 +19,9 @@ void TTRapezInfo::Clear ()
     SetRise (10e-9);
     SetFall (10e-9);
     SetOn (50e-9);
+    SetOnOff (true);
     SetHeight (1);
-    SetFactor (1);
+    SetFactor (0);
     m_vTrapez.clear ();
 }
 //-----------------------------------------------------------------------------
@@ -77,6 +78,7 @@ void TTRapezInfo::AssignAll (const TTRapezInfo &other)
     SetOn (other.GetOn());
     SetHeight (other.GetHeight());
     SetFactor (other.GetFactor());
+    SetOnOff (other.GetOnOff());
     m_vTrapez = other.m_vTrapez;
 }
 //-----------------------------------------------------------------------------
@@ -87,6 +89,7 @@ Json::Value TTRapezInfo::AsJson()
     jTrapez["rise"] = GetRise();
     jTrapez["fall"] = GetFall();
     jTrapez["on"] = GetOn();
+    jTrapez["on_off"] = GetOnOff();
     jTrapez["height"] = GetHeight();
     jTrapez["factor"] = GetFactor();
     return (jTrapez);
@@ -99,9 +102,10 @@ Json::Value TTRapezInfo::LoadFromJson(Json::Value jTrapez)
         SetRise(jTrapez["rise"]);
         SetFall (jTrapez["fall"]);
         SetOn (jTrapez["on"]);
+        SetOnOff (jTrapez["on_off"]);
         SetHeight(jTrapez["height"]);
         SetFactor (jTrapez["factor"]);
-        GenerateTrapez ();
+        GenerateTrapez (m_vTrapez);
     }
     catch (std::exception &exp) {
         jTrapez["error"] = exp.what();
@@ -152,33 +156,60 @@ void TTRapezInfo::SetFactor (double dFactor)
 }
 
 //-----------------------------------------------------------------------------
-void TTRapezInfo::GenerateTrapez ()
+void TTRapezInfo::GenerateTrapez (TDoubleVec &vTrapez) const
 {
-    m_vTrapez.clear ();
     double d=0, delta, delta_t = 8e-9, dValue=0;
 	double dA1=0, dArea = 0;
-	int N = (int) (GetRise() / delta_t + 0.5);
-	delta = GetHeight() / N;
-    while (d < GetRise()) {
-        m_vTrapez.push_back (dValue);
-        dValue += delta;
-        d += delta_t;
+
+    vTrapez.clear ();
+    if (GetOnOff ()) {
+	    int N = (int) (GetRise() / delta_t + 0.5);
+	    delta = GetHeight() / N;
+        while (d < GetRise()) {
+            vTrapez.push_back (dValue);
+            dValue += delta;
+            d += delta_t;
+        }
+	    for (d=0 ; d < GetOn() ; d += delta_t) {
+            vTrapez.push_back (dValue);
+    	}
+	    for (d=0 ; d < GetFall() ; d += delta_t) {
+            vTrapez.push_back (dValue);
+		    dValue -= delta;
+	    }
+        vTrapez.push_back (0);
+	    TDoubleVec::iterator i;
+	    size_t n;
+	    for (i=vTrapez.begin() ; i != vTrapez.end() ; i++)
+		    *i = *i + GetFactor();
     }
-	for (d=0 ; d < GetOn() ; d += delta_t) {
-        m_vTrapez.push_back (dValue);
-	}
-	for (d=0 ; d < GetFall() ; d += delta_t) {
-        m_vTrapez.push_back (dValue);
-		dValue -= delta;
-	}
-    m_vTrapez.push_back (0);
-	TDoubleVec::iterator i;
-	size_t n;
-	//dArea *= 1e-9;
-    //PrintVector (m_vTrapez, "trpz_src.csv");
-	for (i=m_vTrapez.begin() ; i != m_vTrapez.end() ; i++)
-		*i = *i * GetFactor();/// (dArea * 0.100);
 	printf ("\n\nArea: %g\nA1=%g\n%d items\n\n", dArea, dA1, (int) m_vTrapez.size());
-    //PrintVector (m_vTrapez, "trpz.csv");
+    PrintVector (m_vTrapez, "trpz.csv");
+}
+
+//-----------------------------------------------------------------------------
+bool TTRapezInfo::GetOnOff () const
+{
+    return (m_fOnOff);
+}
+
+//-----------------------------------------------------------------------------
+void TTRapezInfo::SetOnOff (bool fOnOff)
+{
+    m_fOnOff = fOnOff;
+}
+
+//-----------------------------------------------------------------------------
+void TTRapezInfo::SetOnOff (Json::Value &jOnOff)
+{
+    bool fOnOff;
+
+    try {
+        fOnOff = jOnOff.asBool();
+    }
+    catch (...) {
+        fOnOff = false;
+    }
+    SetOnOff (fOnOff);
 }
 //-----------------------------------------------------------------------------

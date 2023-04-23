@@ -56,6 +56,7 @@ public:
 	rp_acq_trig_src_t GetHardwareTriggerSource() const;
 #endif
     bool LoadFromJson(const string &strFile);
+    bool IsFilterOn() const;
 	TDoubleVec GetTrapez() const;
 	Json::Value GetTrapezAsJson();
     bool SaveToJson (const std::string &strFile);

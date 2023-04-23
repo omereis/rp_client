@@ -25,6 +25,7 @@ public:
 	static Json::Value ToJson (const TPulseIndexVec &vIndices);
 	void Clear ();
 
+	void SetPulse (int nStart, int nEnd, int nSteps);
 	int GetStart () const;
 	void SetStart (int nStart);
 	int GetEnd () const;

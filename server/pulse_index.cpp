@@ -89,3 +89,10 @@ Json::Value TPulseIndex::ToJson (const TPulseIndexVec &vIndices)
 	return (jPulses);
 }
 
+//---------------------------------------------------------------------------
+void TPulseIndex::SetPulse (int nStart, int nEnd, int nSteps)
+{
+	SetStart (nStart);
+	SetEnd (nEnd);
+	SetSteps (nSteps);
+}

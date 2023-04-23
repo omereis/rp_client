@@ -20,6 +20,7 @@ void TPulseFilter::Clear ()
     m_vPulse.clear();
     m_vFiltered.clear();
     m_vKernel.clear();
+	m_vDiff.clear();
 }
 
 //---------------------------------------------------------------------------
@@ -93,12 +94,27 @@ void TPulseFilter::Filter ()
 }
 
 //---------------------------------------------------------------------------
-void TPulseFilter::SetData (const TDoubleVec &vPulse, const TDoubleVec &vFiltered, const TDoubleVec &vKernel)
+void TPulseFilter::SetData (const TDoubleVec &vPulse, const TDoubleVec &vFiltered, const TDoubleVec &vKernel, const TDoubleVec &vDiff)
 {
     SetPulse (vPulse);
     SetKernel (vKernel);
     SetFiltered (vFiltered);
+	SetDiff (vDiff);
 }
+
+//---------------------------------------------------------------------------
+void TPulseFilter::SetDiff (const TDoubleVec &vDiff)
+{
+	m_vDiff = vDiff;
+}
+
+//---------------------------------------------------------------------------
+size_t TPulseFilter::GetDiff (TDoubleVec &vDiff) const
+{
+	vDiff = m_vDiff;
+	return (vDiff.size());
+}
+
 //---------------------------------------------------------------------------
 size_t TPulseFilter::GetFiltered (TFloatVec &vFiltered) const
 {
@@ -153,15 +169,16 @@ size_t TPulseFilter::GetPulse (TDoubleVec &vPulse) const
 void TPulseFilter::AssignAll (const TPulseFilter &other)
 {
     //TFloatVec vPulse;
-    TDoubleVec vKernel, vFiltered, vPulse;
+    TDoubleVec v;
     
-    other.GetPulse(vPulse);
-    SetPulse (vPulse);
-    other.GetKernel (vKernel);
-    SetKernel (vKernel);
-    other.GetFiltered (vFiltered);
-    SetFiltered (vFiltered);
-
+    other.GetPulse(v);
+    SetPulse (v);
+    other.GetKernel (v);
+    SetKernel (v);
+    other.GetFiltered (v);
+    SetFiltered (v);
+	GetDiff (v);
+	SetDiff (v);
 }
 
 //-------------------------------------------
@@ -169,4 +186,14 @@ size_t TPulseFilter::GetKernel (TDoubleVec &vKernel) const
 {
     vKernel = m_vKernel;
     return (vKernel.size());
+}
+
+//-------------------------------------------
+double TPulseFilter::GetValueAt (size_t n) const
+{
+    double dValue = 0;
+
+    if (n < m_vPulse.size())
+        dValue = m_vPulse[n];
+    return (dValue);
 }

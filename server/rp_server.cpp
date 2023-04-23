@@ -71,10 +71,12 @@ void SafeStartStop (bool fCommand);
 bool SafeGetStatus ();
 size_t SafeQueueSize ();
 void SafeQueueClear ();
-size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered);
+//size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered);
+size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel);
 //size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered);
 //void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered);
-void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered);
+void SafeQueueAdd (const TPulseFilter &pulse_filter);
+//void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered);
 
 void SafeSetMca (bool fOnOff);
 bool SafeGetMca ();
@@ -89,8 +91,11 @@ int CountInString (const std::string &strJson, int c);
 //size_t ReadSignal (double dLen, TFloatVec &vSignal);
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug);
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug);
+bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec);
 //bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
-bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec);
+//bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseIndexVec &vIndices);
+//bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec);
+void IdentifyPulses (const TPulseFilter &pulse_filter, TPulseIndexVec &vIndices);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 //float VectorAverage (const TFloatVec &vec);
 Json::Value ReadMca ();
@@ -104,6 +109,7 @@ size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices)
 size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices);
 Json::Value GetPulsesInSignal (const TFloatVec &vSignal);
 void GetAppDateTime (char *szFileName);
+void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff);
 
 //-----------------------------------------------------------------------------
 std::string ret_str()
@@ -433,9 +439,9 @@ string GetMcaCounts ()
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug)
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 {
-    Json::Value jSignal, jSignalData, jFiltered;
+    Json::Value jSignal, jSignalData, jFiltered, jKernel;
 	int nVectorPoints;
-	TDoubleVec vPulse, vFiltered;
+	TDoubleVec vPulse, vFiltered, vKernel;
 	TDoubleVec::iterator it;
 	//TFloatVec vPulse, vFiltered;
 	//TFloatVec::iterator it;
@@ -448,14 +454,17 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 		//vSignal.clear();
 		fprintf (stderr, "length: i%g\nBuffer: %dx\n", dLen, nVectorPoints);
         while ((jSignal.size() < nVectorPoints) && (SafeQueueSize () > 0)) {
-			sPulse = SafeQueueExtract (vPulse, vFiltered);
-			PrintVector (vPulse, "p.csv");
-			PrintVector (vFiltered, "f.csv");
+			sPulse = SafeQueueExtract (vPulse, vFiltered, vKernel);
+			PrintVector (vPulse, "p_debug.csv");
+			PrintVector (vFiltered, "f_debug.csv");
 			if (sPulse > 0) {
 				for (it=vPulse.begin() ; (it != vPulse.end()) && (jSignal.size() < nVectorPoints) ; it++)
 					jSignal.append(*it);
-				for (it=vFiltered.begin() ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; it++)
-					jFiltered.append(*it);
+				if (vFiltered.size() > 0)
+					for (it=vFiltered.begin() ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; it++)
+						jFiltered.append(*it);
+				for (it=vKernel.begin() ; (it != vKernel.end() && (jKernel.size() < nVectorPoints)) ; it++)
+					jKernel.append(*it);
 			}
 			//rValue += 0;
         }
@@ -465,7 +474,10 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
 		jSignalData["data"] = jSignal;
-		jSignalData["filtered"] = jFiltered;
+		if (jFiltered.size() > 0)
+			jSignalData["filtered"] = jFiltered;
+		if (jKernel.size() > 0)
+			jSignalData["kernel"] = jKernel;
 		//if (fDebug)
 			//jSignalData["detector_pulse"] = GetPulsesInSignal (vSignal);
     }
@@ -592,39 +604,6 @@ Json::Value GetPulsesInSignal (const TFloatVec &vSignal)
 	TPulseIndexVec vIndices;
 
 	CountPulsesInSignal (vSignal, vIndices);
-/*
-	TFloatVec::const_iterator i;
-	bool fInPulse;
-	double dBackground = g_rp_setup.GetBackground();
-	TPulseIndex pi;
-	int n, nBelow, nAbove;
-
-	fInPulse = false;
-	for (i=vSignal.begin(), n=0 ; i != vSignal.end() ; i++, n++) {
-		if (*i < dBackground) { // below background
-			nBelow++;
-			nAbove = 0;
-		}
-		else {
-			nBelow = 0;
-			nAbove++;
-		}
-		if (nBelow >= 3) {
-			if (fInPulse == false) { // pulse start
-				fInPulse = true;
-				pi.SetStart (n);
-			}
-		}
-		else if (nAbove >= 3) {
-			if (fInPulse) { // pulse end
-				fInPulse = false;
-				pi.SetSteps (n - pi.GetStart() - 3);
-				vIndices.push_back (pi);
-				pi.Clear ();
-			}
-		}
-	}
-*/
 	return (TPulseIndex::ToJson (vIndices));
 }
 
@@ -678,7 +657,7 @@ Json::Value GetPulsesInSignal1 (const TFloatVec &vSignal)
 }
 
 //-----------------------------------------------------------------------------
-size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered)
+size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel)
 //size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered)
 {
 	TPulseFilter pulse_filter;
@@ -691,51 +670,51 @@ size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered)
 	g_qFilteredPulses.pop();
 	pulse_filter.GetPulse (vPulse);
 	pulse_filter.GetFiltered (vFiltered);
+	pulse_filter.GetKernel(vKernel);
     s = vPulse.size();
     mtx.unlock ();
 	double d=0;
-    return (vFiltered.size());
+    return (vPulse.size());
 }
 
 //-----------------------------------------------------------------------------
-void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter pulse_filter)
-//void FilterPulse (const TFloatVec &vPulse,double dBackground, TPulseFilter pulse_filter)
+void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff)
 {
-	//TFloatVec vFiltered;
-	TDoubleVec vSrc, vFiltered;
+	TDoubleVec vSrc, vFiltered, vDiff;
 	TDoubleVec v, vTrapez;
-	TDoubleVec::iterator id;
+	TDoubleVec::iterator id, id1, iDiff;
 	TDoubleVec::const_iterator i;
+	static int nCount=0;
 
 	pulse_filter.Clear();
-	vTrapez = g_rp_setup.GetTrapez();
-	pulse_filter.SetKernel (vTrapez);
 	vSrc.resize (vPulse.size());
 	for (i=vPulse.begin(), id=vSrc.begin() ; i != vPulse.end() ; i++, id++)
 		*id = *i - dBackground;
-	convolution(vSrc, vTrapez, vFiltered);
-	pulse_filter.SetData (vSrc, vTrapez, vFiltered);
+	if (fFilterOnOff) {
+		vTrapez = g_rp_setup.GetTrapez();
+		pulse_filter.SetKernel (vTrapez);
+		convolution(vSrc, vTrapez, vFiltered, vSrc.size());
+		vDiff.resize (vFiltered.size());
+		id1 = id = vFiltered.begin();
+		for (iDiff=vDiff.begin(), id1++ ; id1 != vFiltered.end() ; id++, id1++, iDiff++)
+			*iDiff = *id - *id1;
+	}
+	pulse_filter.SetData (vSrc, vFiltered, vTrapez, vDiff);
+	if (nCount == 0) {
+			nCount++;
+		PrintVector (vSrc, "filt_src.csv");
+		PrintVector (vTrapez, "filt_ker.csv");
+		PrintVector (vFiltered, "filt_res.csv");
+		PrintVector (vDiff, "filt_dif.csv");
+	}
 }
 
 //-----------------------------------------------------------------------------
-void FilterPulse (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
-{
-	TDoubleVec vSrc, vTrapez;
-	TDoubleVec::const_iterator iSrc;
-	TDoubleVec::iterator i;
-
-	vTrapez = g_rp_setup.GetTrapez();
-	vFiltered.resize (vPulse.size());
-	double dBackground = g_rp_setup.CalculateBackground (vPulse);
-	vTrapez = g_rp_setup.GetTrapez();
-	for (iSrc=vPulse.begin(), i=vFiltered.begin() ; iSrc != vPulse.end() ; iSrc++, i++)
-		*i = *iSrc - dBackground;
-	convolution (vSrc, vTrapez, vFiltered);
-}
-//-----------------------------------------------------------------------------
-void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
+void SafeQueueAdd (const TPulseFilter &pulse_filter)
+//void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
 //void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered)
 {
+/*
 	TDoubleVec v, vTrapez;
 	TPulseFilter pulse_filter;
 	TFloatVec::iterator i;
@@ -745,20 +724,14 @@ void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered)
 	vTrapez = g_rp_setup.GetTrapez();
 	pulse_filter.SetKernel (vTrapez);
 	pulse_filter.Filter();
-
+*/
     mutex mtx;
 
     mtx.lock ();
 	g_qFilteredPulses.push(pulse_filter);
-	//g_qFiltgeredPulses;
-    //g_qPulses.push(vPulse);
     while (g_qFilteredPulses.size() > 1000)
         g_qFilteredPulses.pop();
     mtx.unlock ();
-	//pulse_filter.GetFiltered (v);
-	//vFiltered.resize(v.size());
-	//for (i=vFiltered.begin(), iv=v.begin() ; iv != v.end() ; iv++, i++)
-		//*i = *iv;
 }
 
 //-----------------------------------------------------------------------------
@@ -872,7 +845,7 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		jStatus["psd"] = rp_setup.GetPsdOnOff ();
 		jResult["status"] = jStatus;
 		jResult["buffer"] = to_string(SafeQueueSize());//g_vRawSignal.size());
-		fprintf (stderr, "HandleSampling, Queue size: %d\n", SafeQueueSize());
+		fprintf (stderr, "HandleSampling, Queue size: %ld\n", SafeQueueSize());
     }
     catch (std::exception &exp) {
 		fprintf (stderr, "Runtime error in 'HandleSampling':\n%s\n", exp.what());
@@ -971,14 +944,19 @@ void OnTimerTick ()
     TPulseInfoVec piVec;
     TPulseInfoVec::iterator iPulseInfo;
 	static int nCount=1;
+	TPulseFilter pulse_filter;
 
     if (g_rp_setup.GetSamplingOnOff ()) {
         if (GetNextPulse (vPulse)) {
 			nCount++;
 			if (nCount % 10 == 0)
 				g_rp_setup.CalculateBackground (vPulse);
-            SafeQueueAdd (vPulse, vFiltered);
-            if (GetPulseParams (vPulse, piVec)) {
+			//if (g_rp_setup.IsFilterOn())
+			FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
+            //SafeQueueAdd (vPulse, vFiltered);
+			SafeQueueAdd (pulse_filter);
+            //if (GetPulseParams (vPulse, piVec)) {
+			if (GetPulseParams (pulse_filter, piVec)) {
                 for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
                 	g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
             	g_rp_setup.NewPulse (piVec);
@@ -1070,9 +1048,62 @@ bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iB
 	return (f);
 }
 
-/*
 //-----------------------------------------------------------------------------
-bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
+bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
+{
+	TPulseIndexVec vIndices;
+	TPulseIndexVec::iterator iPulse;
+	TPulseInfo pi;
+	size_t n;
+	double dMax, dArea, v;
+
+	IdentifyPulses (pulse_filter, vIndices);
+	for (iPulse=vIndices.begin() ; iPulse != vIndices.end() ; iPulse++) {
+		dMax = dArea = 0;
+		for (n=iPulse->GetStart() ; n < iPulse->GetEnd() ; n++) {
+			v = pulse_filter.GetValueAt (n);
+			dMax = max (dMax, v);
+			dArea += v;
+		}
+		pi.SetArea (dArea);
+		pi.SetMaxVal (dMax);
+		pi.SetLength (iPulse->GetEnd() - iPulse->GetStart());
+		pi.SetIndices (*iPulse);
+		piVec.push_back (pi);
+	}
+}
+
+//-----------------------------------------------------------------------------
+void IdentifyPulses (const TPulseFilter &pulse_filter, TPulseIndexVec &vIndices)
+{
+	TDoubleVec vDiff;
+	TDoubleVec::iterator i, iStart, iEnt;
+	int nStart, nEnd, n;
+	bool fInPulse=false;
+	TPulseIndex pi;
+
+	pulse_filter.GetDiff(vDiff);
+	for (i=vDiff.begin(), n=0 ; i != vDiff.end() ; i++, n++) {
+		if (!fInPulse) {
+			if (*i > 0.001) {
+				nStart = n;
+				fInPulse = true;
+			}
+		}
+		else {
+			if (*i < 0.001) {
+				nEnd = n;
+				pi.SetPulse (nStart, n, n - nStart);
+				fInPulse = false;
+				vIndices.push_back (pi);
+				pi.Clear();
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+bool GetPulseParams_no_filter (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
 {
 	TPulseIndexVec vIndices;
 	TPulseIndexVec::iterator iPulse;
@@ -1085,86 +1116,6 @@ bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
 		AddPulse (iStart, iEnd, g_rp_setup.GetBackground(), piVec);
 	}
 }
-*/
-
-//-----------------------------------------------------------------------------
-bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
-//bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec)
-{
-	TPulseIndexVec vIndices;
-	TPulseIndexVec::iterator iPulse;
-	TDoubleVec::iterator iStart, iEnd;
-
-	CountPulsesInSignal (vBuffer, vIndices);
-	for (iPulse=vIndices.begin() ; iPulse != vIndices.end() ; iPulse++) {
-		iStart = vBuffer.begin() + iPulse->GetStart();
-		iEnd = iStart + iPulse->GetSteps();
-		AddPulse (iStart, iEnd, g_rp_setup.GetBackground(), piVec);
-	}
-}
-
-/*
-//-----------------------------------------------------------------------------
-bool GetPulseParams1 (TFloatVec &vBuffer, TPulseInfoVec &piVec)
-{
-	double dMin, dMax, dBkgnd;
-	TFloatVec vSignal;
-	TFloatVec::iterator i, iStart, iEnd, iBufferStart;
-	int n;
-
-	piVec.clear();
-	//GetVectorMinMax (vBuffer, dMin, dMax);
-	//Normalize (vBuffer, dMin, dMax, vSignal);
-	i = vBuffer.begin();
-	dBkgnd = *i;
-	for (n=1, i++ ; n < (g_rp_setup.GetPreTriggerNs() - 10) ; n++, i++)
-		dBkgnd = min (dBkgnd, (double) *i);
-	//dBkgnd *= 2;
-	iBufferStart = vBuffer.begin();
-	do {
-		if (FindPulseStartEnd (iBufferStart , vBuffer.end(), dBkgnd, iStart, iEnd)) {
-			AddPulse (iStart, iEnd, dBkgnd, piVec);
-			iBufferStart = iEnd;
-		}
-		else
-			iBufferStart = vBuffer.end();
-	} while (iBufferStart != vBuffer.end());
-	g_rp_setup.SetBackground (dBkgnd);
-	return (piVec.size() > 0);
-}
-*/
-
-
-
-/*
-//-----------------------------------------------------------------------------
-bool GetPulseParams_norm (TFloatVec &vBuffer, TPulseInfoVec &piVec)
-{
-	double dMin, dMax, dBkgnd;
-	TFloatVec vSignal;
-	TFloatVec::iterator i, iStart, iEnd, iBufferStart;
-	int n;
-
-	piVec.clear();
-	GetVectorMinMax (vBuffer, dMin, dMax);
-	Normalize (vBuffer, dMin, dMax, vSignal);
-	i = vSignal.begin();
-	dBkgnd = *i;
-	for (n=1, i++ ; n < (g_rp_setup.GetPreTriggerNs() - 10) ; n++, i++)
-		dBkgnd = max (dBkgnd, (double) *i);
-	dBkgnd *= 2;
-	iBufferStart = vSignal.begin();
-	do {
-		if (FindPulseStartEnd (iBufferStart , vSignal.end(), dBkgnd, iStart, iEnd)) {
-			AddPulse (iStart, iEnd, dBkgnd, piVec);
-			iBufferStart = iEnd;
-		}
-		else
-			iBufferStart = vSignal.end();
-	} while (iBufferStart != vSignal.end());
-	return (piVec.size() > 0);
-}
-*/
 
 //-----------------------------------------------------------------------------
 void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec)

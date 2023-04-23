@@ -14,7 +14,8 @@ public:
     void Clear ();
 
     size_t GetTrapez (TDoubleVec &vTrapez) const;
-    void GenerateTrapez ();
+	void GenerateTrapez (TDoubleVec &vTrapez) const;
+    //void GenerateTrapez ();
 
     Json::Value AsJson();
     Json::Value LoadFromJson(Json::Value jTrapez);
@@ -36,6 +37,10 @@ public:
     double GetFactor() const;
     void SetFactor (double dFactor);
     void SetFactor (Json::Value &jFactor);
+
+    bool GetOnOff () const;
+    void SetOnOff (bool fOnOff);
+    void SetOnOff (Json::Value &jOnOff);
 protected:
     void AssignAll (const TTRapezInfo &other);
 private:
@@ -45,6 +50,7 @@ private:
     double m_dOn;
     double m_dHeight;
     double m_dFactor;
+    bool m_fOnOff;
 };
 //-----------------------------------------------------------------------------
 #endif

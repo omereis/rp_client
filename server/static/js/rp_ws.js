@@ -535,7 +535,7 @@ function setupReadSignal (reply) {
         var yData=[], yRaw=[], xData=[], t=0, yTrigger=[], yBackground=[];
         var dTrigger = uploadTriggerLevel (), dBackground=uploadBackground();
 		var aPulseData = null, aPulsesIndices=null;//samples.pulses.signal;//.pulse;
-		var aFiltered = null;
+		var aFiltered = [];//null;
         var aMcaData = null;//samples.pulses.mca;
 
         var layout = {};
@@ -544,11 +544,12 @@ function setupReadSignal (reply) {
         if (samples.pulses.hasOwnProperty('signal')) {
 			console.log('signal accepted');
             aPulseData = samples.pulses.signal.data;
-			aFiltered = samples.pulses.signal.filtered;
 			downloadSignalMinMax (samples.pulses.signal);
             if (samples.pulses.signal.hasOwnProperty ('detector_pulse'))
 				aPulsesIndices = samples.pulses.signal.detector_pulse;
 		}
+        if (samples.pulses.hasOwnProperty('filtered'))
+			aFiltered = samples.pulses.signal.filtered;
         if (samples.pulses.hasOwnProperty('buffer_length'))
 			downloadBufferLength(samples.pulses.buffer_length);
         if (samples.pulses.hasOwnProperty('mca_length'))
@@ -557,16 +558,22 @@ function setupReadSignal (reply) {
 			downloadBackground (samples.pulses.background);
 			//downloadMeasuredBackground(samples.background);
         if (aPulseData != null)
-					plotSignal (aPulseData, aFiltered, aPulsesIndices);
-				if (aMcaData != null)
-					plotMca (aMcaData);
+			plotSignal (aPulseData, aFiltered, aPulsesIndices);
+			if (uploadKernelCheckbox()) {
+				if (samples.pulses.signal.hasOwnProperty('kernel'))
+					plotKernal (samples.pulses.signal.kernel);
 			}
-			catch (exception) {
-				var txt = cell.innerText;
-				txt = exception;
-				console.log(exception);
-			}
-		}
+			else
+				deleteKernelPlot();
+			if (aMcaData != null)
+				plotMca (aMcaData);
+	}
+	catch (exception) {
+		var txt = cell.innerText;
+		txt = exception;
+		console.log(exception);
+	}
+}
 
 		//-----------------------------------------------------------------------------
 		function downloadBufferLength(value) {
@@ -620,14 +627,16 @@ function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
 	var fShowTrigger = uploadCheckbox ('cboxTrigger');
 	var fShowBackground = uploadCheckbox ('cboxBackground');
     var dataPulse = {x:xData, y:yData, name: "Signal"};
-    var dataFiltered = {x:xData, y:aFiltered, name: "Filtered"};
 
     var dataTrigger = {x:xData, y:yTrigger, name: "Trigger"};
     var dataBackground = {x:xBackground, y:yBackground, name: "Background"};
 
     var data=[];
     data[0] = dataPulse;
-    data[1] = dataFiltered;
+	if (aFiltered.length > 0) {
+    	var dataFiltered = {x:xData, y:aFiltered, name: "Filtered"};
+    	data[1] = dataFiltered;
+	}
     if (fShowTrigger)
         data.push(dataTrigger);
     if (fShowBackground)
@@ -640,6 +649,36 @@ function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
 	localStorage.setItem ("chart_debug", yPulses);
     var chart = document.getElementById("chartSignal");
     Plotly.newPlot(chart, data, GetSignalChartLayout(fIsMilli));
+}
+//-----------------------------------------------------------------------------
+function plotKernal (vKernel) {
+	var div = document.getElementById ('chartKernel');
+	if (div == null) {
+		var divParent = document.getElementById ('chartKernalParent');
+		div = document.createElement("div");
+		divParent.appendChild(div);
+	}
+	var vx=[vKernel.length];
+	var vy=[vKernel.length];
+	for (var n=0 ; n < vKernel.length ; n++) {
+		vx[n] = n;
+		//vy[n] = vKernel[n];
+	}
+	var trace2 = {
+		x: vx,
+		//y: vy,
+		y: vKernel,
+		type: 'Kernel'
+	};
+	var data = [trace2];
+	Plotly.newPlot('chartKernel', data);
+}
+
+//-----------------------------------------------------------------------------
+function deleteKernelPlot() {
+	var div = document.getElementById ('chartKernel');
+	div.remove();
+	//Plotly.deleteTraces (dic, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1459,13 +1498,42 @@ function onMcaStopClick() {
 }
 
 //-----------------------------------------------------------------------------
-function onTrapezoidOnOff() {
+function uploadTrapezoidOnOff() {
+	var val="";
 	var btn = document.getElementById("btnTrapezOnOff");
 	if (btn != null)
-		if (btn.value.toLowerCase() == "on")
+		val = btn.value.toLowerCase();
+	if (val == "on")
+		val = true;
+	else
+		val = false;
+	return (val);
+}
+
+		
+//-----------------------------------------------------------------------------
+function downloadTrapezOnOff (txtOnOff) {
+	var btn = document.getElementById("btnTrapezOnOff");
+	var val;// = txtOnOff.toLowerCase();
+	if (btn != null) {
+		if (txtOnOff)
+			val = "On";
+		else
+			val = "Off";
+		btn.value = val;
+	}
+}
+
+//-----------------------------------------------------------------------------
+function onTrapezoidOnOff() {
+	var btn = document.getElementById("btnTrapezOnOff");
+	if (btn != null) {
+		var val = uploadTrapezoidOnOff();
+		if (val)// == "on")
 			btn.value = "Off";
 		else
 			btn.value = "On";
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1491,6 +1559,7 @@ function uploadTrapezParams () {
 	msgTrapez["rise"]   = uploadRiseTime ();
 	msgTrapez["fall"]   = uploadFallTime ();
 	msgTrapez["on"]     = uploadOnTime ();
+	msgTrapez["on_off"] = uploadTrapezoidOnOff();
 	msgTrapez["height"] = uploadHeight ();
 	msgTrapez["factor"] = uploadTrapezFactor();
 	return (msgTrapez);
@@ -1553,6 +1622,7 @@ function downloadTrapez(dictTrapez) {
 		//downloadRealValue ('txtbxTrapezHeight', parseInt (dictTrapez.height + 0.5));
 		downloadRealValue ('txtbxTrapezHeight', dictTrapez.height.toFixed(2));
 		downloadRealValue ('txtbxTrapezFactor', dictTrapez.factor);
+		downloadTrapezOnOff (dictTrapez.on_off);
 	}
     catch (exception) {
 		var p = document.getElementById ("txtReply");
@@ -1582,4 +1652,9 @@ function downloadRealValue (idTxt, dValue) {
 	var txtbx = document.getElementById(idTxt);
 	if (txtbx != null)
 		txtbx.value = dValue;
+}
+
+//-----------------------------------------------------------------------------
+function uploadKernelCheckbox() {
+    return (uploadCheckBox ("cboxKernel"));
 }

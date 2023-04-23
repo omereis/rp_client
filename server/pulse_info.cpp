@@ -27,6 +27,7 @@ void TPulseInfo::Clear ()
     SetDelayed (0);
 	SetPulseID (0);
 	SetBackground (0);
+    m_indices.Clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -42,6 +43,7 @@ void TPulseInfo::AssignAll (const TPulseInfo &other)
     SetDelayed (other.GetDelayed ());
 	SetPulseID (other.GetPulseID() );
 	SetBackground (other.GetBackground ());
+    SetIndices (other.GetIndices());
 }
 
 //-----------------------------------------------------------------------------
@@ -205,9 +207,22 @@ int TPulseInfo::GetPulseID () const
 	return (m_id);
 }
 
+//----------------------------------------------------------------------------p
 void TPulseInfo::AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd)
 {
     m_vRawPulse.clear();
 	m_vRawPulse.insert (m_vRawPulse.begin(), iStart, iEnd);
+}
+
+//----------------------------------------------------------------------------p
+void TPulseInfo::SetIndices (const TPulseIndex &indices)
+{
+    m_indices = indices;
+}
+
+//----------------------------------------------------------------------------p
+TPulseIndex TPulseInfo::GetIndices() const
+{
+    return (m_indices);
 }
 //----------------------------------------------------------------------------p

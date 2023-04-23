@@ -226,7 +226,10 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 TDoubleVec TRedPitayaSetup::GetTrapez() const
 {
 	TDoubleVec vTrapez;
+
 	m_trapez.GetTrapez (vTrapez);
+	if (vTrapez.size() == 0)
+		m_trapez.GenerateTrapez (vTrapez);
 	return (vTrapez);
 }
 
@@ -626,6 +629,12 @@ chrono_clock TRedPitayaSetup::SetMcaStartTime ()
 {
 	SetMcaStartTime (std::chrono::system_clock::now());
 	return (GetMcaStartTime());
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::IsFilterOn() const
+{
+	return (m_trapez.GetOnOff());
 }
 
 //-----------------------------------------------------------------------------
