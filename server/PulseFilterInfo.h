@@ -5,6 +5,8 @@
 #include "vector"
 #include "vector"
 //---------------------------------------------------------------------------
+#include "pulse_info.h"
+//---------------------------------------------------------------------------
 class TPulseFilter;
 typedef queue<TPulseFilter> TPulseQueue;
 //---------------------------------------------------------------------------
@@ -27,6 +29,10 @@ public:
     //size_t GetPulse (TFloatVec &vPulse) const;
     void SetData (const TDoubleVec &vPulse, const TDoubleVec &vFiltered, const TDoubleVec &vKernel, const TDoubleVec &vDiff);
     double GetValueAt (size_t n) const;
+
+	void SetPulsesInfo (const TPulseInfoVec &vPulsesInfo);
+	size_t GetPulsesInfo (TPulseInfoVec &vPulsesInfo) const;
+	size_t GetPulsesIndices (TPulseIndexVec &vIndices) const;
 protected:
     void AssignAll (const TPulseFilter &other);
 private:
@@ -34,5 +40,6 @@ private:
     TDoubleVec m_vFiltered;
     TDoubleVec m_vKernel;
     TDoubleVec m_vDiff;
+	TPulseInfoVec m_vPulsesInfo;
 };
 //---------------------------------------------------------------------------

@@ -21,6 +21,7 @@ void TPulseFilter::Clear ()
     m_vFiltered.clear();
     m_vKernel.clear();
 	m_vDiff.clear();
+	m_vPulsesInfo.clear();
 }
 
 //---------------------------------------------------------------------------
@@ -170,7 +171,8 @@ void TPulseFilter::AssignAll (const TPulseFilter &other)
 {
     //TFloatVec vPulse;
     TDoubleVec v;
-    
+	TPulseInfoVec vPulsesInfo;
+
     other.GetPulse(v);
     SetPulse (v);
     other.GetKernel (v);
@@ -179,6 +181,9 @@ void TPulseFilter::AssignAll (const TPulseFilter &other)
     SetFiltered (v);
 	GetDiff (v);
 	SetDiff (v);
+
+	other.GetPulsesInfo (vPulsesInfo);
+	SetPulsesInfo (vPulsesInfo);
 }
 
 //-------------------------------------------
@@ -196,4 +201,34 @@ double TPulseFilter::GetValueAt (size_t n) const
     if (n < m_vPulse.size())
         dValue = m_vPulse[n];
     return (dValue);
+}
+
+//-------------------------------------------
+void TPulseFilter::SetPulsesInfo (const TPulseInfoVec &vPulsesInfo)
+{
+	m_vPulsesInfo = vPulsesInfo;
+}
+
+//-------------------------------------------
+size_t TPulseFilter::GetPulsesInfo (TPulseInfoVec &vPulsesInfo) const
+{
+	vPulsesInfo = m_vPulsesInfo;
+	return (m_vPulsesInfo.size());
+}
+
+//-------------------------------------------
+size_t TPulseFilter::GetPulsesIndices (TPulseIndexVec &vIndices) const
+{
+	TPulseInfoVec vPulsesInfo;
+	TPulseIndex pi;
+	TPulseInfoVec::iterator iPulseInfo;
+
+	vIndices.clear();
+	GetPulsesInfo (vPulsesInfo);
+	for (iPulseInfo=vPulsesInfo.begin() ; iPulseInfo != vPulsesInfo.end() ; iPulseInfo++) {
+		pi = iPulseInfo->GetIndices ();
+		vIndices.push_back (pi);
+		pi.Clear();
+	}
+	return (vIndices.size());
 }
