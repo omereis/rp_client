@@ -96,3 +96,13 @@ void TPulseIndex::SetPulse (int nStart, int nEnd, int nSteps)
 	SetEnd (nEnd);
 	SetSteps (nSteps);
 }
+
+//---------------------------------------------------------------------------
+Json::Value TPulseIndex::AsJson() const
+{
+	Json::Value jIndices;
+
+	jIndices["start"] = GetStart();
+	jIndices["length"] = GetSteps();
+	return (jIndices);
+}
