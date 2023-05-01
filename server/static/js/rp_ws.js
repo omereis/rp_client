@@ -548,7 +548,7 @@ function setupReadSignal (reply) {
             if (samples.pulses.signal.hasOwnProperty ('detector_pulse'))
 				aPulsesIndices = samples.pulses.signal.detector_pulse;
 		}
-        if (samples.pulses.hasOwnProperty('filtered'))
+		if (samples.pulses.signal.hasOwnProperty('filtered'))
 			aFiltered = samples.pulses.signal.filtered;
         if (samples.pulses.hasOwnProperty('buffer_length'))
 			downloadBufferLength(samples.pulses.buffer_length);
@@ -558,7 +558,8 @@ function setupReadSignal (reply) {
 			downloadBackground (samples.pulses.background);
 			//downloadMeasuredBackground(samples.background);
         if (aPulseData != null)
-			plotSignal (aPulseData, aFiltered, aPulsesIndices);
+			plotSignal (samples.pulses.signal);
+			//plotSignal (aPulseData, aFiltered, aPulsesIndices);
 			if (uploadKernelCheckbox()) {
 				if (samples.pulses.signal.hasOwnProperty('kernel'))
 					plotKernal (samples.pulses.signal.kernel);
@@ -596,7 +597,20 @@ function clearBufferBkgnd () {
 }
 
 //-----------------------------------------------------------------------------
-function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
+function plotSignal (sample_signal){
+//function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
+	if (sample_signal.hasOwnProperty ('data'))
+		aPulseData = sample_signal.data;
+	if (sample_signal.hasOwnProperty ('filtered'))
+		aFiltered = sample_signal.filtered;
+
+	if (sample_signal.hasOwnProperty ('detector_pulse'))
+		aPulsesIndices = sample_signal.detector_pulse;
+	//if (sample_signal.hasOwnProperty ('aPulsesIndices'))
+		//aPulsesIndices = sample_signal.aPulsesIndices;
+	else
+		aPulsesIndices = null;
+
 	var yData=[], t, yTrigger=[], yBackground=[];
     var yRaw=[], xData=[], xBackground=[], t=0, yTrigger=[], yBackground=[], yPulses=null;
     var t, dTrigger = uploadTriggerLevel (), dBackground=uploadBackground(), dMin;
@@ -633,9 +647,11 @@ function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
 
     var data=[];
     data[0] = dataPulse;
-	if (aFiltered.length > 0) {
-    	var dataFiltered = {x:xData, y:aFiltered, name: "Filtered"};
-    	data[1] = dataFiltered;
+	if (uploadCheckbox ('cboxFiltered')) {
+		if (aFiltered.length > 0) {
+    		var dataFiltered = {x:xData, y:aFiltered, name: "Filtered"};
+    		data[1] = dataFiltered;
+		}
 	}
     if (fShowTrigger)
         data.push(dataTrigger);
@@ -644,8 +660,17 @@ function plotSignal (aPulseData, aFiltered, aPulsesIndices=null){
 	if (yPulses != null) {
     	var dataPulse = {x:xData, y:yPulses, name: "Debug"};
         data.push(dataPulse);
-        data.push(dataFiltered);
 	}
+	if (sample_signal.hasOwnProperty('filt_deriv')) {
+		if (sample_signal.filt_deriv.length > 0) {
+    		var dataDerive = {x:xData, y:sample_signal.filt_deriv, name: "Derivative"};
+    		data.push(dataDerive);
+		}
+	}
+/*
+*/
+	//data.push(dataPulse);
+	//data.push(dataFiltered);
 	localStorage.setItem ("chart_debug", yPulses);
     var chart = document.getElementById("chartSignal");
     Plotly.newPlot(chart, data, GetSignalChartLayout(fIsMilli));
