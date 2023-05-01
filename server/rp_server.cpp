@@ -72,7 +72,8 @@ bool SafeGetStatus ();
 size_t SafeQueueSize ();
 void SafeQueueClear ();
 //size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered);
-size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel);
+size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel, TPulseIndexVec &vIndices);
+//size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel);
 //size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered);
 //void SafeQueueAdd (const TFloatVec &vPulse, TFloatVec &vFiltered);
 void SafeQueueAdd (const TPulseFilter &pulse_filter);
@@ -363,8 +364,8 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
     return (jNew);
 }
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal)
 {
     TFloatVec::iterator i;
@@ -439,30 +440,38 @@ string GetMcaCounts ()
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug)
 Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 {
-    Json::Value jSignal, jSignalData, jFiltered, jKernel;
+    Json::Value jSignal, jSignalData, jFiltered, jKernel, jFiltDeriv;
 	int nVectorPoints;
 	TDoubleVec vPulse, vFiltered, vKernel;
-	TDoubleVec::iterator it;
+	TDoubleVec::iterator it, itPrev;
 	//TFloatVec vPulse, vFiltered;
 	//TFloatVec::iterator it;
 	std::string strNumber;
-	size_t sPulse;
+	size_t sPulse, n;
 	static int nCount=0;
+	TPulseIndexVec vIndices;
 
     try {
 		nVectorPoints = int ((dLen / 8e-9) + 0.5);
 		//vSignal.clear();
 		fprintf (stderr, "length: i%g\nBuffer: %dx\n", dLen, nVectorPoints);
         while ((jSignal.size() < nVectorPoints) && (SafeQueueSize () > 0)) {
-			sPulse = SafeQueueExtract (vPulse, vFiltered, vKernel);
+			sPulse = SafeQueueExtract (vPulse, vFiltered, vKernel, vIndices);
 			PrintVector (vPulse, "p_debug.csv");
 			PrintVector (vFiltered, "f_debug.csv");
 			if (sPulse > 0) {
 				for (it=vPulse.begin() ; (it != vPulse.end()) && (jSignal.size() < nVectorPoints) ; it++)
 					jSignal.append(*it);
 				if (vFiltered.size() > 0)
-					for (it=vFiltered.begin() ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; it++)
+					for (it=vFiltered.begin(), n=0 ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; n++) {
 						jFiltered.append(*it);
+						itPrev = it;
+						it++;
+						if (n < vFiltered.size() - 1)
+							jFiltDeriv.append (*it - *itPrev);
+						else
+							jFiltDeriv.append (0);
+					}
 				for (it=vKernel.begin() ; (it != vKernel.end() && (jKernel.size() < nVectorPoints)) ; it++)
 					jKernel.append(*it);
 			}
@@ -476,18 +485,36 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 		jSignalData["data"] = jSignal;
 		if (jFiltered.size() > 0)
 			jSignalData["filtered"] = jFiltered;
+		if (jFiltDeriv.size() > 0)
+			jSignalData["filt_deriv"] = jFiltDeriv;
 		if (jKernel.size() > 0)
 			jSignalData["kernel"] = jKernel;
-		//if (fDebug)
-			//jSignalData["detector_pulse"] = GetPulsesInSignal (vSignal);
+		if (fDebug) {
+			if (vIndices.size() > 0) {
+				Json::Value jIndices;
+				TPulseIndexVec::iterator iIndex;
+				for (iIndex=vIndices.begin() ; iIndex != vIndices.end() ; iIndex++) {
+					jIndices.append (iIndex->AsJson());
+				}
+				jSignalData["detector_pulse"] = jIndices;//vIndices;//GetPulsesInSignal (vSignal);
+			}
+		}
     }
     catch (std::exception &exp) {
         fprintf (stderr, "Runtime error in 'ReadSignal':\n%s\n", exp.what());
     }
 	//printf ("rp_server.cpp:315, signal length:%d\n", jSignal.size());
     //return (vSignal.size());
-	strNumber = StringifyJson (jSignal);
-	//fprintf (stderr, "ReadSignal, reply:\n%s\n", strNumber.c_str());
+	strNumber = StringifyJson (jSignalData);
+/*
+	FILE *f = fopen ("reply.txt", "w+");
+	fprintf (f, "----------------------------------------\n");
+	fprintf (stderr, "%s\n", strNumber.c_str());
+	fprintf (f, "%s\n", strNumber.c_str());
+	fprintf (f, "----------------------------------------\n");
+	fflush(f);
+	fclose (f);
+*/
     return (jSignalData);
 }
 
@@ -657,7 +684,8 @@ Json::Value GetPulsesInSignal1 (const TFloatVec &vSignal)
 }
 
 //-----------------------------------------------------------------------------
-size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel)
+size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel, TPulseIndexVec &vIndices)
+//size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel)
 //size_t SafeQueueExtract (TFloatVec &vPulse, TFloatVec &vFiltered)
 {
 	TPulseFilter pulse_filter;
@@ -671,6 +699,7 @@ size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &
 	pulse_filter.GetPulse (vPulse);
 	pulse_filter.GetFiltered (vFiltered);
 	pulse_filter.GetKernel(vKernel);
+	pulse_filter.GetPulsesIndices (vIndices);
     s = vPulse.size();
     mtx.unlock ();
 	double d=0;
@@ -689,7 +718,7 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pul
 	pulse_filter.Clear();
 	vSrc.resize (vPulse.size());
 	for (i=vPulse.begin(), id=vSrc.begin() ; i != vPulse.end() ; i++, id++)
-		*id = *i - dBackground;
+		*id = *i;// - dBackground;
 	if (fFilterOnOff) {
 		vTrapez = g_rp_setup.GetTrapez();
 		pulse_filter.SetKernel (vTrapez);
@@ -954,13 +983,18 @@ void OnTimerTick ()
 			//if (g_rp_setup.IsFilterOn())
 			FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
             //SafeQueueAdd (vPulse, vFiltered);
+			if (GetPulseParams (pulse_filter, piVec))
+				pulse_filter.SetPulsesInfo (piVec);
 			SafeQueueAdd (pulse_filter);
             //if (GetPulseParams (vPulse, piVec)) {
+/*
 			if (GetPulseParams (pulse_filter, piVec)) {
+				pulse_filter.SetPulsesInfo (piVec);
                 for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
                 	g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
             	g_rp_setup.NewPulse (piVec);
             }
+*/
         }
     }
 }
