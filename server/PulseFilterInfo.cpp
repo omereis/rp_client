@@ -232,3 +232,15 @@ size_t TPulseFilter::GetPulsesIndices (TPulseIndexVec &vIndices) const
 	}
 	return (vIndices.size());
 }
+
+//-------------------------------------------
+TDoubleVec::const_iterator TPulseFilter::GetFilteredBegin() const
+{
+	return (m_vFiltered.begin());
+}
+
+//-------------------------------------------
+TDoubleVec::const_iterator TPulseFilter::GetFilteredEnd() const
+{
+	return (m_vFiltered.end());
+}

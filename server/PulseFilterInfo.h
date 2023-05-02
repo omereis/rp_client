@@ -30,6 +30,9 @@ public:
     void SetData (const TDoubleVec &vPulse, const TDoubleVec &vFiltered, const TDoubleVec &vKernel, const TDoubleVec &vDiff);
     double GetValueAt (size_t n) const;
 
+    TDoubleVec::const_iterator GetFilteredBegin() const;
+    TDoubleVec::const_iterator GetFilteredEnd() const;
+
 	void SetPulsesInfo (const TPulseInfoVec &vPulsesInfo);
 	size_t GetPulsesInfo (TPulseInfoVec &vPulsesInfo) const;
 	size_t GetPulsesIndices (TPulseIndexVec &vIndices) const;
