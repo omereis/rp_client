@@ -99,13 +99,15 @@ Json::Value TTRapezInfo::AsJson()
 Json::Value TTRapezInfo::LoadFromJson(Json::Value jTrapez)
 {
     try {
-        SetRise(jTrapez["rise"]);
-        SetFall (jTrapez["fall"]);
-        SetOn (jTrapez["on"]);
-        SetOnOff (jTrapez["on_off"]);
-        SetHeight(jTrapez["height"]);
-        SetFactor (jTrapez["factor"]);
-        GenerateTrapez (m_vTrapez);
+		if (!jTrapez.isNull()) {
+			SetRise(jTrapez["rise"]);
+			SetFall (jTrapez["fall"]);
+			SetOn (jTrapez["on"]);
+			SetOnOff (jTrapez["on_off"]);
+			SetHeight(jTrapez["height"]);
+			SetFactor (jTrapez["factor"]);
+			GenerateTrapez (m_vTrapez);
+		}
     }
     catch (std::exception &exp) {
         jTrapez["error"] = exp.what();
