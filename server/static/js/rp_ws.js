@@ -661,10 +661,12 @@ function plotSignal (sample_signal){
     	var dataPulse = {x:xData, y:yPulses, name: "Debug"};
         data.push(dataPulse);
 	}
-	if (sample_signal.hasOwnProperty('filt_deriv')) {
-		if (sample_signal.filt_deriv.length > 0) {
-    		var dataDerive = {x:xData, y:sample_signal.filt_deriv, name: "Derivative"};
-    		data.push(dataDerive);
+	if (uploadCheckbox ('cboxDeriv')) {
+		if (sample_signal.hasOwnProperty('filt_deriv')) {
+			if (sample_signal.filt_deriv.length > 0) {
+    			var dataDerive = {x:xData, y:sample_signal.filt_deriv, name: "Derivative"};
+    			data.push(dataDerive);
+			}
 		}
 	}
 /*
