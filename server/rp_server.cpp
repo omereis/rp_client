@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <math.h>
 
 #include <mutex>
 #include <thread>
@@ -968,7 +969,6 @@ float VectorMax (const TFloatVec &v)
 void OnTimerTick ()
 {
     TDoubleVec vPulse, vFiltered;
-    //TFloatVec vPulse, vFiltered;
     TFloatVec::iterator i;
     TPulseInfoVec piVec;
     TPulseInfoVec::iterator iPulseInfo;
@@ -980,13 +980,12 @@ void OnTimerTick ()
 			nCount++;
 			if (nCount % 10 == 0)
 				g_rp_setup.CalculateBackground (vPulse);
-			//if (g_rp_setup.IsFilterOn())
 			FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
-            //SafeQueueAdd (vPulse, vFiltered);
 			if (GetPulseParams (pulse_filter, piVec))
 				pulse_filter.SetPulsesInfo (piVec);
 			SafeQueueAdd (pulse_filter);
-            //if (GetPulseParams (vPulse, piVec)) {
+			if (piVec.size() > 0)
+            	g_rp_setup.NewPulse (piVec);
 /*
 			if (GetPulseParams (pulse_filter, piVec)) {
 				pulse_filter.SetPulsesInfo (piVec);
@@ -1084,6 +1083,42 @@ bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iB
 
 //-----------------------------------------------------------------------------
 bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
+// calculate filtered height
+{
+	TDoubleVec::const_iterator i;
+	bool fInPulse=false;
+	double dMax;
+	size_t n;
+	TPulseIndex pi;
+	TPulseInfo pulse_info;
+
+	i = pulse_filter.GetFilteredBegin();
+	dMax = *i;
+	for (i=pulse_filter.GetFilteredBegin(), n=0 ; i != pulse_filter.GetFilteredEnd() ; i++, n++) {
+		if (fInPulse) {
+			dMax = min (*i, dMax);
+			if (*i > -0.02) { // pulse end
+				fInPulse = false;
+				pi.SetSteps (n - pi.GetStart());
+				pulse_info.SetMaxVal (dMax);
+				pulse_info.SetIndices (pi);
+				piVec.push_back (pulse_info);
+				pulse_info.Clear();
+				fInPulse = false;
+			}
+		}
+		else {
+			if (*i < -0.02) { // pulse start
+				dMax = fabs (*i);
+				pi.SetStart (n);
+				fInPulse = true;
+			}
+		}
+	}
+	return (piVec.size() > 0);
+}
+//-----------------------------------------------------------------------------
+bool GetPulseParams_from_source (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 {
 	TPulseIndexVec vIndices;
 	TPulseIndexVec::iterator iPulse;
