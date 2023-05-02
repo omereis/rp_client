@@ -673,8 +673,79 @@ function plotSignal (sample_signal){
 	//data.push(dataFiltered);
 	localStorage.setItem ("chart_debug", yPulses);
     var chart = document.getElementById("chartSignal");
+	saveDataToLocal (data);
     Plotly.newPlot(chart, data, GetSignalChartLayout(fIsMilli));
 }
+
+//-----------------------------------------------------------------------------	
+function saveDataToLocal (data) {
+	var n, strNames, item;
+
+	strNames = "";
+	for (n=0 ; n < data.length ; n++) {
+		strNames += data[n].name;
+		if (n < data.length - 1)
+			strNames += ",";
+		item = data[n];
+		localStorage.setItem (data[n].name, data[n].y);
+	}
+	localStorage.setItem("chart_names", strNames);
+	strNames += ""; // for breakpoint
+}
+
+//-----------------------------------------------------------------------------
+function onSaveFileDataClick() {
+	try {
+		var strNames = localStorage.getItem("chart_names");
+		var ay=[], y, astr = strNames.split(","), astrData=[];
+
+		for (var n=0 ; n < astr.length ; n++) {
+			y = localStorage.getItem(astr[n]);
+			ay[n] = y.split(',');
+			localStorage.removeItem(astr[n]);
+		}
+		for (n=0 ; n < ay[0].length ; n++) {
+			str = "";
+			for (y=0 ; y < ay.length ; y++) {
+				str += ay[y][n];
+				if (y < ay.length - 1)
+					str += ",";
+			}
+			astrData[n] = str + "\n";
+		}
+// source: https://code-boxx.com/create-save-files-javascript/
+
+		download("chart.csv", astrData.toString());
+		localStorage.removeItem("chart_names");
+	}
+    catch (exception) {
+        console.log(exception);
+	}
+	console.log(astr.length);
+	console.log(astrData.length);
+}
+
+//-----------------------------------------------------------------------------
+function download(filename, text) {
+// Source:
+// https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+	element.setAttribute('download', filename);
+  
+	element.style.display = 'none';
+	document.body.appendChild(element);
+  
+	element.click();
+  
+	document.body.removeChild(element);
+}
+
+//-----------------------------------------------------------------------------
+function createBlob(data) {
+  return new Blob([data], { type: "text/plain" });
+}
+
 //-----------------------------------------------------------------------------
 function plotKernal (vKernel) {
 	var div = document.getElementById ('chartKernel');
