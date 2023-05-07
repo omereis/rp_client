@@ -452,6 +452,81 @@ size_t SubVector (const TFloatVec &vSource, int nLength, TFloatVec &vSub)
 	return (vSub.size());
 }
 
+
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string>
+#include <fstream>
+
+//-----------------------------------------------------------------------------
+inline bool file_exists (const std::string& name)
+{
+	ifstream f(name.c_str());
+	return f.good();
+}
+
+//-----------------------------------------------------------------------------
+size_t ReadFile (const char szName[], TStringVec &astr)
+{
+	size_t nLen;
+
+	astr.clear();
+	try {
+		if (file_exists (szName)) {
+			FILE *file = fopen(szName, "r");
+			char *szLine = new char[2048];
+
+			while (fgets (szLine, 2048, file) != NULL)
+				astr.push_back (std::string(szLine));
+			delete szLine;
+			fclose (file);
+		}
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error in ReadFile:\n%s\n", exp.what());
+		nLen = 0;
+	}
+	return (nLen);
+}
+
+//-----------------------------------------------------------------------------
+void AddToCsv(const TDoubleVec &vec, const char szName[])
+{
+	TDoubleVec ::const_iterator iNum;
+	FILE *file;
+	TStringVec astr;
+	TStringVec::iterator iStr;
+	std::string str;
+	size_t n;
+
+	ReadFile (szName, astr);
+	try {
+		file = fopen(szName, "w");
+		iNum = vec.begin();
+		iStr = astr.begin();
+		for (n=0 ; n < max(astr.size(), vec.size()) ; n++) {
+			if (n < vec.size()) {
+				str = std::to_string(*iNum);
+				iNum++;
+			}
+			if (n < astr.size()) {
+				str += "," + *iStr;
+				iStr++;
+			}
+			if (str.find("\n") == string::npos)
+				str += "\n";
+			fprintf (file, "%s", str.c_str());
+		}
+		fclose (file);
+	}
+	catch (std::exception &exp) {
+		if (file != NULL)
+			fclose (file);
+		fprintf (stderr, "Runtime error in ReadFile:\n%s\n", exp.what());
+		astr.clear();
+	}
+}
+
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src)
