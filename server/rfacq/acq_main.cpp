@@ -31,7 +31,7 @@ int main(int argc, char **argv){
 
 	rp_AcqReset();
 
-	RfAquisition (buff);
+	RfAquisition (buff, buff_size);
 /*
         rp_AcqSetDecimation(RP_DEC_8);
         rp_AcqSetTriggerLevel(RP_T_CH_1, 0.5); //Trig level is set in Volts while in SCPI
