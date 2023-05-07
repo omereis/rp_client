@@ -648,6 +648,15 @@ function plotSignal (sample_signal){
     var data=[];
     data[0] = dataPulse;
 	if (uploadCheckbox ('cboxFiltered')) {
+		if (uploadCheckbox ('cboxNormFilt')) {
+			var dFiltMin = arrayMin (aFiltered);
+			var dDataMin = arrayMin (yData);
+			var n, dFactor;
+			dFactor = dDataMin / dFiltMin;
+			for (n=0 ; n < aFiltered.length ; n++)
+				aFiltered[n] *= dFactor;
+			//dMin = yData[0];
+		}
 		if (aFiltered.length > 0) {
     		var dataFiltered = {x:xData, y:aFiltered, name: "Filtered"};
     		data[1] = dataFiltered;
@@ -677,6 +686,24 @@ function plotSignal (sample_signal){
     var chart = document.getElementById("chartSignal");
 	saveDataToLocal (data);
     Plotly.newPlot(chart, data, GetSignalChartLayout(fIsMilli));
+}
+
+//-----------------------------------------------------------------------------	
+function arrayMin (arr) {
+	var n, dMin;
+
+	try {
+		dMin = arr[0];
+		for (n=1 ; n < arr.length ; n++)
+			if (dMin > arr[n])
+				dMin = arr[n];
+			//dMin = Math.min(arr[n]);
+	}
+    catch (exception) {
+		dMin = 0;
+        console.log(exception);
+	}
+	return (dMin);
 }
 
 //-----------------------------------------------------------------------------	
@@ -1227,7 +1254,7 @@ function onCardBufferClear () {
     var msg = new Object, msgSignal = new Object;
 	msgSignal['buffer'] = 'reset';
     msg['read_data'] = msgSignal;
-	sendMesssageThroughFlask(msg, setupReadSignal );
+	sendMesssageThroughFlask(msg, setupReadSignal);
 }
 
 //-----------------------------------------------------------------------------
