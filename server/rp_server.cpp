@@ -103,6 +103,7 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 Json::Value ReadMca ();
 //bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2));
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd);
+bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 //void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
 void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
@@ -458,8 +459,8 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 		fprintf (stderr, "length: i%g\nBuffer: %dx\n", dLen, nVectorPoints);
         while ((jSignal.size() < nVectorPoints) && (SafeQueueSize () > 0)) {
 			sPulse = SafeQueueExtract (vPulse, vFiltered, vKernel, vIndices);
-			PrintVector (vPulse, "p_debug.csv");
-			PrintVector (vFiltered, "f_debug.csv");
+			//PrintVector (vPulse, "p_debug.csv");
+			//PrintVector (vFiltered, "f_debug.csv");
 			if (sPulse > 0) {
 				for (it=vPulse.begin() ; (it != vPulse.end()) && (jSignal.size() < nVectorPoints) ; it++)
 					jSignal.append(*it);
@@ -875,7 +876,7 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		jStatus["psd"] = rp_setup.GetPsdOnOff ();
 		jResult["status"] = jStatus;
 		jResult["buffer"] = to_string(SafeQueueSize());//g_vRawSignal.size());
-		fprintf (stderr, "HandleSampling, Queue size: %ld\n", SafeQueueSize());
+		fprintf (stderr, "HandleSampling, Queue size: %d\n", SafeQueueSize());
     }
     catch (std::exception &exp) {
 		fprintf (stderr, "Runtime error in 'HandleSampling':\n%s\n", exp.what());
@@ -987,16 +988,16 @@ void OnTimerTick ()
 			if (piVec.size() > 0)
             	g_rp_setup.NewPulse (piVec);
 /*
-			if (GetPulseParams (pulse_filter, piVec)) {
-				pulse_filter.SetPulsesInfo (piVec);
-                for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
-                	g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
-            	g_rp_setup.NewPulse (piVec);
-            }
-*/
-        }
-    }
-}
+					if (GetPulseParams (pulse_filter, piVec)) {
+						pulse_filter.SetPulsesInfo (piVec);
+						for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
+							g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
+						g_rp_setup.NewPulse (piVec);
+					}
+		*/
+				}
+			}
+		}
 
 //-----------------------------------------------------------------------------
 bool IsF1GreaterThenF2 (float f1, float f2)
@@ -1026,10 +1027,10 @@ bool GetVectorMinMax (TFloatVec &vBuffer, double &dMin, double &dMax)
 			}
 		}
 	}
-    catch (std::exception &err) {
-        fprintf (stderr, "Runtime error in 'GetVectorMinMax ':\n%s\n", err.what());
-        fMinMax= false;
-    }
+	catch (std::exception &err) {
+		fprintf (stderr, "Runtime error in 'GetVectorMinMax ':\n%s\n", err.what());
+		fMinMax= false;
+	}
 	return (fMinMax);
 }
 
@@ -1140,6 +1141,7 @@ bool GetPulseParams_from_source (const TPulseFilter &pulse_filter, TPulseInfoVec
 		pi.SetIndices (*iPulse);
 		piVec.push_back (pi);
 	}
+	return (piVec.size() > 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1184,6 +1186,7 @@ bool GetPulseParams_no_filter (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
 		iEnd = iStart + iPulse->GetSteps();
 		AddPulse (iStart, iEnd, g_rp_setup.GetBackground(), piVec);
 	}
+	return (piVec.size() > 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1265,23 +1268,28 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
 }
 
 //-----------------------------------------------------------------------------
-
 bool GetNextPulse (TDoubleVec &vPulse)
 //bool GetNextPulse (TFloatVec &vPulse)
 {
     bool fPulse = false;
+	static int n;
 #ifdef  _RED_PITAYA_HW
     fPulse = ReadHardwareSamples (g_rp_setup, vPulse);
 	//PrintBool ("GetNextPulse:616", fPulse);
 #else
     fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
 #endif
+	if (n < 10) {
+		n++;
+		AddToCsv(vPulse, "hardware.csv");
+	}
     return (fPulse);
 }
 
 //-----------------------------------------------------------------------------
 #ifdef  _RED_PITAYA_HW
-bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
+bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse)
+//bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
 {
     uint32_t buff_size = 16384;
     float *buff = (float *)malloc(buff_size * sizeof(float));
@@ -1332,7 +1340,8 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
     if (fTrigger) {
 	    uint32_t uiTriggerPos, uiLen=buff_size, n;
 		int64_t time_ns;
-        TFloatVec::iterator i;
+        TDoubleVec::iterator i;
+        //TFloatVec::iterator i;
 	    rp_AcqGetWritePointerAtTrig (&uiTriggerPos);
 	    //rp_AcqGetDataV (RP_CH_1, uiTriggerPos, &uiLen, buff);
 	    //rp_AcqGetDataV (RP_CH_1, uiTriggerPos - 100, &uiLen, buff);
@@ -1340,7 +1349,7 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse)
 	    //rp_AcqGetDataRaw (RP_CH_1, uiTriggerPos, &uiLen, auiBuffer);
         vPulse.resize (buff_size, 0);
         for (n=0, i=vPulse.begin() ; n < (int) buff_size ; n++, i++) //{
-			*i = buff[n];
+			*i = (double) buff[n];
 			//*i = auiBuffer[n];
     }
     else
