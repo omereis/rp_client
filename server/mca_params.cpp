@@ -185,8 +185,8 @@ int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
     }
     else
         idx = -1;
-    return (idx);
 */
+    return (idx);
 }
 
 /*
