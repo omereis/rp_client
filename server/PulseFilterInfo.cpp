@@ -258,3 +258,21 @@ TDoubleVec::const_iterator TPulseFilter::GetFilteredEnd() const
 	return (iEnd);
 	//return (m_vFiltered.end());
 }
+
+//-------------------------------------------
+TDoubleVec::const_iterator TPulseFilter::GetPulseBegin() const
+{
+	return (m_vPulse.begin());
+}
+
+//-------------------------------------------
+TDoubleVec::const_iterator TPulseFilter::GetPulseEnd() const
+{
+	return (m_vPulse.end());
+}
+
+//-------------------------------------------
+size_t TPulseFilter::GetFilteredSize() const
+{
+	return (m_vFiltered.size());
+}
