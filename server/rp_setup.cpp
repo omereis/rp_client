@@ -57,7 +57,9 @@ void TRedPitayaSetup::Clear ()
     SetPackageSize (g_nDefaultPackageSize);
     SetPreTriggerNs (100);
 	SetMcaTimeLimit (0);
+	m_remote_proc.Clear();
 }
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
 {
@@ -72,6 +74,7 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetPackageSize (other.GetPackageSize());
     SetPreTriggerNs (other.GetPreTriggerNs());
 	SetMcaTimeLimit (other.GetMcaTimeLimit ());
+	m_remote_proc = TRemoteProcessing (other.m_remote_proc);
 }
 //-----------------------------------------------------------------------------
 TRedPitayaTrigger TRedPitayaSetup::GetTrigger() const
@@ -176,6 +179,7 @@ Json::Value TRedPitayaSetup::AsJson()
     jSetup["package_size"] = to_string (GetPackageSize());
 	jSetup["pre_trigger_ns"] = PreTriggerAsString (GetPreTriggerNs());// to_string (GetPreTriggerNs());
 	jSetup["trapez"] = m_trapez.AsJson();
+	jSetup["remote_processing"] = m_remote_proc.AsJson();
     return (jSetup);
 }
 
@@ -183,6 +187,7 @@ Json::Value TRedPitayaSetup::AsJson()
 Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHardware)
 {
     Json::Value jNewSetup;
+	string str;
 
     try {
 		std::string str = StringifyJson (jSetup);
@@ -190,6 +195,13 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
         jNewSetup["trigger"] = m_trigger.UpdateFromJson(jSetup["trigger"]);
         jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
 		jNewSetup["trapez"] = m_trapez.LoadFromJson (jSetup["trapez"]);
+
+		str = StringifyJson (jSetup);
+		str = StringifyJson (jSetup["remote_processing"]);
+		jNewSetup["remote_processing"] = m_remote_proc.LoadFromJson(jSetup["remote_processing"]);
+		jNewSetup["remote_processing"] = 
+		str = StringifyJson (m_remote_proc.AsJson());
+
 		if (!jSetup["background"].isNull()) {
 			std::string strBkgnd = jSetup["background"].asString();
 			double d = stod (strBkgnd);
@@ -635,6 +647,24 @@ chrono_clock TRedPitayaSetup::SetMcaStartTime ()
 bool TRedPitayaSetup::IsFilterOn() const
 {
 	return (m_trapez.GetOnOff());
+}
+
+//-----------------------------------------------------------------------------
+TRemoteProcessing TRedPitayaSetup::GetRemoteProc() const
+{
+	return (m_remote_proc);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::GetRemoteProc(const TRemoteProcessing &remote_proc)
+{
+	m_remote_proc.AssignAll(remote_proc);
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::IsRemoteProcessingOn() const
+{
+	return (m_remote_proc.GetOnOff ());
 }
 
 //-----------------------------------------------------------------------------

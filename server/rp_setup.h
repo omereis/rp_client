@@ -19,6 +19,7 @@
 using namespace std;
 
 #include "TrpzInfo.h"
+#include "remote_proc.h"
 //-----------------------------------------------------------------------------
 
 class TRedPitayaSetup {
@@ -109,6 +110,9 @@ public:
 	void ResetMcaStartTime ();
 	chrono_clock GetMcaStartTime() const;
 	chrono_clock SetMcaStartTime ();
+	TRemoteProcessing GetRemoteProc() const;
+	void GetRemoteProc(const TRemoteProcessing &remote_proc);
+    bool IsRemoteProcessingOn() const;
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
@@ -126,6 +130,7 @@ private:
     float m_fPreTriggerNs;
 	chrono_clock m_crnMcaStart;
 	double m_dMcaTimeLimit;
+	TRemoteProcessing m_remote_proc;
 };
 //-----------------------------------------------------------------------------
 #endif
