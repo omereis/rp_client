@@ -27,6 +27,7 @@ function onUpdateRedPitayaSetupClick() {
 	msgCmd['package_size'] = uploadPackageSize();
     msgCmd['pre_trigger_ns'] = uploadPreTrigger();
 	msgCmd['trapez'] = uploadTrapezParams();
+	msgCmd['remote_processing'] = uploadRemoteProcessing();
     msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
@@ -138,6 +139,8 @@ function setupHandler (reply) {
             downloadTrapez(dictSetup.trapez);
 		if (dictSetup.hasOwnProperty('version'))
             downloadVersion(dictSetup.version);
+		if (dictSetup.hasOwnProperty('remote_processing'))
+            downloadRemoteProceesing(dictSetup.remote_processing);
     }
     catch (err) {
         console.log(err);
@@ -1782,4 +1785,54 @@ function downloadRealValue (idTxt, dValue) {
 //-----------------------------------------------------------------------------
 function uploadKernelCheckbox() {
     return (uploadCheckBox ("cboxKernel"));
+}
+
+//-----------------------------------------------------------------------------
+function uploadText (idTxtBox) {
+	var txt="";
+	var txtbx = document.getElementById(idTxtBox);
+	if (txtbx != null)
+		txt = txtbx.value;
+	return (txt);
+}
+
+//-----------------------------------------------------------------------------
+function uploadTextAsInt (idTxtBox) {
+	var nValue=0;
+	var txtbx = document.getElementById(idTxtBox);
+	if (txtbx != null) {
+		var txt = txtbx.value;
+		nValue = parseInt (txtbx);
+	}
+	return (txt);
+}
+
+//-----------------------------------------------------------------------------
+function uploadRemoteProcessing() {
+    var msg=new Object;
+	var host="", port="";
+
+	var f = uploadCheckBox ("cboxRemoteHost");
+	msg['remote_on_off'] = f;
+	if (f) {
+		host = uploadText ('txtRemoteHost');
+		port = uploadTextAsInt ('txtRemotePort');
+	}
+	msg['remote_host'] = host;
+	msg['remote_port'] = port;
+	return (msg);
+}
+
+//-----------------------------------------------------------------------------
+function downloadRemoteProceesing(dictRemoteProc) {
+	try {
+		var id = document.getElementById ('cboxRemoteHost');
+		if (id != null)
+			id.checked = dictRemoteProc.remote_on_off;//, "cboxStartSignal");
+        donwloadText ('txtRemoteHost', dictRemoteProc.remote_host);
+        donwloadText ('txtRemotePort', dictRemoteProc.remote_port);
+	}
+    catch (exception) {
+        console.log(exception);
+    }
 }
