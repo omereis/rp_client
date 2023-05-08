@@ -113,6 +113,7 @@ size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices);
 Json::Value GetPulsesInSignal (const TFloatVec &vSignal);
 void GetAppDateTime (char *szFileName);
 void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff);
+void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter);
 
 //-----------------------------------------------------------------------------
 std::string ret_str()
@@ -984,6 +985,8 @@ void OnTimerTick ()
 			FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
 			if (GetPulseParams (pulse_filter, piVec))
 				pulse_filter.SetPulsesInfo (piVec);
+			if (g_rp_setup.IsRemoteProcessingOn())
+				RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
 			SafeQueueAdd (pulse_filter);
 			if (piVec.size() > 0)
             	g_rp_setup.NewPulse (piVec);
@@ -1469,4 +1472,44 @@ void GetAppDateTime (char *szFileName)
 	stat (szFileName, &t_stat);
 	struct tm *timeinfo = localtime (&t_stat.st_ctime);
 	g_strAppDate = asctime (timeinfo);
+}
+
+//-----------------------------------------------------------------------------
+Json::Value GetVectorAsJson (TDoubleVec::const_iterator iStart, TDoubleVec::const_iterator iEnd)
+{
+	Json::Value jVec;
+	TDoubleVec::const_iterator i;
+
+	for (i=iStart ; i != iEnd ; i++)
+		jVec.append (*i);
+	return (jVec);
+}
+//-----------------------------------------------------------------------------
+void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter)
+{
+    int n, nPort;
+    void *context = zmq_ctx_new ();
+    void *socket;
+	char szRemoteAddress[256], szHost[100], szBuff[1024];
+	Json::Value j;
+
+	socket = zmq_socket (context, ZMQ_REQ);
+	sprintf (szRemoteAddress, "tcp://%s:%d", remote_processing.GetHost().c_str(), remote_processing.GetPort());
+	int nConnect = zmq_connect(socket, szRemoteAddress);
+	j["pulse"] = GetVectorAsJson (pulse_filter.GetPulseBegin(), pulse_filter.GetPulseEnd());
+    if (pulse_filter.GetFilteredSize() > 0)
+		j["filtered"] = GetVectorAsJson (pulse_filter.GetFilteredBegin(), pulse_filter.GetFilteredEnd());
+	string str = StringifyJson (j);
+	str = trimString (str);
+	nConnect = zmq_send (socket, str.c_str(), str.length(), 0);
+	printf ("\n%d Sent bytes\n", nConnect);
+
+	nConnect = zmq_recv (socket, szBuff, 0, ZMQ_NOBLOCK);
+	if (nConnect == EAGAIN)
+		fprintf (stderr, "No response\n");
+	else
+		fprintf (stderr, "%s\n", szBuff);
+	zmq_close (socket);
+	zmq_ctx_destroy(context);
+
 }
