@@ -391,6 +391,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 		}
 		if (fReset) {
 			SafeQueueClear ();
+			rp_setup.ClearMca();
 		}
 		else {
 			if (jRead["signal"].isNull() == false) {
@@ -877,6 +878,7 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		jStatus["psd"] = rp_setup.GetPsdOnOff ();
 		jResult["status"] = jStatus;
 		jResult["buffer"] = to_string(SafeQueueSize());//g_vRawSignal.size());
+		jResult["mca_buffer"] = to_string(rp_setup.GetMcaCount());//g_vRawSignal.size());
 		fprintf (stderr, "HandleSampling, Queue size: %d\n", SafeQueueSize());
     }
     catch (std::exception &exp) {
@@ -1091,17 +1093,29 @@ bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 {
 	TDoubleVec::const_iterator i;
 	bool fInPulse=false;
-	double dMax;
-	size_t n;
+	double dMax, dAvg;
+	size_t n, nAvg;
 	TPulseIndex pi;
 	TPulseInfo pulse_info;
 
 	i = pulse_filter.GetFilteredBegin();
+	for (n=0 ; n < g_rp_setup.GetTrapezSize() ; n++)
+		i++;
+	dAvg = 0;
+	nAvg = 0;
+	while (n < (int) (0.9 * g_rp_setup.GetPreTriggerNs())) {
+		dAvg += *i;
+		nAvg++;
+		i++;
+		n++;
+	}
+	dAvg /= nAvg;
+	printf ("Pre trigger average: %g\n", dAvg);
 	dMax = *i;
 	for (i=pulse_filter.GetFilteredBegin(), n=0 ; i != pulse_filter.GetFilteredEnd() ; i++, n++) {
 		if (fInPulse) {
 			dMax = min (*i, dMax);
-			if (*i > -0.02) { // pulse end
+			if (*i > dAvg -0.02) { // pulse end
 				fInPulse = false;
 				pi.SetSteps (n - pi.GetStart());
 				pulse_info.SetMaxVal (dMax);
@@ -1112,7 +1126,7 @@ bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 			}
 		}
 		else {
-			if (*i < -0.02) { // pulse start
+			if (*i < dAvg - 0.02) { // pulse start
 				dMax = fabs (*i);
 				pi.SetStart (n);
 				fInPulse = true;
@@ -1282,10 +1296,12 @@ bool GetNextPulse (TDoubleVec &vPulse)
 #else
     fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
 #endif
+/*
 	if (n < 10) {
 		n++;
 		AddToCsv(vPulse, "hardware.csv");
 	}
+*/
     return (fPulse);
 }
 
@@ -1484,32 +1500,60 @@ Json::Value GetVectorAsJson (TDoubleVec::const_iterator iStart, TDoubleVec::cons
 		jVec.append (*i);
 	return (jVec);
 }
+
+void *g_socket;
+bool g_fRecv;
+//-----------------------------------------------------------------------------
+void WaitForRecv ()
+{
+	g_fRecv = false;
+	char szBuff[1024];
+	int nConnect = zmq_recv (g_socket, szBuff, 0, ZMQ_NOBLOCK);
+	fprintf (stderr, "%d bytes recieved:\n%s\n", nConnect, szBuff);
+	g_fRecv = true;
+}
+
 //-----------------------------------------------------------------------------
 void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter)
 {
     int n, nPort;
     void *context = zmq_ctx_new ();
-    void *socket;
+    //void *socket;
 	char szRemoteAddress[256], szHost[100], szBuff[1024];
 	Json::Value j;
+    Timer t;
 
-	socket = zmq_socket (context, ZMQ_REQ);
+	//socket = zmq_socket (context, ZMQ_REQ);
+	g_socket = zmq_socket (context, ZMQ_REQ);
 	sprintf (szRemoteAddress, "tcp://%s:%d", remote_processing.GetHost().c_str(), remote_processing.GetPort());
-	int nConnect = zmq_connect(socket, szRemoteAddress);
+	//int nConnect = zmq_connect(socket, szRemoteAddress);
+	int nConnect = zmq_connect(g_socket, szRemoteAddress);
 	j["pulse"] = GetVectorAsJson (pulse_filter.GetPulseBegin(), pulse_filter.GetPulseEnd());
     if (pulse_filter.GetFilteredSize() > 0)
 		j["filtered"] = GetVectorAsJson (pulse_filter.GetFilteredBegin(), pulse_filter.GetFilteredEnd());
 	string str = StringifyJson (j);
 	str = trimString (str);
-	nConnect = zmq_send (socket, str.c_str(), str.length(), 0);
-	printf ("\n%d Sent bytes\n", nConnect);
+	//nConnect = zmq_send (socket, str.c_str(), str.length(), 0);
+	nConnect = zmq_send (g_socket, str.c_str(), str.length(), 0);
+	//printf ("\n%d Sent bytes\n", nConnect);
 
-	nConnect = zmq_recv (socket, szBuff, 0, ZMQ_NOBLOCK);
+	t.setInterval (WaitForRecv, 1000);
+	usleep(1000);
+	//nConnect = zmq_recv (socket, szBuff, 0, ZMQ_NOBLOCK);
+/*
 	if (nConnect == EAGAIN)
 		fprintf (stderr, "No response\n");
 	else
 		fprintf (stderr, "%s\n", szBuff);
-	zmq_close (socket);
+*/
+	//zmq_close (socket);
+	zmq_close (g_socket);
 	zmq_ctx_destroy(context);
+/*
+	if (g_fRecv)
+		printf ("Message recieved\n");
+	else
+		printf ("Message NOT recieved\n");
+*/
 
 }
