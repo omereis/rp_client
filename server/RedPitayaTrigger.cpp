@@ -318,6 +318,7 @@ Json::Value TRedPitayaTrigger::AsJson()
     jTrigger["enabled"] = GetTrigger(); // on/off
     //jTrigger["trigger"] = GetTrigger(); // on/off
     jTrigger["now"] = GetNow();
+    jTrigger["type"] = GetType();
     return(jTrigger);
 }
 
