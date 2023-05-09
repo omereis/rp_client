@@ -555,8 +555,8 @@ function setupReadSignal (reply) {
 			aFiltered = samples.pulses.signal.filtered;
         if (samples.pulses.hasOwnProperty('buffer_length'))
 			downloadBufferLength(samples.pulses.buffer_length);
-        if (samples.pulses.hasOwnProperty('mca_length'))
-			downloadMcaLength(samples.pulses.mca_length);
+        //if (samples.pulses.hasOwnProperty('mca_length'))
+			//downloadMcaLength(samples.pulses.mca_length);
         if (samples.pulses.hasOwnProperty('background'))
 			downloadBackground (samples.pulses.background);
 			//downloadMeasuredBackground(samples.background);
@@ -895,6 +895,8 @@ function readSamplingStatus (reply) {
 		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
 		if (jReply.sampling.hasOwnProperty('buffer'))
 			downloadBufferLength(jReply.sampling.buffer);
+		if (jReply.sampling.hasOwnProperty('mca_buffer'))
+			downloadMcaLength(jReply.sampling.mca_buffer);
         var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
@@ -1187,6 +1189,7 @@ function downloadTrigger(dictTriggerSetup) {
         downloadTriggerSrc (dictTriggerSetup.src);
 		downloadTriggerOnOff (dictTriggerSetup.enabled);
 		downloadTriggerNow (dictTriggerSetup.now);
+		downloadTriggerType (dictTriggerSetup.type);
 		//enableItemsByTrigger(dictTriggerSetup.enabled);
 	}
 	catch (exception) {
@@ -1204,6 +1207,37 @@ function onTriggerNowClick () {
     sendMesssageThroughFlask(msg, setupHandler);
 */
 }
+
+//-----------------------------------------------------------------------------
+function findComboItem (txtValue, txtCombo) {
+	var n, nFound=-1, txtItem;
+	txtValue = txtValue.toLowerCase();
+	var combo = document.getElementById (txtCombo);
+	if (combo != null) {
+		n = 0;
+		while (nFound < 0) {
+			txtItem = combo.item(n);
+			if (txtItem == null)
+				break;
+			else {
+				txtItem = txtItem.value.toLowerCase();
+				if (txtItem == txtValue)
+					nFound = n;
+			}
+			n++;
+		}
+	}
+	return (nFound);
+}
+
+//-----------------------------------------------------------------------------
+function downloadTriggerType (txtType) {
+	var combo = document.getElementById ('comboTriggerType');
+	var idx = findComboItem (txtType, 'comboTriggerType');
+	if (idx >= 0)
+		combo.selectedIndex = idx;
+}
+
 //-----------------------------------------------------------------------------
 function sendBackgroundCommand(bkgnd_cmd) {
     var msg = new Object, msgCmd = new Object;
