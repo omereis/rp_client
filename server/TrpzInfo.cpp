@@ -214,4 +214,10 @@ void TTRapezInfo::SetOnOff (Json::Value &jOnOff)
     }
     SetOnOff (fOnOff);
 }
+	
+//-----------------------------------------------------------------------------
+size_t TTRapezInfo::GetTrapezSize() const
+{
+    return (m_vTrapez.size());
+}
 //-----------------------------------------------------------------------------

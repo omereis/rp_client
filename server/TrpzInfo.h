@@ -41,6 +41,8 @@ public:
     bool GetOnOff () const;
     void SetOnOff (bool fOnOff);
     void SetOnOff (Json::Value &jOnOff);
+
+	size_t GetTrapezSize() const;
 protected:
     void AssignAll (const TTRapezInfo &other);
 private:
