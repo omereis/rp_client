@@ -235,6 +235,12 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 }
 
 //-----------------------------------------------------------------------------
+size_t TRedPitayaSetup::GetTrapezSize() const
+{
+	return (m_trapez.GetTrapezSize());
+}
+
+//-----------------------------------------------------------------------------
 TDoubleVec TRedPitayaSetup::GetTrapez() const
 {
 	TDoubleVec vTrapez;
@@ -665,6 +671,18 @@ void TRedPitayaSetup::GetRemoteProc(const TRemoteProcessing &remote_proc)
 bool TRedPitayaSetup::IsRemoteProcessingOn() const
 {
 	return (m_remote_proc.GetOnOff ());
+}
+
+//-----------------------------------------------------------------------------
+size_t TRedPitayaSetup::GetMcaCount() const
+{
+    return (m_mca_params.GetCount());
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::ClearMca()
+{
+	m_mca_params.ClearMca ();
 }
 
 //-----------------------------------------------------------------------------

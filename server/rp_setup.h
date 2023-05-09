@@ -59,6 +59,7 @@ public:
     bool LoadFromJson(const string &strFile);
     bool IsFilterOn() const;
 	TDoubleVec GetTrapez() const;
+	size_t GetTrapezSize() const;
 	Json::Value GetTrapezAsJson();
     bool SaveToJson (const std::string &strFile);
     Json::Value AsJson();
@@ -113,6 +114,8 @@ public:
 	TRemoteProcessing GetRemoteProc() const;
 	void GetRemoteProc(const TRemoteProcessing &remote_proc);
     bool IsRemoteProcessingOn() const;
+	size_t GetMcaCount() const;
+	void ClearMca();
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
