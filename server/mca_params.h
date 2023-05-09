@@ -40,6 +40,11 @@ public:
     void SetMaxVoltage (double dMaxVoltage);
 	void SetSpectrum (const TFloatVec &vSpectrum);
 	size_t GetSpectrum (TFloatVec &vSpectrum);
+
+	size_t GetCount() const;
+	void SetCount (size_t n);
+
+	void ClearMca ();
 protected:
     void AssignAll (const TMcaParams &other);
 private:
@@ -48,6 +53,7 @@ private:
     double m_dMaxVoltage;
 	TFloatVec m_vSpectrum;
 	TPulseInfoVec m_vPulses;
+	size_t m_nCount;
 };
 //-----------------------------------------------------------------------------
 #endif

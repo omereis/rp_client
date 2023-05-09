@@ -43,6 +43,7 @@ void TMcaParams::Clear ()
 	SetMinVoltage (0.0);
 	SetMaxVoltage (5.0);
 	m_vPulses.clear();
+	SetCount (0);
 }
 //-----------------------------------------------------------------------------
 void TMcaParams::AssignAll (const TMcaParams &other)
@@ -51,6 +52,7 @@ void TMcaParams::AssignAll (const TMcaParams &other)
     SetMinVoltage (other.GetMinVoltage ());
     SetMaxVoltage (other.GetMaxVoltage ());
 	m_vPulses = other.m_vPulses;
+	SetCount (other.GetCount());
 
 }
 //-----------------------------------------------------------------------------
@@ -97,6 +99,7 @@ void TMcaParams::SetMaxVoltage (double dMaxVoltage)
 void TMcaParams::ResetSpectrum ()
 {
 	m_vSpectrum.resize (m_vSpectrum.size(), 0);
+	SetCount (0);
 	m_vPulses.clear();
 }
 
@@ -244,14 +247,17 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 {
 	TFloatVec vPulse;
 	TFloatVec::const_iterator i;
-
+	int idx;
 	
 	m_vPulses.push_back (pulse_info);
+	SetCount (GetCount() + 1);
     if (m_vSpectrum.size() == 0)
         SetSpectrum (GetChannels());
         //ResetSpectrum (m_params.GetChannels());
-    int idx = HeightIndex (pulse_info.GetBackground(), pulse_info.GetMinVal ());
+    //int idx = HeightIndex (pulse_info.GetBackground(), pulse_info.GetMinVal ());
     //int idx = HeightIndex (0, pulse_info.GetMaxVal ());
+	double dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal ()) * fabs((GetMaxVoltage() - GetMinVoltage()));
+	idx = (int) (dIndex + 0.5);
     if (idx >= 0) {
 		if (idx >= m_vSpectrum.size())  {
 			idx = m_vSpectrum.size() - 1;
@@ -270,6 +276,29 @@ void TMcaParams::NewPulse (const TPulseInfoVec &vPulsesInfo)
 
 	for (i=vPulsesInfo.begin() ; i != vPulsesInfo.end() ; i++)
 		NewPulse (*i);
+}
+
+//-----------------------------------------------------------------------------
+size_t TMcaParams::GetCount() const
+{
+	return (m_nCount);
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetCount (size_t n)
+{
+	m_nCount = n;
+}
+
+
+//-----------------------------------------------------------------------------
+void TMcaParams::ClearMca ()
+{
+	TFloatVec::iterator i;
+
+	SetCount (0);
+	for (i=m_vSpectrum.begin() ; i != m_vSpectrum.end() ; i++)
+		*i = 0;
 }
 
 //-----------------------------------------------------------------------------
