@@ -256,7 +256,7 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
         //ResetSpectrum (m_params.GetChannels());
     //int idx = HeightIndex (pulse_info.GetBackground(), pulse_info.GetMinVal ());
     //int idx = HeightIndex (0, pulse_info.GetMaxVal ());
-	double dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal ()) * fabs((GetMaxVoltage() - GetMinVoltage()));
+	double dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal ()) / fabs((GetMaxVoltage() - GetMinVoltage()));
 	idx = (int) (dIndex + 0.5);
     if (idx >= 0) {
 		if (idx >= m_vSpectrum.size())  {
@@ -264,6 +264,10 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 		}
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
+		if ((GetCount() % 100) == 0) {
+			//printf ("%d MCA items, %g - %g, Max Value: %g, index: %d\n", GetCount(), GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx);
+			printf ("%g,%g, %g, %d,%d\r", GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
+		}
 	}
 	//fclose (file);
 	//fclose (filePulse);
