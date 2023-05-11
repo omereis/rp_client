@@ -762,8 +762,11 @@ void SafeQueueAdd (const TPulseFilter &pulse_filter)
 
     mtx.lock ();
 	g_qFilteredPulses.push(pulse_filter);
-    while (g_qFilteredPulses.size() > 1000)
+    while (g_qFilteredPulses.size() > 500) {
+    //while (g_qFilteredPulses.size() > 1000)
         g_qFilteredPulses.pop();
+		printf ("Queue size() :%d\r", g_qFilteredPulses.size());
+	}
     mtx.unlock ();
 }
 
@@ -840,6 +843,9 @@ bool str_to_bool (const std::string &sSource)
 		f = true;
 	return (f);
 }
+
+clock_t g_cStart;
+
 //-----------------------------------------------------------------------------
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun)
 {
@@ -854,6 +860,8 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		//fprintf (stderr, "HandleSampling, JSON='%s'\n", strResult.c_str());
 		if (!jSampling["signal"].isNull()) {
 			bool fOnOff = jSampling["signal"].asBool();
+			if ((fOnOff) && (rp_setup.GetSamplingOnOff () == false))
+				g_cStart = clock();
 			//fprintf (stderr, "HandleSampling, 385\n");
 			//fprintf (stderr, "signal command: %d\n", jSampling.asBool());
 			//bool fSignal = str_to_bool (ToLower (jSampling["signal"].asString()));
@@ -990,8 +998,10 @@ void OnTimerTick ()
 			if (g_rp_setup.IsRemoteProcessingOn())
 				RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
 			SafeQueueAdd (pulse_filter);
-			if (piVec.size() > 0)
+			if (piVec.size() > 0) {
+				//printf ("Found %d pulses\n", piVec.size());
             	g_rp_setup.NewPulse (piVec);
+			}
 /*
 					if (GetPulseParams (pulse_filter, piVec)) {
 						pulse_filter.SetPulsesInfo (piVec);
@@ -1110,7 +1120,7 @@ bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 		n++;
 	}
 	dAvg /= nAvg;
-	printf ("Pre trigger average: %g\n", dAvg);
+	//printf ("Pre trigger average: %g\n", dAvg);
 	dMax = *i;
 	for (i=pulse_filter.GetFilteredBegin(), n=0 ; i != pulse_filter.GetFilteredEnd() ; i++, n++) {
 		if (fInPulse) {
@@ -1291,8 +1301,16 @@ bool GetNextPulse (TDoubleVec &vPulse)
     bool fPulse = false;
 	static int n;
 #ifdef  _RED_PITAYA_HW
+	clock_t c = clock();
+	double d = (c - g_cStart) / CLOCKS_PER_SEC;
+	static double dLast;
+	if (d != dLast) {
+		dLast = d;
+		if ((((int) dLast) % 5) == 0)
+			printf ("%g\n", dLast);
+	}
     fPulse = ReadHardwareSamples (g_rp_setup, vPulse);
-	//PrintBool ("GetNextPulse:616", fPulse);
+    //fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
 #else
     fPulse = ReadVectorFromFile ("pulse.csv", vPulse);
 #endif
@@ -1344,11 +1362,12 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse)
 	while((fTrigger == false) && (fTimeout == false)){
 		//fprintf (stderr, "debug: %d\n", nDebug);
 		nDebug++;
+		usleep(1);
 		rp_AcqGetTriggerState(&state);
 		if (state == RP_TRIG_STATE_TRIGGERED)//{
-			fTrigger =true;
-		else
-			fprintf (stderr, "No Trigger\r");
+			fTrigger = true;
+		//else
+			//fprintf (stderr, "No Trigger\r");
 		dDiff = (clock() - cStart);
 		dDiff /= (double) CLOCKS_PER_SEC;
 		//fprintf (stderr, "fDiff = %g\n", dDiff);
