@@ -98,17 +98,19 @@ string ToLower (const std::string &str)
 bool ReadVectorFromFile (const std::string &strFile, TDoubleVec &vData)
 {
 	bool fRead;
+	FILE *file = NULL;
 
 	try {
 		vData.clear();
 		char *szLine, szBuf[1024];
-		FILE *file = fopen (strFile.c_str(), "r");
+		file = fopen (strFile.c_str(), "r");
 		if (file != NULL) {
 			while ((szLine = fgets(szBuf, 1024, file)) != NULL) {
 				float r = (float) atof (szLine);
 				vData.push_back (r);
 			}
 			fRead = true;
+			fclose (file);
 		}
 		else {
 			fprintf (stderr, "Could not open file %s\n", strFile.c_str());
@@ -137,6 +139,7 @@ bool ReadVectorFromFile (const std::string &strFile, TFloatVec &vData)
 				vData.push_back (r);
 			}
 			fRead = true;
+			fclose (file);
 		}
 		else {
 			fprintf (stderr, "Could not open file %s\n", strFile.c_str());
