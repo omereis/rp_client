@@ -527,7 +527,37 @@ function sendSamplingCommand (cmd) {
     var msgSignal = new Object;
     msgSignal['signal'] = cmd;
     msg['sampling'] = cmd;
+	
+	if (cmd.signal) {
+		var hUpdate = localStorage.getItem ("update_handle");
+		if (hUpdate == null) {
+			var timeStart = new Date();
+			timeStart = timeStart.getTime();
+			localStorage.setItem ("start_time", timeStart);
+			var hUpdate = setInterval (updateOnTime, 1000);
+			localStorage.setItem ("update_handle", hUpdate);
+		}
+		//txt.value = timeStart;
+	}
+	else {
+		var hUpdate = localStorage.getItem ("update_handle");
+		if (hUpdate != null)
+			clearInterval (hUpdate);
+		localStorage.removeItem ("update_handle");
+
+	}
     sendMesssageThroughFlask(msg, readSamplingStatus);
+}
+
+//-----------------------------------------------------------------------------
+function updateOnTime () {
+	var tStart = localStorage.getItem ("start_time");
+	if (tStart != null) {
+		var tNow = new Date();
+		var tDiff = (tNow.getTime() - tStart) / 1000;
+		var txt = document.getElementById ("txtOnTime");
+		txt.value = tDiff;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1087,11 +1117,23 @@ function donwloadText (txtId, val) {
 function plotMca (aMca) {
 	try {
     	var xData=[], yData=[]
+		var dMax, nMax;
 
         for (var n=0 ; n < aMca.length ; n++) {
+			if (n == 0) {
+				nMax = n;
+				dMax = aMca[n];
+			}
+			else {
+				if (dMax < aMca[n]) {
+					nMax = n;
+					dMax = aMca[n];
+				}
+			}
             xData[n] = n + 1;
             yData[n] = aMca[n];
         }
+		console.log ('Maximum: ' + dMax + ', @index ' + nMax);
         var dataMca = {x:xData, y:yData, type: 'bar'};
 	    var layout = {};
         var data=[];
