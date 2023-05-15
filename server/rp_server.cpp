@@ -91,7 +91,8 @@ void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
 //size_t ReadSignal (double dLen, TFloatVec &vSignal);
-Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug);
+Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, double dLen, bool fDebug);
+//Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug);
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug);
 bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec);
 //bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
@@ -192,19 +193,19 @@ bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strRepl
     	TFloatVec vSignal;
 
 		if (reader.parse (strJson, root)) {
-			fprintf (stderr, "Message Parsed\n");
+			//fprintf (stderr, "Message Parsed\n");
 			fMessageRecieved = true;
 			jReply.clear();
 			strReply  = "";
 			if (!root["setup"].isNull()) {
 				string s = StringifyJson (root["setup"]);
-				printf ("Setup: %s\n", s.c_str());
+				//printf ("Setup: %s\n", s.c_str());
 				jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
 			}
 			if (!root[g_szReadData].isNull())
 				jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal);
 			if (!root[g_szSampling].isNull()) {
-				fprintf (stderr, "Reading sampling\n");
+				//fprintf (stderr, "Reading sampling\n");
 				jReply[g_szSampling] = HandleSampling(root[g_szSampling], g_rp_setup, fRun);
 			}
 			if (!root[g_szMCA].isNull())
@@ -297,9 +298,9 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 		fUpdateHardware = true;
 #endif
 		std::string strSetup = StringifyJson (jSetup);
-		fprintf (stderr, "Setup Message: %s\n", strSetup.c_str());
+		//fprintf (stderr, "Setup Message: %s\n", strSetup.c_str());
         strCommand = ToLower(jSetup["command"].asString());
-		fprintf (stderr, "Command: %s\n", strCommand.c_str());
+		//fprintf (stderr, "Command: %s\n", strCommand.c_str());
 		Json::Value jBkgnd = jSetup["background"];
 		if (strCommand == "update") {
 #ifdef	_RED_PITAYA_HW
@@ -361,7 +362,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
         jNew = rp_setup.AsJson();
         jNew["error"] = err.what();
     }
-	strReply = StringifyJson (jNew);
+	//strReply = StringifyJson (jNew);
 	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
 	//fprintf (stderr, "Setup:\n%s\n", strReply.c_str());
 	//fprintf (stderr, "\n+++++++++++++++++++++++++++\n");
@@ -375,7 +376,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 	mutex mtx;
     std::string strReply, strNumber, strPulses, strPulse;
     char szNum[128];
-    Json::Value jAllPulses, jPulse(Json::arrayValue), jPulseData(Json::arrayValue);
+    Json::Value jAllPulses, jPulse(Json::arrayValue), jPulseData(Json::arrayValue), jSignal;
     int n, nPulses, j;
 	bool fReset = false;
 	TPulseIndexVec vIndices;
@@ -383,6 +384,9 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
     try {
         vSignal.clear();
 		strReply = StringifyJson (jRead);
+		jSignal = jRead["signal"];
+		string strSignal = StringifyJson (jSignal);
+		//string strSignal = StringifyJson (jRead["signal"]);
 		if (jRead["buffer"].isNull() == false) {
 			string str = jRead["buffer"].asString();
 			fprintf (stderr, "Buffer Command: %s\n", str.c_str());
@@ -395,21 +399,25 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 		}
 		else {
 			if (jRead["signal"].isNull() == false) {
-				bool fDebug = !jRead["debug"].isNull();
-				string strSignalLength = jRead["signal"].asString();
+				bool fDebug = jSignal["debug"].asBool();
+				//bool fDebug = !jRead["debug"].isNull();
+				string strSignalLength = jSignal["length"].asString();
+				//string strSignalLength = jRead["signal"].asString();
 				fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
 				double dLen = stod (strSignalLength);
             	if (dLen > 0) {
             		//jAllPulses["signal"] = ReadSignal (rp_setup, dLen, vSignal, fDebug);
-					jAllPulses["signal"] = ReadSignal (rp_setup, dLen, fDebug);
+					jAllPulses["signal"] = ReadSignal (rp_setup, jSignal["filtered"].asBool(), jSignal["deriv"].asBool(), dLen, fDebug);
             	}
 			}
-        		if (!jRead["mca"].isNull()) {
-					Json::Value jMca = jRead["mca"];
-					if (jRead["mca"].asBool()) {
-						fprintf (stderr, "\nMCA read\n");
-            			jAllPulses["mca"] = ReadMca ();
-				}
+        	if (!jRead["mca"].isNull()) {
+				if (jRead["mca"].asBool())
+            		jAllPulses["mca"] = ReadMca ();
+						//Json::Value jMca = jRead["mca"];
+					//if (jRead["mca"].asBool()) {
+						//fprintf (stderr, "\nMCA read\n");
+            			//jAllPulses["mca"] = ReadMca ();
+				//}
         	}
 		}
         jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
@@ -442,7 +450,7 @@ string GetMcaCounts ()
 //-----------------------------------------------------------------------------
 //size_t ReadSignal (double dLen, TFloatVec &vSignal)
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug)
-Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
+Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, double dLen, bool fDebug)
 {
     Json::Value jSignal, jSignalData, jFiltered, jKernel, jFiltDeriv;
 	int nVectorPoints;
@@ -466,16 +474,21 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 			if (sPulse > 0) {
 				for (it=vPulse.begin() ; (it != vPulse.end()) && (jSignal.size() < nVectorPoints) ; it++)
 					jSignal.append(*it);
-				if (vFiltered.size() > 0)
-					for (it=vFiltered.begin(), n=0 ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; n++) {
-						jFiltered.append(*it);
-						itPrev = it;
-						it++;
-						if (n < vFiltered.size() - 1)
-							jFiltDeriv.append (*it - *itPrev);
-						else
-							jFiltDeriv.append (0);
+				if (fFiltered) {
+					if (vFiltered.size() > 0) {
+						for (it=vFiltered.begin(), n=0 ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; n++) {
+							jFiltered.append(*it);
+							itPrev = it;
+							it++;
+							if (fDeriv) {
+								if (n < vFiltered.size() - 1)
+									jFiltDeriv.append (*it - *itPrev);
+								else
+									jFiltDeriv.append (0);
+							}
+						}
 					}
+				}
 				for (it=vKernel.begin() ; (it != vKernel.end() && (jKernel.size() < nVectorPoints)) ; it++)
 					jKernel.append(*it);
 			}
@@ -487,9 +500,9 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug)
 		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
 		jSignalData["data"] = jSignal;
-		if (jFiltered.size() > 0)
+		if ((fFiltered) && (jFiltered.size() > 0))
 			jSignalData["filtered"] = jFiltered;
-		if (jFiltDeriv.size() > 0)
+		if ((fDeriv) && (jFiltDeriv.size() > 0))
 			jSignalData["filt_deriv"] = jFiltDeriv;
 		if (jKernel.size() > 0)
 			jSignalData["kernel"] = jKernel;
@@ -733,6 +746,7 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pul
 			*iDiff = *id - *id1;
 	}
 	pulse_filter.SetData (vSrc, vFiltered, vTrapez, vDiff);
+/*
 	if (nCount == 0) {
 			nCount++;
 		PrintVector (vSrc, "filt_src.csv");
@@ -740,6 +754,7 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pul
 		PrintVector (vFiltered, "filt_res.csv");
 		PrintVector (vDiff, "filt_dif.csv");
 	}
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -762,7 +777,8 @@ void SafeQueueAdd (const TPulseFilter &pulse_filter)
 
     mtx.lock ();
 	g_qFilteredPulses.push(pulse_filter);
-    while (g_qFilteredPulses.size() > 500) {
+    while (g_qFilteredPulses.size() > 100) {
+    //while (g_qFilteredPulses.size() > 500) {
     //while (g_qFilteredPulses.size() > 1000)
         g_qFilteredPulses.pop();
 		printf ("Queue size() :%d\r", g_qFilteredPulses.size());
@@ -852,6 +868,7 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
     std::string strResult;
     Json::Value jResult, jStatus;
     bool fCommandOK;
+	static int nCount;
 
     try {
         fCommandOK = true;
@@ -871,6 +888,11 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 			//fprintf (stderr, "HandleSampling, Sampling is '%s'\n", BoolToString (fOnOff).c_str());
 		}
 		if (!jSampling["mca"].isNull()) {
+			if (!jSampling["mca_time"].isNull()) {
+				string sTime = jSampling["mca_time"].asString();
+				double d = atof (sTime.c_str());
+				printf ("\nMCA Required Time: %s, %g seconds\n\n", sTime.c_str(), d);
+			}
 			rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));
 		}
 		if (!jSampling["psd"].isNull()) {
@@ -887,7 +909,10 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 		jResult["status"] = jStatus;
 		jResult["buffer"] = to_string(SafeQueueSize());//g_vRawSignal.size());
 		jResult["mca_buffer"] = to_string(rp_setup.GetMcaCount());//g_vRawSignal.size());
-		fprintf (stderr, "HandleSampling, Queue size: %d\n", SafeQueueSize());
+		jResult["mca_time"] = rp_setup.GetMcaMeasureTime ();
+		//if (nCount % 10 == 0)
+			//fprintf (stderr, "HandleSampling, Sampling: %s, MCA: %s, Queue size: %d\r", BoolToString(rp_setup.GetSamplingOnOff ()).c_str(), BoolToString  (rp_setup.GetMcaOnOff()).c_str(), SafeQueueSize());
+		nCount++;
     }
     catch (std::exception &exp) {
 		fprintf (stderr, "Runtime error in 'HandleSampling':\n%s\n", exp.what());
@@ -977,6 +1002,7 @@ float VectorMax (const TFloatVec &v)
     return (fMax);
 }
 
+bool g_fTimerBusy = false;
 //-----------------------------------------------------------------------------
 void OnTimerTick ()
 {
@@ -987,32 +1013,31 @@ void OnTimerTick ()
 	static int nCount=1;
 	TPulseFilter pulse_filter;
 
-    if (g_rp_setup.GetSamplingOnOff ()) {
-        if (GetNextPulse (vPulse)) {
-			nCount++;
-			if (nCount % 10 == 0)
-				g_rp_setup.CalculateBackground (vPulse);
-			FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
-			if (GetPulseParams (pulse_filter, piVec))
-				pulse_filter.SetPulsesInfo (piVec);
-			if (g_rp_setup.IsRemoteProcessingOn())
-				RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
-			SafeQueueAdd (pulse_filter);
-			if (piVec.size() > 0) {
-				//printf ("Found %d pulses\n", piVec.size());
-            	g_rp_setup.NewPulse (piVec);
-			}
-/*
-					if (GetPulseParams (pulse_filter, piVec)) {
-						pulse_filter.SetPulsesInfo (piVec);
-						for (iPulseInfo=piVec.begin() ; iPulseInfo != piVec.end() ; iPulseInfo++)
-							g_vPulsesInfo.push_back (*iPulseInfo);//.insert (g_vPulsesInfo.end(), piVec.begin(), piVec.end());
-						g_rp_setup.NewPulse (piVec);
-					}
-		*/
+
+	if (!g_fTimerBusy) {
+		g_fTimerBusy = true;
+    	if (g_rp_setup.GetSamplingOnOff ()) {
+        	if (GetNextPulse (vPulse)) {
+				nCount++;
+				if (nCount % 10 == 0)
+					g_rp_setup.CalculateBackground (vPulse);
+				FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
+				if (GetPulseParams (pulse_filter, piVec))
+					pulse_filter.SetPulsesInfo (piVec);
+				if (g_rp_setup.IsRemoteProcessingOn())
+					RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
+				SafeQueueAdd (pulse_filter);
+				if (piVec.size() > 0) {
+					//printf ("Found %d pulses\n", piVec.size());
+            		g_rp_setup.NewPulse (piVec);
 				}
 			}
 		}
+		g_fTimerBusy = false;
+	}
+	else
+		printf ("Time busy\n");
+}
 
 //-----------------------------------------------------------------------------
 bool IsF1GreaterThenF2 (float f1, float f2)
@@ -1330,7 +1355,7 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse)
 {
     uint32_t buff_size = 16384;
     float *buff = (float *)malloc(buff_size * sizeof(float));
-	int16_t* auiBuffer = (int16_t*) calloc (buff_size, sizeof (auiBuffer[0]));
+	//int16_t* auiBuffer = (int16_t*) calloc (buff_size, sizeof (auiBuffer[0]));
 	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
 	bool fTrigger=false, fTimeout=false;
 	clock_t cStart;
@@ -1393,6 +1418,8 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse)
     else
     	printf ("Timeout: %g\n", dDiff);
     rp_AcqStop();
+	free (buff);
+	//free (auiBuffer);
 	//fprintf (stderr, "--------------------------------------\n");
     return (fTrigger);
 }
