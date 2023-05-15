@@ -30,7 +30,9 @@ int RfAquisition (float *buff, uint32_t buff_size)
         //length and smaling rate
 
 	usleep(100);
-	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+	rp_AcqSetTriggerLevel(RP_T_CH_1, 15e-3); //Trig level is set in Volts while in SCPI
+	//rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+	rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_NE);
 	rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
 
 	while(1){
