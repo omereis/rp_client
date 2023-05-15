@@ -67,9 +67,9 @@ def message_to_rp (dictCommand, qData):
         socket = open_socket()
         s = str(json.dumps(dictCommand))
         socket.send_string(s)
-        print("\nmessage_to_rp:  message sent\n")
-        print(s)
-        print("\n")
+        #print("\nmessage_to_rp:  message sent\n")
+        #print(s)
+        #print("\n")
         message = socket.recv()
         #print("message recieved:\n{}".format(message))
         msg_str = message.decode('utf-8')
@@ -93,7 +93,7 @@ def message_server(dictCommand):
             fProcessAlive = prcSender.is_alive()
             time.sleep(0.1)
             dtDelta = (datetime.now() - dtStart).total_seconds()
-            print('Waiting {}'.format(dtDelta))
+            #print('Waiting {}'.format(dtDelta))
         if (dtDelta < 5):
             prcSender.join()
             while qData.qsize() > 0:
@@ -103,10 +103,10 @@ def message_server(dictCommand):
             msg_str = 'timeout'
     except Exception as e:
         print("Runtime error opening socket:\n%s" % e)
-    if (len(msg_str) <= 20):
-        print('Message:\n"{}"'.format(msg_str))
-    else:
-        print('Message length:\n"{}"'.format(len(msg_str)))
+    #if (len(msg_str) <= 20):
+        #print('Message:\n"{}"'.format(msg_str))
+    #else:
+        #print('Message length:\n"{}"'.format(len(msg_str)))
     #print('=======================================================')
     #print(msg_str)
     #print('=======================================================')
@@ -128,22 +128,22 @@ def client_setup_command (dictCommand):
 def OnRedPitayaMessage():
     txtReply = 'Red Pitaya Reply'
     res = request.args['message']
-    print(res)
+    #print(res)
     socket = None
-    print('type(res): {}'.format(type(res)))
+    ##print('type(res): {}'.format(type(res)))
     try:
         res = request.args['message'].lower()
-        print('on_red_pitaya_message')
-        print('++++++ Command +++++++++++++++++++++++++++++++++++++++')
-        print(res)
-        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        #print('on_red_pitaya_message')
+        #print('++++++ Command +++++++++++++++++++++++++++++++++++++++')
+        #print(res)
+        #print('++++++++++++++++++++++++++++++++++++++++++++++++++++++')
         dictCommand = json.loads(res)
         txtReply = message_server(dictCommand)
         dictReply = json.loads(txtReply)
-        print(dictReply.keys())
+        #print(dictReply.keys())
         socket = open_socket()
         txtReply = dictReply['text']
-        print ('Flag: {}'.format(dictReply['flag']))
+        #print ('Flag: {}'.format(dictReply['flag']))
         part = 1
         while not dictReply['flag']:
             socket.send_string('go')
