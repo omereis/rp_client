@@ -256,6 +256,7 @@ void TRedPitayaTrigger::SetTrigger (const std::string &strSrcSrc, const std::str
 		rp_AcqSetTriggerSrc(trigger_src);
 		//rp_AcqSetTriggerSrc (trigger_src);
 		rp_AcqGetTriggerSrc(&trigger_src);
+		printf ("Trigger aswsigned/ Source: %s\n", GetHardwareTriggerName (trigger_src).c_str());
 		//fprintf (stderr, "'TRedPitayaTrigger::SetTrigger', AFTER calling 'rp_AcqGetTriggerSrc', trigger source: %s\n", GetHardwareTriggerSource (trigger_src).c_str());
 	}
 }
@@ -319,6 +320,7 @@ Json::Value TRedPitayaTrigger::AsJson()
     //jTrigger["trigger"] = GetTrigger(); // on/off
     jTrigger["now"] = GetNow();
     jTrigger["type"] = GetType();
+
     return(jTrigger);
 }
 
@@ -335,6 +337,9 @@ Json::Value TRedPitayaTrigger::UpdateFromJson(Json::Value &jSetup)
         	SetSrc (jSetup["src"].asString());
 			SetNow (jSetup["now"].asBool());
     		SetTrigger (jSetup["enabled"]);
+#ifdef	_RED_PITAYA_HW
+			SetHardwareTrigger();
+#endif
 		}
         jNew = AsJson();
     }
@@ -461,6 +466,8 @@ bool TRedPitayaTrigger::SetHardwareTrigger()
 
 	try {
 		rp_acq_trig_src_t trigger_src = GetHardwareTriggerSource ();
+		printf ("#####################################################\n");
+		printf ("Trigger source: %s\n", GetHardwareTriggerName (trigger_src).c_str());
 		if (rp_AcqSetTriggerSrc (trigger_src) != RP_OK) {
 			PrintRuntimeError ("'rp_AcqSetTriggerSrc' failed in TRedPitayaTrigger::SetHardwareTrigger");
 			return (false);
@@ -471,6 +478,8 @@ bool TRedPitayaTrigger::SetHardwareTrigger()
 			PrintRuntimeError ("'rp_AcqSetTriggerLevel' failed in TRedPitayaTrigger::SetHardwareTrigger");
 			return (false);
 		}
+		printf ("Trigger level: %g\n", fLevel);
+		printf ("#####################################################\n");
 		fSet = true;
 	}
 	catch (std::exception &e) {
