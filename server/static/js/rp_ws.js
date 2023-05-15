@@ -6,6 +6,12 @@
 /******************************************************************************/
 
 //-----------------------------------------------------------------------------
+function onPageLoad () {
+	//onReadRedPitayaSetupClick ();
+	//onReadStatusClick();
+}
+
+//-----------------------------------------------------------------------------
 function onReadRedPitayaSetupClick () {
     var msg = new Object, msgCommand = new Object;
 	msgCommand['command'] = 'read';
@@ -385,17 +391,20 @@ function handleSignalMeasure (reply) {
 
 //-----------------------------------------------------------------------------
 function onReadSignalClick() {
-    var msg = new Object, msgSignal = new Object;
+    var msg = new Object, msgRead=new Object, msgSignal = new Object;
     if (uploadSignalRead()) {
-        msgSignal['signal'] = uploadSignalLength();
-		if (GetDebugChecked())
-        	msgSignal['debug'] = true;
+        msgSignal['length'] = uploadSignalLength();
+		msgSignal['debug'] = uploadCheckBox ("cboxDebug");
+		msgSignal['kernel'] = uploadCheckBox ("cboxKernel");
+		msgSignal['filtered'] = uploadCheckBox ("cboxFiltered");
+		msgSignal['deriv'] = uploadCheckBox ("cboxDeriv");
 	}
     //if (uploadMcaRead())
-        msgSignal['mca'] = uploadMcaRead();
+	msgRead['signal'] = msgSignal;
+	msgRead['mca'] = uploadMcaRead();
     //if (uploadPsdRead())
-        msgSignal['psd'] = uploadPsdRead();
-    msg['read_data'] = msgSignal;
+    msgRead['psd'] = uploadPsdRead();
+    msg['read_data'] = msgRead;
     if (Object.keys(msgSignal).length > 0) {
 		localStorage.removeItem ("chart_debug");
         sendMesssageThroughFlask(msg, setupReadSignal);
@@ -497,6 +506,16 @@ function onSamplingOff() {
 }
 
 //-----------------------------------------------------------------------------
+function sendSamplingUpdate (fSampling, fMca, txtMcaTime, fPsd) {
+    var msgSignal = new Object;
+    msgSignal['signal'] = fSampling;//uploadSignalOnOff ();
+    msgSignal['mca'] = fMca;//uploadMcaOnOff ();
+    msgSignal['mca_time'] = txtMcaTime;//uploadTextReal ('txtMcaTimeLimit');
+    msgSignal['psd'] = fPsd;//uploadPsdOnOff ();
+    sendSamplingCommand (msgSignal);
+}
+
+//-----------------------------------------------------------------------------
 function onSamplingUpdate () {
     var msgSignal = new Object;
     msgSignal['signal'] = uploadSignalOnOff ();
@@ -522,19 +541,46 @@ function uploadPsdOnOff () {
 }
 
 //-----------------------------------------------------------------------------
+function periodicStatus() {
+	onReadStatusClick();
+	console.log (new Date());
+}
+
+//-----------------------------------------------------------------------------
+function setReadPeriodicCardStatus (fOnOff) {
+	if (fOnOff) {
+		var hUpdate = localStorage.getItem ("update_handle");
+		if (hUpdate == null) {
+			var nRate = uploadTextAsFloat ('txtUpdateRate');
+
+			var hUpdate = setInterval (periodicStatus, 1000);
+			localStorage.setItem ("update_handle", hUpdate);
+		}
+		//txt.value = timeStart;
+	}
+	else {
+		var hUpdate = localStorage.getItem ("update_handle");
+		if (hUpdate != null)
+			clearInterval (hUpdate);
+		localStorage.removeItem ("update_handle");
+	}
+}
+
+//-----------------------------------------------------------------------------
 function sendSamplingCommand (cmd) {
     var msg = new Object;
     var msgSignal = new Object;
     msgSignal['signal'] = cmd;
     msg['sampling'] = cmd;
 	
-	if (cmd.signal) {
+	if (!cmd.signal) {
+		setReadPeriodicCardStatus (false);
+/*
 		var hUpdate = localStorage.getItem ("update_handle");
 		if (hUpdate == null) {
-			var timeStart = new Date();
-			timeStart = timeStart.getTime();
-			localStorage.setItem ("start_time", timeStart);
-			var hUpdate = setInterval (updateOnTime, 1000);
+			var nRate = uploadTextAsFloat ('txtUpdateRate');
+
+			var hUpdate = setInterval (periodicStatus, 1000);
 			localStorage.setItem ("update_handle", hUpdate);
 		}
 		//txt.value = timeStart;
@@ -545,6 +591,7 @@ function sendSamplingCommand (cmd) {
 			clearInterval (hUpdate);
 		localStorage.removeItem ("update_handle");
 
+*/
 	}
     sendMesssageThroughFlask(msg, readSamplingStatus);
 }
@@ -593,14 +640,8 @@ function setupReadSignal (reply) {
         if (aPulseData != null)
 			plotSignal (samples.pulses.signal);
 			//plotSignal (aPulseData, aFiltered, aPulsesIndices);
-			if (uploadKernelCheckbox()) {
-				if (samples.pulses.signal.hasOwnProperty('kernel'))
-					plotKernal (samples.pulses.signal.kernel);
-			}
-			else
-				deleteKernelPlot();
-			if (aMcaData != null)
-				plotMca (aMcaData);
+		if (aMcaData != null)
+			plotMca (aMcaData);
 	}
 	catch (exception) {
 		var txt = cell.innerText;
@@ -609,19 +650,51 @@ function setupReadSignal (reply) {
 	}
 }
 
-		//-----------------------------------------------------------------------------
-		function downloadBufferLength(value) {
-			var txtbx = document.getElementById("txtCardBuffer");
-			txtbx.value = value;
-			txtbx.style.background = 'Yellow';
-			setInterval (clearBufferBkgnd, 1000);
-		}
+//-----------------------------------------------------------------------------
+function downloadBufferLength(value) {
+	var txtbx = document.getElementById("txtCardBuffer");
+	txtbx.value = value;
+	txtbx.style.background = 'Yellow';
+	setInterval (clearBufferBkgnd, 1000);
+}
 
-		//-----------------------------------------------------------------------------
-		function downloadMcaLength(value) {
-			var txtbx = document.getElementById("txtMcaBuffer");
-			txtbx.value = value;
-		}
+//-----------------------------------------------------------------------------
+function pad(num, size) {
+// source: https://stackoverflow.com/questions/2998784/how-to-output-numbers-with-leading-zeros-in-javascript
+	num = num.toString();
+	while (num.length < size)
+		num = "0" + num;
+	return (num);
+}
+
+//-----------------------------------------------------------------------------
+function formatSSecondsAsTime(sec_num) {
+    //var sec_num = parseInt(this, 10); // don't forget the second param
+    var hours   = Math.floor(sec_num / 3600);
+    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+	hours = pad (hours, 2);
+	minutes = pad (minutes, 2);
+	seconds = pad (seconds , 2);
+	var txtTime;
+	try {
+		var txtSeconds = parseFloat(seconds).toFixed(1);
+		txtSeconds = txtSeconds.padStart(4, '0');
+    	txtTime = hours+':'+ minutes+':'+ txtSeconds;
+	}
+	catch (exception) {
+    	txtTime = exception;
+	}
+	return (txtTime);
+}
+
+//-----------------------------------------------------------------------------
+function downloadMcaLength(txtBuffer, txtMcaTime) {
+	var txtbx = document.getElementById("txtMcaBuffer");
+	txtbx.value = txtBuffer;
+	document.getElementById('txtMcaRuntime').value = formatSSecondsAsTime (txtMcaTime);
+}
 
 //-----------------------------------------------------------------------------
 function clearBufferBkgnd () {
@@ -916,17 +989,26 @@ function uploadTriggerLevel () {
 }
 
 //-----------------------------------------------------------------------------
+function setStartStop (fVal, idCheckbox, idTxt) {
+	downloadCheckBox (fVal, idCheckbox);
+	var txtbx = document.getElementById (idTxt);
+	if (txtbx)
+		txtbx.value = (fVal ? "Stop" : "Start");
+}
+
+//-----------------------------------------------------------------------------
 function readSamplingStatus (reply) {
     var p = document.getElementById("cellStatus");
     try {
 		var jReply = JSON.parse(reply);//.sampling;
-		downloadCheckBox (jReply.sampling.status.signal, "cboxStartSignal");
-		downloadCheckBox (jReply.sampling.status.mca, "cboxStartMCA");
+		setStartStop (jReply.sampling.status.signal, 'cboxStartSignal', 'btnSamplingStartStop');
+		setStartStop (jReply.sampling.status.mca, 'cboxStartMCA', 'btnMCAStartStop');
+
 		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
 		if (jReply.sampling.hasOwnProperty('buffer'))
 			downloadBufferLength(jReply.sampling.buffer);
 		if (jReply.sampling.hasOwnProperty('mca_buffer'))
-			downloadMcaLength(jReply.sampling.mca_buffer);
+			downloadMcaLength(jReply.sampling.mca_buffer, jReply.sampling.mca_time);
         var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
@@ -935,6 +1017,8 @@ function readSamplingStatus (reply) {
             cl = 'red';
         }
         p.style.backgroundColor = cl;
+		if (jReply.sampling.status.signal)
+			setReadPeriodicCardStatus (true);
     }
     catch (exception) {
 		var p = document.getElementById ("txtReply");
@@ -942,6 +1026,34 @@ function readSamplingStatus (reply) {
 			p.value = reply;
         console.log(exception);
     }
+}
+
+//-----------------------------------------------------------------------------
+function toggleButtonStartStop (idBtn) {
+	var id = document.getElementById (idBtn);
+	var fNewVal;
+	if (id != null) {
+		var txtCaption = id.value.toLowerCase();
+		if (txtCaption == "start")
+			fNewVal = true;
+		else
+			fNewVal = false;
+		txtCaption = (fNewVal ? "Stop" : "Start");
+		id.value = txtCaption;
+	}
+	return (fNewVal);
+}
+
+//-----------------------------------------------------------------------------
+function onSamplingStartStop() {
+	var fStartStop = toggleButtonStartStop ('btnSamplingStartStop');
+	sendSamplingUpdate (fStartStop, uploadMcaOnOff(), uploadMcaTimeLimit(), uploadPsdOnOff ());
+}
+
+//-----------------------------------------------------------------------------
+function onMcaStartStop() {
+	var fStartStop = toggleButtonStartStop ('btnMCAStartStop');
+	sendSamplingUpdate (fStartStop, fStartStop, uploadMcaTimeLimit(), uploadPsdOnOff ());
 }
 
 //-----------------------------------------------------------------------------
@@ -1356,6 +1468,24 @@ function onPreTriggerSet() {
 
 //-----------------------------------------------------------------------------
 function onPreTriggerGet() {
+}
+
+//-----------------------------------------------------------------------------
+function uploadTextAsFloat (idTxt) {
+    var txtbx = document.getElementById(idTxt);
+	var val;
+	if (txtbx != null)
+		val = parseFloat (txtbx.value);
+	return (val);
+}
+
+//-----------------------------------------------------------------------------
+function uploadTextAsInt (idTxt) {
+    var txtbx = document.getElementById(idTxt);
+	var val;
+	if (txtbx != null)
+		val = parseInt (txtbx.value);
+	return (val);
 }
 
 //-----------------------------------------------------------------------------
