@@ -85,7 +85,8 @@ public:
     float GetTriggerLevel ();
     void SetSamplingOnOff (bool fSampling);
     bool GetSamplingOnOff () const;
-	void SetMcaOnOff (const string &str);
+	void SetMcaOnOff (const string &strOnOff);
+	void SetMcaOnOff (const string &strOnOff, const string &strTime);
 	void SetMcaOnOff (Json::Value &jMcaCmd);
     void SetMcaOnOff (bool fMca);
     bool GetMcaOnOff () const;
@@ -107,10 +108,18 @@ public:
 	void SetMcaTimeLimit (const string &strTime);
 	double GetMcaTimeLimit () const;
 	double GetMcaMeasureTime () const;
-	void SetMcaStartTime (const chrono_clock &crnStart);
-	void ResetMcaStartTime ();
+
+	chrono_clock SetMcaStopTime (chrono_clock clk);
+	chrono_clock GetMcaStopTime() const;
+	chrono_clock SetMcaStopTime ();
 	chrono_clock GetMcaStartTime() const;
 	chrono_clock SetMcaStartTime ();
+	void SetMcaStartTime (const chrono_clock &crnStart);
+	void ResetMcaStartTime ();
+
+	void SetMcaValid (bool fValid);
+	bool IsMcaValid () const;
+
 	TRemoteProcessing GetRemoteProc() const;
 	void GetRemoteProc(const TRemoteProcessing &remote_proc);
     bool IsRemoteProcessingOn() const;
@@ -131,7 +140,11 @@ private:
     bool m_fPsdOnOff;
     int m_nPackageSize;
     float m_fPreTriggerNs;
+
 	chrono_clock m_crnMcaStart;
+	chrono_clock m_crnMcaStop;
+	bool m_fMcaValid;
+
 	double m_dMcaTimeLimit;
 	TRemoteProcessing m_remote_proc;
 };

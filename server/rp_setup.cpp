@@ -57,6 +57,9 @@ void TRedPitayaSetup::Clear ()
     SetPackageSize (g_nDefaultPackageSize);
     SetPreTriggerNs (100);
 	SetMcaTimeLimit (0);
+	//SetMcaStartTime (0);
+	//SetMcaStopTime (0);
+	SetMcaValid (false);
 	m_remote_proc.Clear();
 }
 
@@ -74,6 +77,8 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetPackageSize (other.GetPackageSize());
     SetPreTriggerNs (other.GetPreTriggerNs());
 	SetMcaTimeLimit (other.GetMcaTimeLimit ());
+
+	SetMcaValid (other.IsMcaValid ());
 	m_remote_proc = TRemoteProcessing (other.m_remote_proc);
 }
 //-----------------------------------------------------------------------------
@@ -315,11 +320,23 @@ void TRedPitayaSetup::SetMcaOnOff (Json::Value &jMcaCmd)
 }
 
 //-----------------------------------------------------------------------------
-void TRedPitayaSetup::SetMcaOnOff (const string &str)
+void TRedPitayaSetup::SetMcaOnOff (const string &strOnOff)
 {
 	try {
-		bool f = to_bool (str);
+		bool f = to_bool (strOnOff);
 		SetMcaOnOff (f);
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error on 'SetMcaOnOff:\n%s\n", exp.what());
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaOnOff (const string &strOnOff, const string &strTime)
+{
+	try {
+		SetMcaOnOff (strOnOff);
+		SetMcaTimeLimit (strTime);
 	}
 	catch (std::exception &exp) {
 		fprintf (stderr, "Runtime error on 'SetMcaOnOff:\n%s\n", exp.what());
@@ -334,6 +351,8 @@ void TRedPitayaSetup::SetMcaOnOff (bool fMca)
     mtx.lock();
 	if ((fMca == true) && (m_fMcaOnOff == false)) // starting
 		SetMcaStartTime ();
+	else if ((fMca == false) && (m_fMcaOnOff == true)) // ending
+		SetMcaStopTime();
     m_fMcaOnOff = fMca;
     mtx.unlock();
 }
@@ -626,14 +645,47 @@ double TRedPitayaSetup::GetMcaTimeLimit () const
 void TRedPitayaSetup::SetMcaStartTime (const chrono_clock &crnStart)
 {
 	m_crnMcaStart = crnStart;
+	 SetMcaValid (true);
 }
 
 //-----------------------------------------------------------------------------
 double TRedPitayaSetup::GetMcaMeasureTime () const
 {
-	chrono_clock end = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end - GetMcaStartTime();
-	return (elapsed_seconds.count());
+	double dTime = 0;
+	chrono_clock end;
+
+	if (IsMcaValid ()) {
+		if (GetMcaOnOff ())
+			end = std::chrono::system_clock::now();
+		else
+			end = GetMcaStopTime();
+		std::chrono::duration<double> elapsed_seconds = end - GetMcaStartTime();
+		dTime = elapsed_seconds.count();
+	}
+	else {
+		//printf ("MCA not valid\n");
+		dTime = 0;
+	}
+	return (dTime);
+}
+
+//-----------------------------------------------------------------------------
+chrono_clock TRedPitayaSetup::GetMcaStopTime() const
+{
+	return (m_crnMcaStop);
+}
+
+//-----------------------------------------------------------------------------
+chrono_clock TRedPitayaSetup::SetMcaStopTime (chrono_clock clk)
+{
+	m_crnMcaStop = clk;
+	return (m_crnMcaStop);
+}
+//-----------------------------------------------------------------------------
+chrono_clock TRedPitayaSetup::SetMcaStopTime ()
+{
+	SetMcaStopTime (std::chrono::system_clock::now());
+	return (GetMcaStartTime());
 }
 
 //-----------------------------------------------------------------------------
@@ -683,6 +735,19 @@ size_t TRedPitayaSetup::GetMcaCount() const
 void TRedPitayaSetup::ClearMca()
 {
 	m_mca_params.ClearMca ();
+}
+
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaValid (bool fValid)
+{
+	m_fMcaValid = fValid;
+}
+
+//-----------------------------------------------------------------------------
+bool TRedPitayaSetup::IsMcaValid () const
+{
+	return (m_fMcaValid);
 }
 
 //-----------------------------------------------------------------------------
