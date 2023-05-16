@@ -893,7 +893,10 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 				double d = atof (sTime.c_str());
 				printf ("\nMCA Required Time: %s, %g seconds\n\n", sTime.c_str(), d);
 			}
-			rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())));
+			string strMca = jSampling["mca_time"].asString();
+			printf ("MCA Time: %s\n", strMca.c_str());
+			rp_setup.SetMcaOnOff (ToLower (jSampling["mca"].asString()), jSampling["mca_time"].asString());
+			//rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())), jSampling["mca_time"].asString());
 		}
 		if (!jSampling["psd"].isNull()) {
 			rp_setup.SetPsdOnOff (str_to_bool (ToLower (jSampling["psd"].asString())));
