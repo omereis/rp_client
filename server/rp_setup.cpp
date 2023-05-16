@@ -538,8 +538,15 @@ void TRedPitayaSetup::SetPreTriggerNs (Json::Value jPreTrigger)
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::NewPulse (const TPulseInfoVec &vPulsesInfo)
 {
-	if (GetMcaOnOff())
+	if (GetMcaOnOff()) {
     	m_mca_params.NewPulse (vPulsesInfo);
+		double dMcaMeasureTime, dTimeLimit = GetMcaTimeLimit ();
+		if (dTimeLimit > 0) {
+			dMcaMeasureTime = GetMcaMeasureTime ();
+			if (dMcaMeasureTime >= dTimeLimit)
+				SetMcaOnOff (false);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
