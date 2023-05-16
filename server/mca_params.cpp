@@ -264,11 +264,17 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 		}
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
-		if ((GetCount() % 100) == 0) {
+		//if ((GetCount() % 100) == 0) {
 			//printf ("%d MCA items, %g - %g, Max Value: %g, index: %d\n", GetCount(), GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx);
-			printf ("%g,%g, %g, %d,%d\r", GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
-		}
+		//}
 	}
+/*
+	static int nCount;
+	FILE *file = fopen ("mca.csv", "a+");
+	fprintf (file, "%g,%g, %g, %d,%d\n", GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
+	fclose (file);
+	printf ("TMcaParams::NewPulse, count=%d\n", nCount++);
+*/
 	//fclose (file);
 	//fclose (filePulse);
 }
