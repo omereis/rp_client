@@ -1808,13 +1808,26 @@ function onMcaStartClick() {
 }
 
 //-----------------------------------------------------------------------------
+function onSetMcaTimeLimit() {
+	var fMcaUnlimited = uploadRadio ('radioMcaTimeLimit');
+	enableItem ("txtMcaTimeLimit", fMcaUnlimited);
+	enableItem ("radioMcaTimeMin", fMcaUnlimited);
+	enableItem ("radioMcaTimeSec", fMcaUnlimited); 
+}
+
+//-----------------------------------------------------------------------------
 function uploadMcaTimeLimit() {
+	var fMcaUnlimited = uploadRadio ('radioMcaTimeLimit');
     var dSec = uploadTextReal ('txtMcaTimeLimit');
 	try {
-		var radio = document.getElementById ('radioMcaTimeMin');
-		if (radio != null)
-			if (radio.checked)
-				dSec *= 60;
+		if (fMcaUnlimited) {
+			var radio = document.getElementById ('radioMcaTimeMin');
+			if (radio != null)
+				if (radio.checked)
+					dSec *= 60;
+		}
+		else
+			dSec = -1;
 	}
     catch (exception) {
 		console.log('Runtime error in "uploadMcaTimeLimit":\n' + exception);
