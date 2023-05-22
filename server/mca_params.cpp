@@ -43,6 +43,8 @@ void TMcaParams::Clear ()
 	SetMinVoltage (0.0);
 	SetMaxVoltage (5.0);
 	m_vPulses.clear();
+    SetMax (0);
+    SetMin (0);
 	SetCount (0);
 }
 //-----------------------------------------------------------------------------
@@ -52,8 +54,9 @@ void TMcaParams::AssignAll (const TMcaParams &other)
     SetMinVoltage (other.GetMinVoltage ());
     SetMaxVoltage (other.GetMaxVoltage ());
 	m_vPulses = other.m_vPulses;
+    SetMax (other.GetMax());
+    SetMin (other.GetMin());
 	SetCount (other.GetCount());
-
 }
 //-----------------------------------------------------------------------------
 uint TMcaParams::GetChannels () const
@@ -156,9 +159,8 @@ void TMcaParams::SetSpectrum (const TFloatVec &vSpectrum)
 //-----------------------------------------------------------------------------
 size_t TMcaParams::GetSpectrum (TFloatVec &vSpectrum)
 {
-	vSpectrum.resize(m_vSpectrum.size());
-	vSpectrum.insert (vSpectrum.begin(), m_vSpectrum.begin(), m_vSpectrum.end());
-	return (m_vSpectrum.size());
+	vSpectrum = m_vSpectrum;
+	return (vSpectrum.size());
 }
 
 //-----------------------------------------------------------------------------
@@ -173,55 +175,8 @@ int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
 	else
 		idx = -1;
 
-/*
-    if ((m_params.GetMaxVoltage() > m_params.GetMinVoltage()) && (fSignalMax > fSignalMin)) {
-        float fIndex = (fSignalMax - fSignalMin) / (m_params.GetMaxVoltage() - m_params.GetMinVoltage());
-        idx = (int) (fIndex * m_params.GetChannels());
-		if (idx >= m_params.GetChannels())
-			idx >= m_params.GetChannels();
-    }
-    if ((GetMaxVoltage() > GetMinVoltage()) && (fSignalMax > fSignalMin)) {
-        float fIndex = (fSignalMax - fSignalMin) / (GetMaxVoltage() - GetMinVoltage());
-        idx = (int) (fIndex * GetChannels());
-		if (idx >= GetChannels())
-			idx >= GetChannels();
-    }
-    else
-        idx = -1;
-*/
     return (idx);
 }
-
-/*
-//-----------------------------------------------------------------------------
-void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax)
-{
-    TFloatVec::const_iterator i;
-
-    i = vPulse.begin();
-    fMin = fMax = *i;
-    for (i++ ; i != vPulse.end() ; i++) {
-        fMin = min (fMin, *i);
-        fMax = max (fMax, *i);
-    }
-}
-
-//-----------------------------------------------------------------------------
-void TMcaParams::NewPulse (const TFloatVec &vPulse)
-{
-    float fMin, fMax, fHeight;
-
-	m_vAllPulses.push_back (vPulse);
-    GetVectorMinMax (vPulse, fMin, fMax);
-    int idx = HeightIndex (fMin, fMax);
-    if (idx >= 0) {
-		if (idx >= m_vSpectrum.size())
-			idx = m_vSpectrum.size() - 1;
-        int n = m_vSpectrum[idx];
-        m_vSpectrum[idx] = (n + 1);
-	}
-}
-*/
 
 //-----------------------------------------------------------------------------
 int TMcaParams::GetMcaPulses() const
@@ -250,13 +205,9 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 	int idx;
 	
 	m_vPulses.push_back (pulse_info);
-	SetCount (GetCount() + 1);
     if (m_vSpectrum.size() == 0)
         SetSpectrum (GetChannels());
-        //ResetSpectrum (m_params.GetChannels());
-    //int idx = HeightIndex (pulse_info.GetBackground(), pulse_info.GetMinVal ());
-    //int idx = HeightIndex (0, pulse_info.GetMaxVal ());
-	double dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal ()) / fabs((GetMaxVoltage() - GetMinVoltage()));
+	double dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal () - GetMinVoltage()) / fabs((GetMaxVoltage() - GetMinVoltage()));
 	idx = (int) (dIndex + 0.5);
     if (idx >= 0) {
 		if (idx >= m_vSpectrum.size())  {
@@ -264,19 +215,22 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 		}
         int n = m_vSpectrum[idx];
         m_vSpectrum[idx] = (n + 1);
-		//if ((GetCount() % 100) == 0) {
-			//printf ("%d MCA items, %g - %g, Max Value: %g, index: %d\n", GetCount(), GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx);
-		//}
 	}
-/*
+    if (GetCount() == 0) {
+        SetMin(pulse_info.GetMaxVal ());
+        SetMax(pulse_info.GetMaxVal ());
+    }
+    else{
+        if (pulse_info.GetMaxVal () < GetMin())
+            SetMin(pulse_info.GetMaxVal ());
+        if (pulse_info.GetMaxVal () > GetMax())
+            SetMax(pulse_info.GetMaxVal ());
+    }
+    IncreaseCount ();
 	static int nCount;
-	FILE *file = fopen ("mca.csv", "a+");
+	FILE *file = fopen ("mca_res.csv", "a+");
 	fprintf (file, "%g,%g, %g, %d,%d\n", GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
 	fclose (file);
-	printf ("TMcaParams::NewPulse, count=%d\n", nCount++);
-*/
-	//fclose (file);
-	//fclose (filePulse);
 }
 
 //-----------------------------------------------------------------------------
@@ -312,3 +266,33 @@ void TMcaParams::ClearMca ()
 }
 
 //-----------------------------------------------------------------------------
+void TMcaParams::SetMax (double dMax)
+{
+    m_dMax = dMax;
+}
+
+//-----------------------------------------------------------------------------
+double TMcaParams::GetMax() const
+{
+    return (m_dMax);
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetMin (double dMin)
+{
+    m_dMin = dMin;
+}
+
+//-----------------------------------------------------------------------------
+double TMcaParams::GetMin() const
+{
+    return (m_dMin);
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::IncreaseCount ()
+{
+    m_nCount++;
+}
+
+
