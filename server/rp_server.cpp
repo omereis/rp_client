@@ -214,7 +214,8 @@ bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strRepl
 				jReply = ContinueReadSignal (root, vSignal);
 		}
 		else {
-			fprintf (stderr, "Parsing error\n");
+			fprintf (stderr, "\nParsing error\n");
+			fprintf (stderr, "%s\n\n", strJson.c_str());
 			strReply += strJson + "\nParsing Error";
 		}
 	}
@@ -1378,6 +1379,11 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse)
 	//fprintf (stderr, "ReadHardwareSamples, 651\n");
 	//rp_AcqSetSamplingRate (RP_SMP_125M);
     rp_AcqSetTriggerDelay(0);
+	rp_AcqSetArmKeep (true);
+	//float rHyst;
+	rp_AcqSetTriggerHyst (1e-3);
+	//rp_AcqGetTriggerHyst (&rHyst);
+	//printf ("Hysterezis: %g mV\n", 1e3 * rHyst);
 	//fprintf (stderr, "ReadHardwareSamples, 650\n");
     rp_AcqStart();
 	//fprintf (stderr, "Trigger Source: %s\n", GetHardwareTriggerName (rp_setup.GetHardwareTriggerSource()).c_str());
@@ -1502,6 +1508,8 @@ Json::Value ReadMca ()
 	jMCA["mca_count"] = (double) g_rp_setup.GetMcaCount();
 	jMCA["mca_min"] = g_rp_setup.GetMcaMin();
 	jMCA["mca_max"] = g_rp_setup.GetMcaMax();
+	jMCA["mca_min_v"] = g_rp_setup.GetMcaMinVoltage();
+	jMCA["mca_max_v"] = g_rp_setup.GetMcaMaxVoltage();
 		jMCA["mca_data"] = jMcaData;
 		string s;
 		s = StringifyJson (jMCA);
