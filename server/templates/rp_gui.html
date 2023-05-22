@@ -11,6 +11,11 @@
         <script src="{{ url_for ('static', filename='js/rp_gui.js') }}" charset="utf-8"></script>
         <script src="{{ url_for ('static', filename='js/rp_ws.js') }}" charset="utf-8"></script>
 
+<!--
+        <script src="{{ url_for ('static', filename='js/require.js') }}" charset="utf-8"></script>
+-->
+        <script src="{{ url_for ('static', filename='js/FileSaver.js') }}" charset="utf-8"></script>
+
         <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
         <script src="https://d3js.org/d3.v4.js"></script>
 		<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
@@ -383,7 +388,7 @@
                         <input type="text" id="txtMcaRuntime" style="width:100px;text-align: center;" value="">
                     </td>
 					<td>
-						<input type="button" value="Save...">
+						<input type="button" value="Save..." onclick="onSaveClick()">
                     </td>
                 </tr>
 
