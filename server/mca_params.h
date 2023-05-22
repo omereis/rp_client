@@ -45,12 +45,22 @@ public:
 	void SetCount (size_t n);
 
 	void ClearMca ();
+
+    void SetMax (double dMax);
+    double GetMax() const;
+    void SetMin (double dMin);
+    double GetMin() const;
+    void IncreaseCount ();
+
 protected:
     void AssignAll (const TMcaParams &other);
 private:
     uint m_uiChannels;
     double m_dMinVoltage;
     double m_dMaxVoltage;
+    double m_dMin;
+    double m_dMax;
+
 	TFloatVec m_vSpectrum;
 	TPulseInfoVec m_vPulses;
 	size_t m_nCount;
