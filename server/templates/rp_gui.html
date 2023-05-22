@@ -445,18 +445,26 @@
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="width:35%;">
+                        <td style="width:35%;">
                             <input type="button" value="Read from Card" onclick="onReadSignalClick()">
-                            <input type="checkbox" id="cboxDebug">Debug
-                            <!-- <input type="checkbox" id="cboxKernel">kernel -->
-                            <input type="checkbox" id="cboxFiltered">Filtered
-                            <input type="checkbox" id="cboxDeriv">Derivative
-                            <input type="checkbox" id="cboxNormFilt">Normalize Filter
+                            Buffer
+                            <input type="text" id="txtBuffer" value="25" style="width:75px;text-align: center;"> 
+                            <select id="comboSignalBufferUnits">
+                                <option value="1e-9">Nano</option>
+                                <option value="1e-6" selected>&mu;</option>
+                                <option value="1e-3">Milli</option>
+                            </select> Seconds
                         </td>
                         <td>
                             <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal
                             <input type="checkbox" id="cboxReadMCA" value="MCA" checked="true">MCA
                             <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true">PSD
+                        </td>
+                        <td>
+                            <input type="checkbox" id="cboxDebug">Debug
+                            <input type="checkbox" id="cboxFiltered">Filtered
+                            <input type="checkbox" id="cboxDeriv">Derivative
+                            <input type="checkbox" id="cboxNormFilt">Normalize Filter
                         </td>
                     </tr>
                     <td id="cellSignal" colspan="3">
@@ -470,10 +478,14 @@
 							<input type="radio" name="display_units" id="radioVolts" onclick="onVoltsMilliClick(id)" checked="true">Volts
 							<input type="radio" name="display_units" id="radioMillivolts" onclick="onVoltsMilliClick(id)">Millivolts
 						</td>
-						<td colspan="2">
+						<td style="text-align: center;">
+                            Chart Title<br>
+                            <input type="text" id="txtChartTitle" value="MCA">
+						</td>
+						<td>
 							Minimum <input type="text" id="txtSignalMin" style="width:75px;text-align: center;" readonly>
 							Maximum <input type="text" id="txtSignalMax" style="width:75px;text-align: center;" readonly>
-							Frequency <input type="text" id="txtSignalFreq" style="width:75px;text-align: center;" readonly>
+							Count <input type="text" id="txtSignalsCount" style="width:75px;text-align: center;" readonly>
 						</td>
                     </tr>
                     <tr>
@@ -485,12 +497,15 @@
                         </td>
                         <td colspan="2">
                             Buffer
+<!--
+
                             <input type="text" id="txtBuffer" value="25" style="width:75px;text-align: center;"> 
                             <select id="comboSignalBufferUnits">
                                 <option value="1e-9">Nano</option>
                                 <option value="1e-6" selected>&mu;</option>
                                 <option value="1e-3">Milli</option>
                             </select> Seconds
+                        -->
                         </td>
                     </tr>
                     <tr>
