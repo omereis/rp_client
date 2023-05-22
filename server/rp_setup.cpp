@@ -760,6 +760,18 @@ double TRedPitayaSetup::GetMcaMax() const
 }
 
 //-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetMcaMinVoltage() const
+{
+	return (m_mca_params.GetMinVoltage());
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetMcaMaxVoltage() const
+{
+	return (m_mca_params.GetMaxVoltage());
+}
+
+//-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaValid (bool fValid)
 {
 	m_fMcaValid = fValid;

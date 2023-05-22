@@ -127,6 +127,8 @@ public:
 	void ClearMca();
 	double GetMcaMin() const;
 	double GetMcaMax() const;
+	double GetMcaMinVoltage() const;
+	double GetMcaMaxVoltage() const;
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
