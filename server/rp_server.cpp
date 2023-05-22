@@ -1486,19 +1486,30 @@ string SaveMCA ()
 //-----------------------------------------------------------------------------
 Json::Value ReadMca ()
 {
-    Json::Value jMCA(Json::arrayValue);
+    Json::Value jMCA, jMcaData;
     TFloatVec vSpectrum;
     TFloatVec::iterator i;
-    char *sz = new char[32];
+    //char *sz = new char[32];
 
-	g_rp_setup.GetMcaSpectrum (vSpectrum);
-    //g_mca_calculator.GetSpectrum (vSpectrum);
-    for (i=vSpectrum.begin() ; i <= vSpectrum.end() ; i++) {
-		if (*i > 0)
-			*i += 0;
-        sprintf (sz, "%.3f", *i);
-        jMCA.append (sz);
-    }
+	try {
+		g_rp_setup.GetMcaSpectrum (vSpectrum);
+    	for (i=vSpectrum.begin() ; i < vSpectrum.end() ; i++) {
+        	jMcaData.append (*i);
+    	}
+/*
+		jMcaData.append (17);
+*/
+	jMCA["mca_count"] = (double) g_rp_setup.GetMcaCount();
+	jMCA["mca_min"] = g_rp_setup.GetMcaMin();
+	jMCA["mca_max"] = g_rp_setup.GetMcaMax();
+		jMCA["mca_data"] = jMcaData;
+		string s;
+		s = StringifyJson (jMCA);
+	}
+    catch (std::exception exp) {
+		fprintf (stderr, "Runtime error in 'ReadMca':\n%s\n", exp.what());
+		jMCA["error"] = exp.what();
+	}
     return (jMCA);
 }
 
