@@ -7,6 +7,13 @@
 
 //-----------------------------------------------------------------------------
 function onPageLoad () {
+	try {
+		localStorage.removeItem ('MCA_Data');
+		//var FileSaver = require('file-saver');
+	}
+	catch (exception) {
+		alert ('Runtime error in uploadTriggerLevel ' + exception);
+	}
 	//onReadRedPitayaSetupClick ();
 	//onReadStatusClick();
 }
@@ -138,7 +145,7 @@ function setupHandler (reply) {
 		if (dictSetup.hasOwnProperty('package_size'))
 			downloadPagckageSize (dictSetup.package_size);
 		if (dictSetup.hasOwnProperty('mca'))
-			downloadMca (dictSetup.mca);
+			downloadMcaParams (dictSetup.mca);
         if (dictSetup.hasOwnProperty('pre_trigger_ns'))
             downloadPreTrigger(dictSetup.pre_trigger_ns);
 		if (dictSetup.hasOwnProperty('trapez'))
@@ -641,7 +648,8 @@ function setupReadSignal (reply) {
 			plotSignal (samples.pulses.signal);
 			//plotSignal (aPulseData, aFiltered, aPulsesIndices);
 		if (aMcaData != null)
-			plotMca (aMcaData);
+			downloadMca (aMcaData);
+			//plotMca (aMcaData);
 	}
 	catch (exception) {
 		var txt = cell.innerText;
@@ -1207,7 +1215,7 @@ function mcaSetupHandler (reply) {
 }
 
 //-----------------------------------------------------------------------------
-function downloadMca (dictMca) {
+function downloadMcaParams (dictMca) {
 	try {
         donwloadText ('txtMcaChannels', dictMca.channels);
 		downloadTextVoltage ('txtMcaMin', parseFloat(dictMca.min_voltage));
@@ -1223,6 +1231,20 @@ function donwloadText (txtId, val) {
     var txt = document.getElementById (txtId);
     if (txt != null)
         txt.value = val;
+}
+
+//-----------------------------------------------------------------------------
+function downloadMca (dictMca) {
+	try {
+		downloadRealValue ('txtSignalMin', dictMca.mca_min, 3);
+		downloadRealValue ('txtSignalMax', dictMca.mca_max, 3);
+		downloadRealValue ('txtSignalFreq', dictMca.mca_count);
+		if (dictMca.hasOwnProperty ('mca_data'))
+			plotMca (dictMca.mca_data);
+	}
+	catch (exception) {
+		console.log(exception);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1265,6 +1287,7 @@ function plotMca (aMca) {
 		chart.layout.xaxis.range[0] = 0;
 		chart.layout.xaxis.range[1] = dMcaChannels;// 2050;
 		Plotly.redraw('chartMca');
+		localStorage.setItem ('MCA_Data', aMca.toString());
 	}
 	catch (exception) {
 		console.log(exception);
@@ -1575,12 +1598,18 @@ function uploadChartData(txtChartName) {
 
 //-----------------------------------------------------------------------------
 function onSaveFileClick() {
+	saveChartToFile('chartSignal');
+}
+
+//-----------------------------------------------------------------------------
+function saveChartToFile(txtChart) {
 /*
 Source:
 https://code.tutsplus.com/tutorials/how-to-save-a-file-with-javascript--cms-41105
 */
 	var tempLink = document.createElement("a");
-	var value = new Blob (uploadChartData('chartSignal'));
+	var value = new Blob (uploadChartData(txtChart));
+	//var value = new Blob (uploadChartData('chartSignal'));
 	tempLink.setAttribute('href', URL.createObjectURL(value));
 	tempLink.setAttribute('download', 'signal.csv');
 	tempLink.click();
@@ -1995,10 +2024,15 @@ function downloadVersion(txtVersion) {
 }
 
 //-----------------------------------------------------------------------------
-function downloadRealValue (idTxt, dValue) {
+function downloadRealValue (idTxt, dValue, nDigits=-1) {
 	var txtbx = document.getElementById(idTxt);
-	if (txtbx != null)
-		txtbx.value = dValue;
+	if (txtbx != null) {
+		if (nDigits < 0)
+			txtbx.value = dValue;
+		else {
+			txtbx.value = dValue.toFixed(3);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2055,3 +2089,51 @@ function downloadRemoteProceesing(dictRemoteProc) {
         console.log(exception);
     }
 }
+
+//-----------------------------------------------------------------------------
+function onSaveClick() {
+	try {
+		save();
+	}
+    catch (exception) {
+        console.log(exception);
+    }
+
+}
+
+//-----------------------------------------------------------------------------
+function exportToCsv(filename, rows) {
+    var blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+    //var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, filename);
+    } else {
+        var link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+function save() 
+{ 
+	var data = localStorage.getItem ('MCA_Data');
+	if (data != null) {
+		try {
+			var lines = data.toString().replaceAll (',','\n');
+			exportToCsv("mca.csv", lines);
+		}
+    	catch (exception) {
+        	console.log(exception);
+    	}
+	}
+    
+} 
