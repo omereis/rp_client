@@ -1238,7 +1238,7 @@ function downloadMca (dictMca) {
 	try {
 		downloadRealValue ('txtSignalMin', dictMca.mca_min, 3);
 		downloadRealValue ('txtSignalMax', dictMca.mca_max, 3);
-		downloadRealValue ('txtSignalFreq', dictMca.mca_count);
+		downloadRealValue ('txtSignalsCount', dictMca.mca_count);
 		if (dictMca.hasOwnProperty ('mca_data'))
 			plotMca (dictMca.mca_data);
 	}
@@ -1273,7 +1273,11 @@ function plotMca (aMca) {
         var data=[];
         data[0] = dataMca;
 		var dMcaChannels = uploadTextReal ('txtMcaChannels');
-    	layout["title"] = "MCA (" + dMcaChannels.toString() + ")";
+		var txtTitle = uploadTextValue('txtChartTitle');
+		if (txtTitle.length > 0)
+    		layout["title"] = txtTitle + " (" + dMcaChannels.toString() + ")";
+		else
+    		layout["title"] = "MCA (" + dMcaChannels.toString() + ")";
     	layout["xaxis"] = {};
     	layout["yaxis"] = {};
     	layout.xaxis["title"] = "Channel";
