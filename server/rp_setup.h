@@ -125,6 +125,8 @@ public:
     bool IsRemoteProcessingOn() const;
 	size_t GetMcaCount() const;
 	void ClearMca();
+	double GetMcaMin() const;
+	double GetMcaMax() const;
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:

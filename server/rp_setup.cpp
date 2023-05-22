@@ -524,6 +524,7 @@ void TRedPitayaSetup::SetPreTriggerNs (const std::string &str)
         fprintf (stderr, "Runtime error setting pre trigger:\n%s\n", exp.what());
     }
 }
+
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetPreTriggerNs (Json::Value jPreTrigger)
 {
@@ -543,8 +544,10 @@ void TRedPitayaSetup::NewPulse (const TPulseInfoVec &vPulsesInfo)
 		double dMcaMeasureTime, dTimeLimit = GetMcaTimeLimit ();
 		if (dTimeLimit > 0) {
 			dMcaMeasureTime = GetMcaMeasureTime ();
-			if (dMcaMeasureTime >= dTimeLimit)
+			if (dMcaMeasureTime >= dTimeLimit) {
 				SetMcaOnOff (false);
+				printf ("MCA Stopped\n");
+			}
 		}
 	}
 }
@@ -744,6 +747,17 @@ void TRedPitayaSetup::ClearMca()
 	m_mca_params.ClearMca ();
 }
 
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetMcaMin() const
+{
+	return (m_mca_params.GetMin());
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetMcaMax() const
+{
+	return (m_mca_params.GetMax());
+}
 
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaValid (bool fValid)
