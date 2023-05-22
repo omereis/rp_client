@@ -207,14 +207,18 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 	m_vPulses.push_back (pulse_info);
     if (m_vSpectrum.size() == 0)
         SetSpectrum (GetChannels());
-	double dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal () - GetMinVoltage()) / fabs((GetMaxVoltage() - GetMinVoltage()));
+	double dIndex;
+	if (pulse_info.GetMaxVal () > GetMinVoltage())
+		dIndex = 0;
+	else
+		dIndex = ((double) GetChannels()) * fabs(pulse_info.GetMaxVal () - GetMinVoltage()) / fabs((GetMaxVoltage() - GetMinVoltage()));
 	idx = (int) (dIndex + 0.5);
     if (idx >= 0) {
-		if (idx >= m_vSpectrum.size())  {
-			idx = m_vSpectrum.size() - 1;
+		if (idx < m_vSpectrum.size())  {
+			//idx = m_vSpectrum.size() - 1;
+        	int n = m_vSpectrum[idx];
+        	m_vSpectrum[idx] = (n + 1);
 		}
-        int n = m_vSpectrum[idx];
-        m_vSpectrum[idx] = (n + 1);
 	}
     if (GetCount() == 0) {
         SetMin(pulse_info.GetMaxVal ());
@@ -229,7 +233,7 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
     IncreaseCount ();
 	static int nCount;
 	FILE *file = fopen ("mca_res.csv", "a+");
-	fprintf (file, "%g,%g, %g, %d,%d\n", GetMaxVoltage(), GetMinVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
+	fprintf (file, "%g,%g, %g, %d,%d\n", GetMinVoltage(), GetMaxVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
 	fclose (file);
 }
 
