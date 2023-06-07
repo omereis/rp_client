@@ -164,7 +164,8 @@ int main (int argc, char *argv[])
     Json::Value jSetup = g_rp_setup.AsJson();
 	//g_rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
-    t.setInterval (OnTimerTick, 100);
+	std::thread threadTick (OnTimerTick);
+    //t.setInterval (OnTimerTick, 100);
     while (fRun) {
 		fMessageRecieved = false;
         zmq_recv (responder, szRecvBuffer , 1024, 0);
@@ -176,6 +177,7 @@ int main (int argc, char *argv[])
 		SendReply (responder, szRecvBuffer, jReply);
     }
 	delete[] szRecvBuffer;
+	threadTick.join();
     return 0;
 }
 
@@ -747,15 +749,6 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pul
 			*iDiff = *id - *id1;
 	}
 	pulse_filter.SetData (vSrc, vFiltered, vTrapez, vDiff);
-/*
-	if (nCount == 0) {
-			nCount++;
-		PrintVector (vSrc, "filt_src.csv");
-		PrintVector (vTrapez, "filt_ker.csv");
-		PrintVector (vFiltered, "filt_res.csv");
-		PrintVector (vDiff, "filt_dif.csv");
-	}
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1007,6 +1000,7 @@ float VectorMax (const TFloatVec &v)
 }
 
 bool g_fTimerBusy = false;
+TDoubleVec g_adFilter, g_adProcess;
 //-----------------------------------------------------------------------------
 void OnTimerTick ()
 {
@@ -1017,30 +1011,39 @@ void OnTimerTick ()
 	static int nCount=1;
 	TPulseFilter pulse_filter;
 
-
-	if (!g_fTimerBusy) {
-		g_fTimerBusy = true;
-    	if (g_rp_setup.GetSamplingOnOff ()) {
-        	if (GetNextPulse (vPulse)) {
-				nCount++;
-				if (nCount % 10 == 0)
-					g_rp_setup.CalculateBackground (vPulse);
-				FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
-				if (GetPulseParams (pulse_filter, piVec))
-					pulse_filter.SetPulsesInfo (piVec);
-				if (g_rp_setup.IsRemoteProcessingOn())
-					RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
-				SafeQueueAdd (pulse_filter);
-				if (piVec.size() > 0) {
-					//printf ("Found %d pulses\n", piVec.size());
-            		g_rp_setup.NewPulse (piVec);
+	while (1) {
+		if (!g_fTimerBusy) {
+			g_fTimerBusy = true;
+    		if (g_rp_setup.GetSamplingOnOff ()) {
+        		if (GetNextPulse (vPulse)) {
+					nCount++;
+					auto started = std::chrono::high_resolution_clock::now();
+					FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
+					auto done = std::chrono::high_resolution_clock::now();
+					if (GetPulseParams (pulse_filter, piVec))
+						pulse_filter.SetPulsesInfo (piVec);
+					if (g_rp_setup.IsRemoteProcessingOn())
+						RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
+					g_adFilter.push_back (std::chrono::duration_cast<std::chrono::milliseconds>(done-started).count());
+					SafeQueueAdd (pulse_filter);
+					if (g_adFilter.size() == 100) {
+						double dFilter = VectorAverage (g_adFilter.begin(), g_adFilter.end());
+						printf ("Filter time: %g\n", dFilter);
+						g_adFilter.clear();
+					}
+					if (piVec.size() > 0) {
+						//printf ("Found %d pulses\n", piVec.size());
+            			g_rp_setup.NewPulse (piVec);
+					}
+					else
+						printf ("No pulses found\n");
 				}
 			}
+			g_fTimerBusy = false;
 		}
-		g_fTimerBusy = false;
+		else
+			printf ("Time busy\n");
 	}
-	else
-		printf ("Time busy\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -1142,12 +1145,16 @@ bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 		i++;
 	dAvg = 0;
 	nAvg = 0;
+	//FILE *file = fopen("pre.csv", "a+");
 	while (n < (int) (0.9 * g_rp_setup.GetPreTriggerNs())) {
+		//fprintf (file, "%g\n", *i);
 		dAvg += *i;
 		nAvg++;
 		i++;
 		n++;
 	}
+	//fprintf (file, "\n\n");
+	//fclose(file);
 	dAvg /= nAvg;
 	//printf ("Pre trigger average: %g\n", dAvg);
 	dMax = *i;
