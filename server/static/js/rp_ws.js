@@ -9,6 +9,7 @@
 function onPageLoad () {
 	try {
 		localStorage.removeItem ('MCA_Data');
+		document.getElementById('cboxReadPSD').disabled = true;
 		//var FileSaver = require('file-saver');
 	}
 	catch (exception) {
@@ -741,6 +742,7 @@ function plotSignal (sample_signal){
 		yPulses = []
 		dMin = vector_min (yData);
 	}
+	var dt = uploadSamplingRate();
     for (var n=0 ; n < aPulseData.length ; n++, t += 8e-9) {
         xData[n] = t;
         yTrigger[n] = dTrigger;
@@ -1240,7 +1242,7 @@ function downloadMca (dictMca) {
 		downloadRealValue ('txtSignalMax', dictMca.mca_max, 3);
 		downloadRealValue ('txtSignalsCount', dictMca.mca_count);
 		if (dictMca.hasOwnProperty ('mca_data'))
-			plotMca (dictMca.mca_data);
+			plotMca (dictMca.mca_data, dictMca.mca_count);
 	}
 	catch (exception) {
 		console.log(exception);
@@ -1248,7 +1250,7 @@ function downloadMca (dictMca) {
 }
 
 //-----------------------------------------------------------------------------
-function plotMca (aMca) {
+function plotMca (aMca, nCount) {
 	try {
     	var xData=[], yData=[]
 		var dMax, nMax;
@@ -1275,7 +1277,7 @@ function plotMca (aMca) {
 		var dMcaChannels = uploadTextReal ('txtMcaChannels');
 		var txtTitle = uploadTextValue('txtChartTitle');
 		if (txtTitle.length > 0)
-    		layout["title"] = txtTitle + " (" + dMcaChannels.toString() + ")";
+    		layout["title"] = txtTitle + " (" + nCount.toString() + " Counts, " + dMcaChannels.toString() + " Channels)";
 		else
     		layout["title"] = "MCA (" + dMcaChannels.toString() + ")";
     	layout["xaxis"] = {};
@@ -2141,3 +2143,27 @@ function save()
 	}
     
 } 
+
+//-----------------------------------------------------------------------------
+function uploadSamplingRate() {
+    var rate = uploadRate();
+	var dt = 1;
+	if (rate.length > 0) {
+		rate = parseFloat(rate);
+		dt = 1.0 / rate;
+/*
+		if (rate == 125000000">125Msps</option>
+                            	<option value="
+		if (rate == 15625000">15.625Msps</option>
+                            	<option value="
+		if (rate == 1953000">1.953Msps</option>
+                            	<option value="
+		if (rate == 122070">122.070ksps</option>
+                            	<option value="
+		if (rate == 15258">15.258ksps</option>
+                            	<option value="1907">1.907ksps</option>
+*/
+	}
+	console.log(rate);
+	return (dt);
+}
