@@ -215,7 +215,7 @@
                         <td colspan="2">
                             <input type="checkbox" id="cboxStartSignal" value="Signal" checked="true">Signal
                             <input type="checkbox" id="cboxStartMCA" value="MCA" checked="true">MCA
-                            <input type="checkbox" id="cboxStartPSD" value="PSD" checked="true">PSD
+                            <input type="checkbox" id="cboxStartPSD" value="PSD" checked="false">PSD
                         </td>
                         <td>
                             <input type="button" id="cellStatus" value="status"  onclick="onReadStatusClick()">
@@ -264,7 +264,7 @@
 							<input type="button" value="Clear" onclick="onCardBufferClear()">
 						</td>
                     </tr>
-<!--
+<!-- -->
 					<tr>
                     <th colspan="3" style="background-color: #5c7ee4;">
                         Remote Processing
@@ -280,7 +280,7 @@
 						<td><input type="text" id="txtRemoteHost" style="width:100"></td>
 						<td><input type="text" id="txtRemotePort" style="width:50;text-align:center;"></td>
 					</tr>
--->
+<!-- -->
                     <th colspan="3" style="background-color: #5c7ee4;">
                         Trapezoid
                     </th>
@@ -458,9 +458,9 @@
                         <td>
                             <input type="checkbox" id="cboxReadSignal" value="Signal" checked="true">Signal
                             <input type="checkbox" id="cboxReadMCA" value="MCA" checked="true">MCA
-                            <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true">PSD
+                            <input type="checkbox" id="cboxReadPSD" value="PSD" checked="true" visible="false">PSD
                         </td>
-                        <td>
+                        <td width="40%">
                             <input type="checkbox" id="cboxDebug">Debug
                             <input type="checkbox" id="cboxFiltered">Filtered
                             <input type="checkbox" id="cboxDeriv">Derivative
@@ -485,9 +485,11 @@
 						<td>
 							Minimum <input type="text" id="txtSignalMin" style="width:75px;text-align: center;" readonly>
 							Maximum <input type="text" id="txtSignalMax" style="width:75px;text-align: center;" readonly>
+							<br>
 							Count <input type="text" id="txtSignalsCount" style="width:75px;text-align: center;" readonly>
 						</td>
                     </tr>
+<!--
                     <tr>
 						<td>
                         	<input type="button" value="Start" id="btnSignalStartStop" onclick="onSignalStartStopClick(this.id)">
@@ -497,17 +499,9 @@
                         </td>
                         <td colspan="2">
                             Buffer
-<!--
-
-                            <input type="text" id="txtBuffer" value="25" style="width:75px;text-align: center;"> 
-                            <select id="comboSignalBufferUnits">
-                                <option value="1e-9">Nano</option>
-                                <option value="1e-6" selected>&mu;</option>
-                                <option value="1e-3">Milli</option>
-                            </select> Seconds
-                        -->
                         </td>
                     </tr>
+-->
                     <tr>
                         <td colspan="3">
                             <div id="chartMca" style="resize:both;overflow:auto;"></div>
