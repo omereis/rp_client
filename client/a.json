@@ -1,0 +1,9 @@
+{
+	"sampling":{
+		"rate":125000000,
+		"decimation":1
+	},
+	"trigger":{
+		"level":0.005,"dir":"up","src":"in1"
+	}
+}

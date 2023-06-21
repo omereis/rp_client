@@ -1063,7 +1063,6 @@ void GetNextQueuePulse (TDoubleVec &vPulse)
 {
     mutex mtx;
 
-	vPulse.clear();
     mtx.lock ();
 	vPulse = g_qPulses.back ();
 	g_qPulses.pop();
@@ -1184,14 +1183,12 @@ void ProcessThread ()
 		if (VectorQueueSize() > 0) {
 		//if (SafeQueueSize() > 0) {
 			GetNextQueuePulse (vPulse);
-			if (vPulse.size() > 0) {
-				FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
-				if (GetPulseParams (pulse_filter, piVec))
-					pulse_filter.SetPulsesInfo (piVec);
-				AddFiteredPulseToQueue (pulse_filter);
-				if (piVec.size() > 0)
-            		g_rp_setup.NewPulse (piVec);
-			}
+			FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
+			if (GetPulseParams (pulse_filter, piVec))
+				pulse_filter.SetPulsesInfo (piVec);
+			AddFiteredPulseToQueue (pulse_filter);
+			if (piVec.size() > 0)
+            	g_rp_setup.NewPulse (piVec);
 		}
 		usleep(10);
 	}

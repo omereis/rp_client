@@ -38,7 +38,6 @@
 			color="#00FF00";
 		}
 		var p = document.getElementById('pTarget');
-		txtTarget = document.title + " - " + txtTarget;
 		p.innerText = txtTarget;
 		p.style.backgroundColor = color;
 		console.log ({{is_red_pitaya}});
@@ -52,8 +51,7 @@
 </script>
         
     </body onresize="onWindowResize()">
-	<h3><p id="pTarget">Red Pitaya Based Nuclear Signal Analysis</p></h3>
-<!--	<h3>Red Pitaya Based Nuclear Signal Analysis</h3>-->
+	<h3><p id="pTarget"></p></h3>
 <!-- Running on {_ target _} -->
     <table style="background-color: #8ec7eb;width:100%">
         <tr>
@@ -232,7 +230,6 @@
 							Seconds
 					    </td>
                     </tr>
-<!--
                     <tr>
                         <td colspan="3">
                             Smoothing Window:
@@ -246,7 +243,6 @@
                             </select>
                         </td>
                     </tr>
--->
 <!--
                     <tr>
                         <td>

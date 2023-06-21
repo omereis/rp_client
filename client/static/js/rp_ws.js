@@ -496,8 +496,6 @@ function onReadStatusClick () {
     //msgStatus['op'] = 'status';
     //sendSamplingCommand (msgStatus);
     var msgSignal = new Object;
-	msgSignal['status'] = true;
-
     //msgSignal['signal'] = uploadSignalOnOff ();
     //msgSignal['mca'] = uploadMcaOnOff ();
     //msgSignal['mca_time'] = uploadTextReal ('txtMcaTimeLimit');
@@ -560,15 +558,12 @@ function periodicStatus() {
 function setReadPeriodicCardStatus (fOnOff) {
 	if (fOnOff) {
 		var hUpdate = localStorage.getItem ("update_handle");
-/*
 		if (hUpdate == null) {
 			var nRate = uploadTextAsFloat ('txtUpdateRate');
 
 			var hUpdate = setInterval (periodicStatus, 1000);
 			localStorage.setItem ("update_handle", hUpdate);
 		}
-*/
-
 		//txt.value = timeStart;
 	}
 	else {
@@ -586,9 +581,9 @@ function sendSamplingCommand (cmd) {
     msgSignal['signal'] = cmd;
     msg['sampling'] = cmd;
 	
-/*
 	if (!cmd.signal) {
 		setReadPeriodicCardStatus (false);
+/*
 		var hUpdate = localStorage.getItem ("update_handle");
 		if (hUpdate == null) {
 			var nRate = uploadTextAsFloat ('txtUpdateRate');
@@ -604,8 +599,8 @@ function sendSamplingCommand (cmd) {
 			clearInterval (hUpdate);
 		localStorage.removeItem ("update_handle");
 
-	}
 */
+	}
     sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
