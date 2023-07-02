@@ -13,7 +13,6 @@ txtHostName = None
 g_txtTarget = 'Red Pitaya'
 g_fIsRedPitaya = True
 g_fIsontainer = False
-global g_nPackageSize
 
 #------------------------------------------------------------------------------
 @app.route("/")
@@ -54,8 +53,6 @@ def open_socket(port=5555):
             strAddress = "tcp://localhost:" % port#5555"
         except Exception as e:
             strAddress = "tcp://127.0.0.1:5555"
-            #strAddress = "tcp://localhost:5555"
-        #socket.connect("tcp://localhost:5555")
         socket.connect(strAddress)
     except Exception as e:
         print("Runtime error opening socket:\n%s" % e)
@@ -67,11 +64,7 @@ def message_to_rp (dictCommand, qData):
         socket = open_socket()
         s = str(json.dumps(dictCommand))
         socket.send_string(s)
-        #print("\nmessage_to_rp:  message sent\n")
-        #print(s)
-        #print("\n")
         message = socket.recv()
-        #print("message recieved:\n{}".format(message))
         msg_str = message.decode('utf-8')
         qData.put(msg_str)
     except Exception as e:
