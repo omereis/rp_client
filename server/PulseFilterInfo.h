@@ -1,6 +1,9 @@
 /******************************************************************************\
 |                              PulseFilterInfo.h                               |
 \******************************************************************************/
+#ifndef	_PULSE_FILTER_INFO_H
+#define	_PULSE_FILTER_INFO_H
+
 #include "misc.h"
 #include "vector"
 #include "list"
@@ -50,4 +53,5 @@ private:
     TDoubleVec m_vDiff;
 	TPulseInfoVec m_vPulsesInfo;
 };
+#endif
 //---------------------------------------------------------------------------
