@@ -662,7 +662,7 @@ function setupReadSignal (reply) {
 			//plotSignal (aPulseData, aFiltered, aPulsesIndices);
 		if (aMcaData != null)
 			downloadMca (aMcaData);
-			//plotMca (aMcaData);
+			////plotMca (aMcaData);
 	}
 	catch (exception) {
 		var txt = cell.innerText;
@@ -694,7 +694,7 @@ function pad(num, size) {
 }
 
 //-----------------------------------------------------------------------------
-function formatSSecondsAsTime(sec_num) {
+function formatSecondsAsTime(sec_num) {
     //var sec_num = parseInt(this, 10); // don't forget the second param
     var hours   = Math.floor(sec_num / 3600);
     var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
@@ -719,7 +719,7 @@ function formatSSecondsAsTime(sec_num) {
 function downloadMcaLength(txtBuffer, txtMcaTime) {
 	var txtbx = document.getElementById("txtMcaBuffer");
 	txtbx.value = txtBuffer;
-	document.getElementById('txtMcaRuntime').value = formatSSecondsAsTime (txtMcaTime);
+	document.getElementById('txtMcaRuntime').value = formatSecondsAsTime (txtMcaTime);
 }
 
 //-----------------------------------------------------------------------------
@@ -1263,7 +1263,7 @@ function downloadMca (dictMca) {
 		downloadRealValue ('txtSignalMax', dictMca.mca_max, 3);
 		downloadRealValue ('txtSignalsCount', dictMca.mca_count);
 		if (dictMca.hasOwnProperty ('mca_data'))
-			plotMca (dictMca.mca_data, dictMca.mca_count);
+			plotMca (dictMca.mca_data, dictMca.mca_count, dictMca.mca_time);
 	}
 	catch (exception) {
 		console.log(exception);
@@ -1271,7 +1271,7 @@ function downloadMca (dictMca) {
 }
 
 //-----------------------------------------------------------------------------
-function plotMca (aMca, nCount) {
+function plotMca (aMca, nCount, mca_seconds) {
 	try {
     	var xData=[], yData=[]
 		var dMax, nMax;
@@ -1297,8 +1297,9 @@ function plotMca (aMca, nCount) {
         data[0] = dataMca;
 		var dMcaChannels = uploadTextReal ('txtMcaChannels');
 		var txtTitle = uploadTextValue('txtChartTitle');
+		var txtMcaTime = formatSecondsAsTime (mca_seconds);
 		if (txtTitle.length > 0)
-    		layout["title"] = txtTitle + " (" + nCount.toString() + " Counts, " + dMcaChannels.toString() + " Channels)";
+    		layout["title"] = txtTitle + " (" + nCount.toString() + " Counts, " + dMcaChannels.toString() + " Channels, Time: " + txtMcaTime + ")";
 		else
     		layout["title"] = "MCA (" + dMcaChannels.toString() + ")";
     	layout["xaxis"] = {};
