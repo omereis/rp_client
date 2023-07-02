@@ -10,6 +10,10 @@
 #include <assert.h>
 #include <math.h>
 
+#include <sys/stat.h>
+#include <time.h>
+#include <stdio.h>
+
 #include <mutex>
 #include <thread>
 
@@ -28,8 +32,13 @@ using namespace std;
 
 #include "PulseFilterInfo.h"
 #include "jsoncpp/json/json.h"
+
+#include "MutexQueue.h"
+
+#include "sampling.h"
 //-----------------------------------------------------------------------------
 TDoubleVecQueue g_qPulses;
+//mutex g_mtxPulsesQueue;
 //TFloatVecQueue g_qPulses;
 TFloatVecQueue g_qFiltered;
 TFloatVecQueue g_qDebug;
@@ -44,7 +53,7 @@ string g_strAppDate;
 static const char *g_szReadData = "read_data";
 static const char *g_szBufferLength = "buffer_length";
 static const char *g_szReadMca   = "rea_dmca";
-static const char *g_szSampling  = "sampling";
+const char *g_szSampling  = "sampling";
 static const char *g_szStatus    = "status";
 static const char *g_szAll       = "all";
 static const char *g_szError     = "error";
@@ -60,20 +69,27 @@ TRedPitayaSetup g_rp_setup;
 //TRedPitayaTrigger rpt;
 //#endif
 //-----------------------------------------------------------------------------
+//#ifndef	TMutexDoubleVecQueue
+//typedef TMutexQueue<TDoubleVecQueue> TMutexDoubleVecQueue;
+//#endif
+//-----------------------------------------------------------------------------
+//#ifndef	TMutexPulseFilterQueue
+//typedef TMutexQueue<TPulseFilter> TMutexPulseFilterQueue;
+//#endif
 
-bool HandleMessage (const string &strJson, Json::Value &jReply);//string &strReply)
+//bool HandleMessage (const string &strJson, Json::Value &jReply, mutex *mtxPulsesQueue);
+bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
 void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage);
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
-Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal); 
-Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
+Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
+//Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
 Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal);
-void OnTimerTick ();
 void ExportDebugPulse(TFloatVecQueue &qDebug);
 void SafeStartStop (bool fCommand);
 bool SafeGetStatus ();
 size_t SafeQueueSize ();
-void SafeQueueClear ();
+//void SafeQueueClear ();
 //size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered);
 size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel, TPulseIndexVec &vIndices);
 //size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &vKernel);
@@ -92,11 +108,10 @@ void SafeReadMca (Json::Value &jResult);
 void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
-//size_t ReadSignal (double dLen, TFloatVec &vSignal);
-Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, double dLen, bool fDebug);
+
+Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, double dLen, bool fDebug, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, bool fDebug);
 //Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug);
-bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec);
 //bool GetPulseParams (TFloatVec &vBuffer, TPulseInfoVec &piVec);
 //bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseIndexVec &vIndices);
 //bool GetPulseParams (TDoubleVec &vBuffer, TPulseInfoVec &piVec);
@@ -106,7 +121,6 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 Json::Value ReadMca ();
 //bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2));
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd);
-bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 //void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
 void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
@@ -115,15 +129,16 @@ size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices)
 size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices);
 Json::Value GetPulsesInSignal (const TFloatVec &vSignal);
 void GetAppDateTime (char *szFileName);
-void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff);
-void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter);
-void RemoteProcess (const TRemoteProcessing &remote_processing, const TDoubleVec &vPulse);
-void AddVectorToQueue (const TDoubleVec &vPulse);
+//void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff);
+//void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter);
+//void RemoteProcess (const TRemoteProcessing &remote_processing, const TDoubleVec &vPulse);
+void AddVectorToQueue (const TDoubleVec &vPulse, mutex *pMutex);
+void VectorQueueClear();
 size_t VectorQueueSize();
-void GetNextQueuePulse (TDoubleVec &vPulse);
+size_t GetNextQueuePulse (TDoubleVec &vPulse);
 size_t ReadNextQueuePulse (TPulseFilter &pulse_filter);
 size_t FilteredPulseQueueSize();
-void ProcessThread ();
+//void ProcessThread ();
 
 //-----------------------------------------------------------------------------
 std::string ret_str()
@@ -133,12 +148,9 @@ std::string ret_str()
 	return (s);
 }
 
-#include <sys/stat.h>
-#include <time.h>
-#include <stdio.h>
-
 //-----------------------------------------------------------------------------
 string SaveMCA ();
+
 //-----------------------------------------------------------------------------
 int main (int argc, char *argv[])
 {
@@ -161,6 +173,12 @@ int main (int argc, char *argv[])
 	int n, nBufferPoints;
 	float *afBuffer;
 	char *szRecvBuffer = new char [1024];
+	mutex mtxRaw, mtxProcess;
+
+	//TMutexQueue<TDoubleVecQueue> qRaw (&mtxRaw);
+	//TMutexQueue<TPulseFilter> qProcess (&mtxProcess);
+	TMutexDoubleVecQueue qRaw;// (&mtxRaw);
+	TMutexPulseFilterQueue qProcess;// (&mtxProcess);
 
 	fprintf (stderr, "Loading Setup\n");
 #ifdef	_RED_PITAYA_HW
@@ -171,18 +189,17 @@ int main (int argc, char *argv[])
 #endif
     g_rp_setup.LoadFromJson(g_szDefaultSetup);// "rp_setup.json");
     Json::Value jSetup = g_rp_setup.AsJson();
-	//g_rp_setup.UpdateFromJson(jSetup, fUpdateHardware);
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
-	std::thread threadTick (OnTimerTick);
-	std::thread threadProcess (ProcessThread);
-    //t.setInterval (OnTimerTick, 100);
+
+	std::thread threadTick (SamplingThread, (void *) &qRaw, (void *) &g_rp_setup);//&mtxRaw);//mtxPulsesQueue);
+	std::thread threadProcess (ProcessThread, &qRaw, &qProcess, (void *) &g_rp_setup);//mtxPulsesQueue);
     while (fRun) {
 		fMessageRecieved = false;
         zmq_recv (responder, szRecvBuffer , 1024, 0);
 		std::string strJson = ToLower(szRecvBuffer);
 		strJson = ReplaceAll(strJson, "\'", "\"");
 
-		fRun = HandleMessage (strJson, jReply);
+		fRun = HandleMessage (strJson, jReply, qRaw, qProcess);//&mtxPulsesQueue);
 		strReply = StringifyJson (jReply);
 		SendReply (responder, szRecvBuffer, jReply);
     }
@@ -193,7 +210,7 @@ int main (int argc, char *argv[])
 }
 
 //-----------------------------------------------------------------------------
-bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strReply)
+bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
 {
 	bool fRun=true;
 	string strReply;
@@ -216,15 +233,14 @@ bool HandleMessage (const string &strJson, Json::Value &jReply)//string &strRepl
 				jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
 			}
 			if (!root[g_szReadData].isNull())
-				jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal);
+				//jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal, mtxPulsesQueue);
+				jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal, qRaw, qProcess);
 			if (!root[g_szSampling].isNull()) {
 				//fprintf (stderr, "Reading sampling\n");
-				jReply[g_szSampling] = HandleSampling(root[g_szSampling], g_rp_setup, fRun);
+				jReply[g_szSampling] = HandleSampling(root[g_szSampling], g_rp_setup, fRun, qRaw, qProcess);
 			}
 			if (!root[g_szMCA].isNull())
 				jReply[g_szMCA] = HandleMCA(root[g_szMCA], g_rp_setup);
-			if (!root["signal"].isNull())
-				jReply = ContinueReadSignal (root, vSignal);
 		}
 		else {
 			fprintf (stderr, "\nParsing error\n");
@@ -254,6 +270,7 @@ void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage)
 		nTotalToSend = strReply.length();
 		nPackSize = g_rp_setup.GetPackageSize();
 		while (nTotalToSend > 0) {
+			//printf("Total to send: %d\n", nTotalToSend);
 			jReply.clear();
 			s = strReply.substr (nStart, nPackSize);
 			nStart += nPackSize;//100;
@@ -269,6 +286,7 @@ void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage)
 				//rc = zmq_recv (responder, szRecvBuffer, 1024, 0);
 			//rc = zmq_recv (responder, buffer, 1024, 0);
 			}
+			//jReplyMessage = Json::Value("");
 		}
 	//delete[] szRecvBuffer;
 	}
@@ -333,7 +351,7 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 			fprintf (stderr, "\n\nBackground Command\n");
 			//TFloatVec vSignal;
 			TDoubleVec vSignal;
-			GetNextPulse (vSignal);
+			GetNextPulse (vSignal, rp_setup);
 			jNew = rp_setup.HandleBackground (jBkgnd, vSignal);
 			if (jBkgnd.isString()) {
 				string sBkgnd = jSetup["background"].asString();
@@ -384,10 +402,10 @@ Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup)
 }
 
 //-----------------------------------------------------------------------------
-Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal)
+Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
 {
     TFloatVec::iterator i;
-	mutex mtx;
+	//mutex mtx;
     std::string strReply, strNumber, strPulses, strPulse;
     char szNum[128];
     Json::Value jAllPulses, jPulse(Json::arrayValue), jPulseData(Json::arrayValue), jSignal;
@@ -408,7 +426,10 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 				fReset = true;
 		}
 		if (fReset) {
-			SafeQueueClear ();
+			qRaw.Clear();
+			qProcess.Clear();
+			//VectorQueueClear(mtxPulsesQueue);
+			//SafeQueueClear (mtxPulsesQueue);
 			rp_setup.ClearMca();
 		}
 		else {
@@ -420,8 +441,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 				fprintf (stderr, "Required length: %s\n", strSignalLength.c_str());
 				double dLen = stod (strSignalLength);
             	if (dLen > 0) {
-            		//jAllPulses["signal"] = ReadSignal (rp_setup, dLen, vSignal, fDebug);
-					jAllPulses["signal"] = ReadSignal (rp_setup, jSignal["filtered"].asBool(), jSignal["deriv"].asBool(), dLen, fDebug);
+					jAllPulses["signal"] = ReadSignal (rp_setup, jSignal["filtered"].asBool(), jSignal["deriv"].asBool(), dLen, fDebug, qRaw, qProcess);
             	}
 			}
         	if (!jRead["mca"].isNull()) {
@@ -434,7 +454,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 				//}
         	}
 		}
-        jAllPulses["buffer_length"] = to_string (SafeQueueSize ());
+        jAllPulses["buffer_length"] = to_string (qRaw.GetSize());//SafeQueueSize ());
         jAllPulses["mca_length"] = GetMcaCounts ();
         jAllPulses["background"] = g_rp_setup.GetBackground();
 
@@ -462,16 +482,11 @@ string GetMcaCounts ()
 }
 
 //-----------------------------------------------------------------------------
-//size_t ReadSignal (double dLen, TFloatVec &vSignal)
-//Json::Value ReadSignal (TRedPitayaSetup &rp_setup, double dLen, TFloatVec &vSignal, bool fDebug)
-Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, double dLen, bool fDebug)
+Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, double dLen, bool fDebug, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
 {
     Json::Value jSignal, jSignalData, jFiltered, jKernel, jFiltDeriv;
 	int nVectorPoints;
-	//TDoubleVec vPulse, vFiltered, vKernel;
 	TDoubleVec::const_iterator it, itPrev;
-	//TFloatVec vPulse, vFiltered;
-	//TFloatVec::iterator it;
 	std::string strNumber;
 	size_t sPulse, n;
 	static int nCount=0;
@@ -479,28 +494,31 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, 
 	TPulseIndexVec vIndices;
 
     try {
-		nVectorPoints = int ((dLen / 8e-9) + 0.5);
+		double dRate = rp_setup.GetSamplingPeriod();
+		if (dRate <= 0) {
+			jSignalData["error"] = "ilegal sampling rate: " + to_string (dRate);
+    		return (jSignalData);
+		}
+		nVectorPoints = int ((dLen / dRate) + 0.5);
+		//nVectorPoints = int ((dLen / 8e-9) + 0.5);
 		//vSignal.clear();
 		fprintf (stderr, "length: i%g\nBuffer: %dx\n", dLen, nVectorPoints);
-        while ((jSignal.size() < nVectorPoints) && (FilteredPulseQueueSize() > 0)) {
-			sPulse = ReadNextQueuePulse (pulse_filter);
-			//sPulse = SafeQueueExtract (vPulse, vFiltered, vKernel, vIndices);
-			//PrintVector (vPulse, "p_debug.csv");
-			//PrintVector (vFiltered, "f_debug.csv");
+        //while ((jSignal.size() < nVectorPoints) && (FilteredPulseQueueSize() > 0)) {
+		while ((jSignal.size() < nVectorPoints) && (qProcess.GetSize() > 0)) {
+			qProcess.PopLastItem(pulse_filter);
+			sPulse = pulse_filter.GetPulseSize();
+			//sPulse = ReadNextQueuePulse (pulse_filter);
 			if (sPulse > 0) {
 				for (it=pulse_filter.GetPulseBegin() ; (it != pulse_filter.GetPulseEnd()) && (jSignal.size() < nVectorPoints) ; it++)
 					jSignal.append(*it);
 				if (fFiltered) {
 					if (pulse_filter.GetFilteredSize() > 0) {
-					//if (vFiltered.size() > 0) {
 						for (it=pulse_filter.GetFilteredBegin(), n=0 ; (it != pulse_filter.GetFilteredEnd() && (jFiltered.size() < nVectorPoints)) ; n++) {
-						//for (it=vFiltered.begin(), n=0 ; (it != vFiltered.end() && (jFiltered.size() < nVectorPoints)) ; n++) {
 							jFiltered.append(*it);
 							itPrev = it;
 							it++;
 							if (fDeriv) {
 								if (n < pulse_filter.GetFilteredSize() - 1)
-								//if (n < vFiltered.size() - 1)
 									jFiltDeriv.append (*it - *itPrev);
 								else
 									jFiltDeriv.append (0);
@@ -508,14 +526,8 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, 
 						}
 					}
 				}
-//				for (it=vKernel.begin() ; (it != vKernel.end() && (jKernel.size() < nVectorPoints)) ; it++)
-//					jKernel.append(*it);
 			}
-			//rValue += 0;
         }
-        //jSignal["signal_length"] = to_string (vSignal.size());
-        //jSignal["package_size"] = to_string(rp_setup.GetPackageSize());
-		//PrintVector (vSignal, "out_debug.csv");
 		string sSignal = StringifyJson (jSignal);
 		fprintf (stderr, "Signal Read: %d\n", nCount++);
 		jSignalData["data"] = jSignal;
@@ -742,6 +754,7 @@ size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &
     return (vPulse.size());
 }
 
+/*
 //-----------------------------------------------------------------------------
 void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff)
 {
@@ -766,6 +779,7 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pul
 	}
 	pulse_filter.SetData (vSrc, vFiltered, vTrapez, vDiff);
 }
+*/
 
 //-----------------------------------------------------------------------------
 void SafeQueueAdd (const TPulseFilter &pulse_filter)
@@ -796,32 +810,52 @@ void SafeQueueAdd (const TPulseFilter &pulse_filter)
     mtx.unlock ();
 }
 
+/*
 //-----------------------------------------------------------------------------
 void SafeQueueClear ()
 {
-    mutex mtx;
+    //mutex mtx;
 
-    mtx.lock ();
+	while (g_mtxPulsesQueue.try_lock())
+		usleep(1);
+    //mtx.lock ();mutex 
+	g_mtxPulsesQueue.lock();
 	while (!g_qFilteredPulses.empty())
     //while (!g_qPulses.empty())
 		//g_qPulses.pop();
 		g_qFilteredPulses.pop_back ();
-    mtx.unlock ();
+	g_mtxPulsesQueue.unlock();
+    //mtx.unlock ();
+}
+*/
+
+//-----------------------------------------------------------------------------
+void WaitForMutex (mutex &mtx, useconds_t usec)
+{
+	while (mtx.try_lock())
+		usleep(usec);
 }
 
+/*
 //-----------------------------------------------------------------------------
 size_t SafeQueueSize ()
 {
     size_t s;
-    mutex mtx;
+    //mutex mtx;
 
-    mtx.lock ();
+    //mtx.lock ();
+	//while (g_mtxPulsesQueue.try_lock())
+		//usleep(1);
+	WaitForMutex (g_mtxPulsesQueue, 1);
+	g_mtxPulsesQueue.lock();
 	s = g_qFilteredPulses.size();
     //s = g_qPulses.size();
 	//s = g_vPulsesInfo.size();
-    mtx.unlock ();
+    //mtx.unlock ();
+	g_mtxPulsesQueue.unlock();
     return (s);
 }
+*/
 
 //-----------------------------------------------------------------------------
 void SafeStartStop (bool fCommand)
@@ -856,8 +890,9 @@ bool SafeGetMca ()
     mtx.unlock();
     return (fRunning);
 }
-//-----------------------------------------------------------------------------
 
+/*
+//-----------------------------------------------------------------------------
 bool str_to_bool (const std::string &sSource)
 {
 	bool f  = false;
@@ -869,9 +904,11 @@ bool str_to_bool (const std::string &sSource)
 		f = true;
 	return (f);
 }
+*/
 
 clock_t g_cStart;
 
+/*
 //-----------------------------------------------------------------------------
 Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun)
 {
@@ -934,8 +971,9 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
     }
     return (jResult);
 }
-//-----------------------------------------------------------------------------
+*/
 
+//-----------------------------------------------------------------------------
 Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
 {
     std::string strResult;
@@ -1017,30 +1055,56 @@ float VectorMax (const TFloatVec &v)
 }
 
 //-----------------------------------------------------------------------------
-void AddVectorToQueue (const TDoubleVec &vPulse)
+void AddVectorToQueue (const TDoubleVec &vPulse, mutex *pMutex)
 {
-    mutex mtx;
+    //mutex mtx;
 
-    mtx.lock ();
+    //mtx.lock ();
+	while (pMutex->try_lock())
+		usleep(1);
+	pMutex->lock();
 	g_qPulses.push (vPulse);
 	while (g_qPulses.size() > 500) {
 		g_qPulses.pop();
 		//printf ("Max Number\n");
 	}
-	mtx.unlock();
+	////mtx.unlock();
+	pMutex->unlock();
 }
 
+/*
+//-----------------------------------------------------------------------------
+void VectorQueueClear()
+{
+    //mutex mtx;
+	while (g_mtxPulsesQueue.try_lock())
+		usleep(1);
+	g_mtxPulsesQueue.lock();
+    //mtx.lock ();
+	while (g_qPulses.size() > 0)
+		g_qPulses.pop();
+	//mtx.unlock();
+	g_mtxPulsesQueue.unlock();
+}
+*/
+
+/*
 //-----------------------------------------------------------------------------
 size_t VectorQueueSize()
 {
-    mutex mtx;
+    //mutex mtx;
 	size_t n;
 
-    mtx.lock ();
+	while (g_mtxPulsesQueue.try_lock())
+		usleep(1);
+	g_mtxPulsesQueue.lock();
+    //mtx.lock ();
 	n = g_qPulses.size();
-	mtx.unlock();
+	//mtx.unlock();
+	g_mtxPulsesQueue.unlock();
 	return (n);
 }
+*/
 
 //-----------------------------------------------------------------------------
 size_t ReadNextQueuePulse (TPulseFilter &pulse_filter)
@@ -1058,17 +1122,25 @@ size_t ReadNextQueuePulse (TPulseFilter &pulse_filter)
 	return (pulse_filter.GetPulseSize());
 }
 
+/*
 //-----------------------------------------------------------------------------
-void GetNextQueuePulse (TDoubleVec &vPulse)
+size_t GetNextQueuePulse (TDoubleVec &vPulse)
 {
-    mutex mtx;
 
 	vPulse.clear();
-    mtx.lock ();
-	vPulse = g_qPulses.back ();
-	g_qPulses.pop();
-	mtx.unlock();
+	while (g_mtxPulsesQueue.try_lock())
+		usleep(1);
+	g_mtxPulsesQueue.lock();
+    //mtx.lock ();
+	if (g_qPulses.size () > 0) {
+		vPulse = g_qPulses.back ();
+		g_qPulses.pop();
+	}
+	//mtx.unlock();
+	g_mtxPulsesQueue.unlock();
+	return (vPulse.size());
 }
+*/
 
 //-----------------------------------------------------------------------------
 void AddFiteredPulseToQueue (const TPulseFilter &pulse_filter)
@@ -1096,32 +1168,11 @@ size_t FilteredPulseQueueSize()
 }
 
 TDoubleVec g_adFilter, g_adProcess;
-//-----------------------------------------------------------------------------
-void OnTimerTick ()
-{
-	static bool fTimerBusy = false;
-    TDoubleVec vPulse;
-
-	while (1) {
-		if (!fTimerBusy) {
-			fTimerBusy = true;
-    		if (g_rp_setup.GetSamplingOnOff ()) {
-        		if (GetNextPulse (vPulse))
-					AddVectorToQueue (vPulse);
-				if (g_rp_setup.IsRemoteProcessingOn())
-					RemoteProcess (g_rp_setup.GetRemoteProc(), vPulse);
-			}
-			fTimerBusy = false;
-		}
-		else
-			printf ("Time busy\n");
-		usleep (10);
-	}
-}
 
 bool g_fTimerBusy = false;
+/*
 //-----------------------------------------------------------------------------
-void OnTimerTick1 ()
+void SamplingThread1 ()
 {
     TDoubleVec vPulse, vFiltered;
     TFloatVec::iterator i;
@@ -1145,13 +1196,6 @@ void OnTimerTick1 ()
 						RemoteProcess (g_rp_setup.GetRemoteProc(), pulse_filter);
 					g_adFilter.push_back (std::chrono::duration_cast<std::chrono::milliseconds>(done-started).count());
 					SafeQueueAdd (pulse_filter);
-/*
-					if (g_adFilter.size() == 100) {
-						double dFilter = VectorAverage (g_adFilter.begin(), g_adFilter.end());
-						printf ("Filter time: %g\n", dFilter);
-						g_adFilter.clear();
-					}
-*/
 					try {
 						if (piVec.size() > 0) {
 						//printf ("Found %d pulses\n", piVec.size());
@@ -1161,7 +1205,7 @@ void OnTimerTick1 ()
 							printf ("No pulses found\n");
 					}
 					catch (std::exception &exp) {
-						fprintf (stderr, "Runtime error in OnTimerTick:\n:%s\n", exp.what());
+						fprintf (stderr, "Runtime error in SamplingThread:\n:%s\n", exp.what());
 					}
 				}
 			}
@@ -1172,7 +1216,9 @@ void OnTimerTick1 ()
 		usleep (10);
 	}
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void ProcessThread ()
 {
@@ -1182,20 +1228,25 @@ void ProcessThread ()
 
 	while (1) {
 		if (VectorQueueSize() > 0) {
-		//if (SafeQueueSize() > 0) {
-			GetNextQueuePulse (vPulse);
-			if (vPulse.size() > 0) {
-				FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
-				if (GetPulseParams (pulse_filter, piVec))
-					pulse_filter.SetPulsesInfo (piVec);
-				AddFiteredPulseToQueue (pulse_filter);
-				if (piVec.size() > 0)
-            		g_rp_setup.NewPulse (piVec);
+			if (GetNextQueuePulse (vPulse) > 0) {
+				try {
+					//FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, false);
+					FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
+					//if (GetPulseParams (pulse_filter, piVec))
+						//pulse_filter.SetPulsesInfo (piVec);
+					AddFiteredPulseToQueue (pulse_filter);
+					if (piVec.size() > 0)
+            			g_rp_setup.NewPulse (piVec);
+				}
+				catch (std::exception &exp) {
+					fprintf (stderr, "Runtime Error in ProcessThread:\n%s\n", exp.what());
+				}
 			}
 		}
 		usleep(10);
 	}
 }
+*/
 
 //-----------------------------------------------------------------------------
 bool IsF1GreaterThenF2 (float f1, float f2)
@@ -1481,6 +1532,7 @@ TFloatVec SmoothPulse (const TFloatVec &vRawPulse)
     return (vSmooth);
 }
 
+/*
 //-----------------------------------------------------------------------------
 bool GetNextPulse (TDoubleVec &vPulse)
 //bool GetNextPulse (TFloatVec &vPulse)
@@ -1500,6 +1552,7 @@ bool GetNextPulse (TDoubleVec &vPulse)
 #endif
     return (fPulse);
 }
+*/
 
 //-----------------------------------------------------------------------------
 #ifdef  _RED_PITAYA_HW
@@ -1670,34 +1723,6 @@ Json::Value ReadMca ()
 		jMCA["error"] = exp.what();
 	}
     return (jMCA);
-}
-
-//-----------------------------------------------------------------------------
-Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal)
-{
-	Json::Value jReply;
-	TFloatVec::iterator it;
-
-	try {
-		int n, nSize = jCmd["signal"].asInt();
-		int nStart = jCmd["start"].asInt();
-		for (n=0, it=vSignal.begin() ; (n < nStart) && (it != vSignal.end()) ; n++)
-			it++;
-		for (n=0 ; (n < nSize) && (it != vSignal.end()) ; n++, it++)
-			jReply["signal"].append (*it);
-		jReply["length"] = to_string(n);
-	}
-    catch (std::exception exp) {
-		fprintf (stderr, "Runtime error in 'ContinueReadSignal ':\n%s\n", exp.what());
-		jReply["error"] = exp.what();
-	}
-/*
-	string strReply = StringifyJson (jReply);
-	fprintf (stderr, "+----------------------------------------------------+\n");
-	fprintf (stderr, "Reply:\n%s\n", strReply.c_str());
-	fprintf (stderr, "+----------------------------------------------------+\n");
-*/
-	return (jReply);
 }
 
 //-----------------------------------------------------------------------------
