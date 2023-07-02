@@ -63,6 +63,24 @@ void TRedPitayaSampling::AssignAll (const TRedPitayaSampling &other)
     SetSignalPoints (other.GetSignalPoints());
 	SetPulserDir (other.GetPulseDir());
 }
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSampling::GetSamplingPeriod () const
+{
+	double dRate;
+	string strRate = GetRate();
+
+	try {
+		dRate = stod (strRate);
+		dRate = 1.0 / dRate;
+	}
+	catch (std::exception &exp) {
+		dRate = 0;
+		fprintf (stderr, "Runtime error in TRedPitayaSampling::GetSamplingRate:\n%s\n", exp.what());
+	}
+	return (dRate);
+}
+
 //-----------------------------------------------------------------------------
 string TRedPitayaSampling::GetRate () const
 {

@@ -36,6 +36,7 @@ public:
 #endif
 
     string GetRate () const;
+	double GetSamplingPeriod () const;
     void SetRate (const string &strRate);
     string GetDecimation () const;
     void  SetDecimation (const string &str);
