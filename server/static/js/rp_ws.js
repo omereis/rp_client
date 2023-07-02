@@ -5,10 +5,14 @@
 
 /******************************************************************************/
 
+const RawBuffer       = 1;
+const ProcessedBuffer = 2;
 //-----------------------------------------------------------------------------
 function onPageLoad () {
 	try {
 		localStorage.removeItem ('MCA_Data');
+		localStorage.removeItem ("update_handle");
+		var hUpdate = localStorage.getItem ("update_handle");
 		document.getElementById('cboxReadPSD').disabled = true;
 		//var FileSaver = require('file-saver');
 	}
@@ -558,24 +562,26 @@ function periodicStatus() {
 
 //-----------------------------------------------------------------------------
 function setReadPeriodicCardStatus (fOnOff) {
-	if (fOnOff) {
-		var hUpdate = localStorage.getItem ("update_handle");
-/*
-		if (hUpdate == null) {
-			var nRate = uploadTextAsFloat ('txtUpdateRate');
-
-			var hUpdate = setInterval (periodicStatus, 1000);
-			localStorage.setItem ("update_handle", hUpdate);
+	try {
+		if (fOnOff) {
+			var hUpdate = localStorage.getItem ("update_handle");
+			if (hUpdate == null) {
+				var nRate = uploadTextAsFloat ('txtUpdateRate');
+				var hUpdate = setInterval (periodicStatus, 1000);
+				localStorage.setItem ("update_handle", hUpdate);
+			}
+	
+			//txt.value = timeStart;
 		}
-*/
-
-		//txt.value = timeStart;
+		else {
+			var hUpdate = localStorage.getItem ("update_handle");
+			if (hUpdate != null)
+				clearInterval (hUpdate);
+			localStorage.removeItem ("update_handle");
+		}
 	}
-	else {
-		var hUpdate = localStorage.getItem ("update_handle");
-		if (hUpdate != null)
-			clearInterval (hUpdate);
-		localStorage.removeItem ("update_handle");
+	catch (e) {
+		console.log(e);
 	}
 }
 
@@ -606,6 +612,7 @@ function sendSamplingCommand (cmd) {
 
 	}
 */
+	//console.log(JSON.stringify(msg));
     sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
@@ -644,7 +651,7 @@ function setupReadSignal (reply) {
 		if (samples.pulses.signal.hasOwnProperty('filtered'))
 			aFiltered = samples.pulses.signal.filtered;
         if (samples.pulses.hasOwnProperty('buffer_length'))
-			downloadBufferLength(samples.pulses.buffer_length);
+			downloadBufferLength(RawBuffer, samples.pulses.buffer_length);
         //if (samples.pulses.hasOwnProperty('mca_length'))
 			//downloadMcaLength(samples.pulses.mca_length);
         if (samples.pulses.hasOwnProperty('background'))
@@ -665,8 +672,13 @@ function setupReadSignal (reply) {
 }
 
 //-----------------------------------------------------------------------------
-function downloadBufferLength(value) {
-	var txtbx = document.getElementById("txtCardBuffer");
+function downloadBufferLength(target, value) {
+	var txtbx;
+
+	if (target == ProcessedBuffer)
+		txtbx = document.getElementById("txtCardProcessBuffer");
+	else
+		txtbx = document.getElementById("txtCardRawBuffer");
 	txtbx.value = value;
 	txtbx.style.background = 'Yellow';
 	setInterval (clearBufferBkgnd, 1000);
@@ -712,7 +724,7 @@ function downloadMcaLength(txtBuffer, txtMcaTime) {
 
 //-----------------------------------------------------------------------------
 function clearBufferBkgnd () {
-	var txtbx = document.getElementById("txtCardBuffer");
+	var txtbx = document.getElementById("txtCardRawBuffer");
 	txtbx.style.background = 'White';
 }
 
@@ -1020,8 +1032,10 @@ function readSamplingStatus (reply) {
 		setStartStop (jReply.sampling.status.mca, 'cboxStartMCA', 'btnMCAStartStop');
 
 		downloadCheckBox (jReply.sampling.status.psd, "cboxStartPSD");
-		if (jReply.sampling.hasOwnProperty('buffer'))
-			downloadBufferLength(jReply.sampling.buffer);
+		if (jReply.sampling.hasOwnProperty('process_buffer'))
+			downloadBufferLength(ProcessedBuffer , jReply.sampling.process_buffer);
+		if (jReply.sampling.hasOwnProperty('raw_buffer'))
+			downloadBufferLength(RawBuffer, jReply.sampling.raw_buffer);
 		if (jReply.sampling.hasOwnProperty('mca_buffer'))
 			downloadMcaLength(jReply.sampling.mca_buffer, jReply.sampling.mca_time);
         var cl, status = jReply.sampling.status.signal;
@@ -1032,8 +1046,8 @@ function readSamplingStatus (reply) {
             cl = 'red';
         }
         p.style.backgroundColor = cl;
-		if (jReply.sampling.status.signal)
-			setReadPeriodicCardStatus (true);
+		//if (jReply.sampling.status.signal)
+			//setReadPeriodicCardStatus (true);
     }
     catch (exception) {
 		var p = document.getElementById ("txtReply");
@@ -1062,12 +1076,14 @@ function toggleButtonStartStop (idBtn) {
 //-----------------------------------------------------------------------------
 function onSamplingStartStop() {
 	var fStartStop = toggleButtonStartStop ('btnSamplingStartStop');
+	setReadPeriodicCardStatus (fStartStop);
 	sendSamplingUpdate (fStartStop, uploadMcaOnOff(), uploadMcaTimeLimit(), uploadPsdOnOff ());
 }
 
 //-----------------------------------------------------------------------------
 function onMcaStartStop() {
 	var fStartStop = toggleButtonStartStop ('btnMCAStartStop');
+	setReadPeriodicCardStatus (fStartStop);
 	sendSamplingUpdate (fStartStop, fStartStop, uploadMcaTimeLimit(), uploadPsdOnOff ());
 }
 
@@ -1467,7 +1483,7 @@ function handlerBackground (reply) {
     }
 }
 //-----------------------------------------------------------------------------
-function onCardBufferLength () {
+function onCardRawBufferLength () {
     var msg = new Object, msgSignal = new Object;
 	msgSignal['buffer'] = 'read';
     msg['read_data'] = msgSignal;
@@ -1484,7 +1500,7 @@ function onCardBufferClear () {
 
 //-----------------------------------------------------------------------------
 function setupCardBuffer (reply) {
-    var txtbx = document.getElementById("txtCardBuffer");
+    var txtbx = document.getElementById("txtCardRawBuffer");
     try {
 		var jReply = JSON.parse (reply);
 		txtbx.value = jReply.pulses.buffer;//sampling.buffer
