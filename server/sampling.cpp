@@ -42,38 +42,27 @@ void SamplingThread (void *pParam1, void *pParam2)
 }
 
 //-----------------------------------------------------------------------------
-//void ProcessThread (mutex *pMutex)
-//void ProcessThread (TMutexQueue<TDoubleVecQueue> *qmtxRaw)
 void ProcessThread (void *pParam1, void *pParam2, void *pParam3)
 {
     TDoubleVec vPulse;
 	TPulseFilter pulse_filter;
     TPulseInfoVec piVec;
 	mutex mtx;
-	//TMutexQueue<TDoubleVec> q (&mtx);
-	//TMutexQueue<TDoubleVec> *pqmtxRaw = (TMutexQueue<TDoubleVec> *) pParam1;
 	TMutexDoubleVecQueue *pqmtxRaw = (TMutexDoubleVecQueue *) pParam1;
-	//TMutexQueue<TPulseFilter> *pqProcess = (TMutexQueue<TPulseFilter> *) pParam2;
 	TMutexPulseFilterQueue *pqProcess = (TMutexPulseFilterQueue *) pParam2;
-	//TMutexQueue<TPulseFilter> *pqProcess = (TMutexQueue<TPulseFilter> *) pParam2;
 	TRedPitayaSetup *pSetup = (TRedPitayaSetup *) pParam3;
 
 	while (1) {
     	if (pqmtxRaw->GetSize() > 0) {
 			pqmtxRaw->PopLastItem (vPulse);
     		if (vPulse.size() > 0) {
-			//if (GetNextQueuePulse (vPulse) > 0) {
 				try {
-					//FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, false);
 					FilterPulse (vPulse, pSetup->GetBackground(), pulse_filter, pSetup->IsFilterOn(), pSetup);
-					//FilterPulse (vPulse, g_rp_setup.GetBackground(), pulse_filter, g_rp_setup.IsFilterOn());
-					if (GetPulseParams (pulse_filter, piVec))
+					if (GetPulseParams (*pSetup, pulse_filter, piVec))
 						pulse_filter.SetPulsesInfo (piVec);
 					pqProcess->AddItem (pulse_filter);
-					//AddFiteredPulseToQueue (pulse_filter);
 					if (piVec.size() > 0)
             			pSetup->NewPulse (piVec);
-            			//g_rp_setup.NewPulse (piVec);
 				}
 				catch (std::exception &exp) {
 					fprintf (stderr, "Runtime Error in ProcessThread:\n%s\n", exp.what());

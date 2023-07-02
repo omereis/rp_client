@@ -20,7 +20,8 @@ bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 //bool GetNextPulse (TDoubleVec &vPulse);
 void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter);
 void RemoteProcess (const TRemoteProcessing &remote_processing, const TDoubleVec &vPulse);
-bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec);
+//bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec);
 bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TDoubleVec &vPulse);
+bool GetPulseParams (const TRedPitayaSetup &rp_setup, const TPulseFilter &pulse_filter, TPulseInfoVec &piVec);
 //---------------------------------------------------------------------------
 #endif

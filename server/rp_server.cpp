@@ -64,7 +64,7 @@ static const char *g_szDefaultSetup = "rp_setup.json";
 bool g_fMca = false;
 //-----------------------------------------------------------------------------
 //#ifdef	__HARDWARE
-TRedPitayaSetup g_rp_setup;
+//TRedPitayaSetup g_rp_setup;
 //TRedPitayaSampling rps;
 //TRedPitayaTrigger rpt;
 //#endif
@@ -78,8 +78,10 @@ TRedPitayaSetup g_rp_setup;
 //#endif
 
 //bool HandleMessage (const string &strJson, Json::Value &jReply, mutex *mtxPulsesQueue);
-bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
-void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage);
+//bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
+bool HandleMessage (const string &strJson, Json::Value &jReply, TRedPitayaSetup &rp_setup, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
+//void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage);
+void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage, TRedPitayaSetup &rp_setup);
 Json::Value HandleSetup(Json::Value &jSetup, TRedPitayaSetup &rp_setup);
 Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloatVec &vSignal, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
 //Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun);
@@ -87,7 +89,8 @@ Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup);
 Json::Value ContinueReadSignal (Json::Value jCmd, TFloatVec &vSignal);
 void ExportDebugPulse(TFloatVecQueue &qDebug);
 void SafeStartStop (bool fCommand);
-bool SafeGetStatus ();
+//bool SafeGetStatus ();
+bool SafeGetStatus (TRedPitayaSetup &rp_setup);
 size_t SafeQueueSize ();
 //void SafeQueueClear ();
 //size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered);
@@ -98,14 +101,18 @@ size_t SafeQueueExtract (TDoubleVec &vPulse, TDoubleVec &vFiltered, TDoubleVec &
 void SafeQueueAdd (const TPulseFilter &pulse_filter);
 //void SafeQueueAdd (const TDoubleVec &vPulse, TDoubleVec &vFiltered);
 
-void SafeSetMca (bool fOnOff);
+//void SafeSetMca (bool fOnOff);
+void SafeSetMca (bool fOnOff, TRedPitayaSetup &rp_setup);
 bool SafeGetMca ();
 TMcaParams SafeGetMcaParams ();
 void SafeSetMcaParams (const TMcaParams &params);
 //void SafeAddToMca (const TFloatVec &vPulse);
-void SafeResetMca();
-void SafeReadMca (Json::Value &jResult);
-void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
+//void SafeResetMca();
+void SafeResetMca(TRedPitayaSetup &rp_setup);
+//void SafeReadMca (Json::Value &jResult);
+void SafeReadMca (TRedPitayaSetup &rp_setup, Json::Value &jResult);
+//void SafeGetMcaSpectrum (TFloatVec &vSpectrum);
+void SafeGetMcaSpectrum (TRedPitayaSetup &rp_setup, TFloatVec &vSpectrum);
 bool CountBraces (std::string &strJson);
 int CountInString (const std::string &strJson, int c);
 
@@ -118,16 +125,19 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, 
 void IdentifyPulses (const TPulseFilter &pulse_filter, TPulseIndexVec &vIndices);
 TFloatVec SmoothPulse (const TFloatVec &vRawPulse);
 //float VectorAverage (const TFloatVec &vec);
-Json::Value ReadMca ();
+//Json::Value ReadMca ();
+Json::Value ReadMca (TRedPitayaSetup &rp_setup);
 //bool FindPulseStart (TFloatVec::const_iterator itBegin, TFloatVec::const_iterator itEnd, TFloatVecConstIterator &itFound, double dBackground, bool func (float f1, float f2));
 bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iBufferEnd, double dBkgnd, TFloatVec::iterator &iStart, TFloatVec::iterator &iEnd);
 //bool ReadHardwareSamples (const TRedPitayaSetup &rp_setup, TFloatVec &vPulse);
 //void AddPulse (TFloatVec::iterator iStart, TFloatVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
 void AddPulse (TDoubleVec::iterator iStart, TDoubleVec::iterator iEnd, double dBkgnd, TPulseInfoVec &piVec);
-string GetMcaCounts ();
-size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices);
-size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices);
-Json::Value GetPulsesInSignal (const TFloatVec &vSignal);
+string GetMcaCounts (TRedPitayaSetup &rp_setup);
+//size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices);
+size_t CountPulsesInSignal (const TDoubleVec &vSignal, const TRedPitayaSetup &rp_setup, TPulseIndexVec &vIndices);
+size_t CountPulsesInSignal (const TFloatVec &vSignal, const TRedPitayaSetup &rp_setup, TPulseIndexVec &vIndices);
+//Json::Value GetPulsesInSignal (const TFloatVec &vSignal);
+Json::Value GetPulsesInSignal (const TFloatVec &vSignal, TRedPitayaSetup &rp_setup);
 void GetAppDateTime (char *szFileName);
 //void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff);
 //void RemoteProcess (const TRemoteProcessing &remote_processing, TPulseFilter &pulse_filter);
@@ -138,6 +148,8 @@ size_t VectorQueueSize();
 size_t GetNextQueuePulse (TDoubleVec &vPulse);
 size_t ReadNextQueuePulse (TPulseFilter &pulse_filter);
 size_t FilteredPulseQueueSize();
+//string SaveMCA ();
+string SaveMCA (TRedPitayaSetup &rp_setup);
 //void ProcessThread ();
 
 //-----------------------------------------------------------------------------
@@ -149,11 +161,11 @@ std::string ret_str()
 }
 
 //-----------------------------------------------------------------------------
-string SaveMCA ();
 
 //-----------------------------------------------------------------------------
 int main (int argc, char *argv[])
 {
+	TRedPitayaSetup rp_setup;
 #ifdef  _RED_PITAYA_HW
 	rp_Init();
 #endif
@@ -187,21 +199,21 @@ int main (int argc, char *argv[])
 	//g_rp_setup.LoadFromHardware (true);
 #else
 #endif
-    g_rp_setup.LoadFromJson(g_szDefaultSetup);// "rp_setup.json");
-    Json::Value jSetup = g_rp_setup.AsJson();
+    rp_setup.LoadFromJson(g_szDefaultSetup);// "rp_setup.json");
+    Json::Value jSetup = rp_setup.AsJson();
     printf ("Setup: %s\n", StringifyJson(jSetup).c_str());
 
-	std::thread threadTick (SamplingThread, (void *) &qRaw, (void *) &g_rp_setup);//&mtxRaw);//mtxPulsesQueue);
-	std::thread threadProcess (ProcessThread, &qRaw, &qProcess, (void *) &g_rp_setup);//mtxPulsesQueue);
+	std::thread threadTick (SamplingThread, (void *) &qRaw, (void *) &rp_setup);//&mtxRaw);//mtxPulsesQueue);
+	std::thread threadProcess (ProcessThread, &qRaw, &qProcess, (void *) &rp_setup);//mtxPulsesQueue);
     while (fRun) {
 		fMessageRecieved = false;
         zmq_recv (responder, szRecvBuffer , 1024, 0);
 		std::string strJson = ToLower(szRecvBuffer);
 		strJson = ReplaceAll(strJson, "\'", "\"");
 
-		fRun = HandleMessage (strJson, jReply, qRaw, qProcess);//&mtxPulsesQueue);
+		fRun = HandleMessage (strJson, jReply, rp_setup, qRaw, qProcess);//&mtxPulsesQueue);
 		strReply = StringifyJson (jReply);
-		SendReply (responder, szRecvBuffer, jReply);
+		SendReply (responder, szRecvBuffer, jReply, rp_setup);
     }
 	delete[] szRecvBuffer;
 	threadTick.join();
@@ -210,7 +222,7 @@ int main (int argc, char *argv[])
 }
 
 //-----------------------------------------------------------------------------
-bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
+bool HandleMessage (const string &strJson, Json::Value &jReply, TRedPitayaSetup &rp_setup, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
 {
 	bool fRun=true;
 	string strReply;
@@ -230,17 +242,17 @@ bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQ
 			if (!root["setup"].isNull()) {
 				string s = StringifyJson (root["setup"]);
 				//printf ("Setup: %s\n", s.c_str());
-				jReply["setup"] = HandleSetup(root["setup"], g_rp_setup);
+				jReply["setup"] = HandleSetup(root["setup"], rp_setup);
 			}
 			if (!root[g_szReadData].isNull())
 				//jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal, mtxPulsesQueue);
-				jReply["pulses"] = HandleReadData(root[g_szReadData], g_rp_setup, vSignal, qRaw, qProcess);
+				jReply["pulses"] = HandleReadData(root[g_szReadData], rp_setup, vSignal, qRaw, qProcess);
 			if (!root[g_szSampling].isNull()) {
 				//fprintf (stderr, "Reading sampling\n");
-				jReply[g_szSampling] = HandleSampling(root[g_szSampling], g_rp_setup, fRun, qRaw, qProcess);
+				jReply[g_szSampling] = HandleSampling(root[g_szSampling], rp_setup, fRun, qRaw, qProcess);
 			}
 			if (!root[g_szMCA].isNull())
-				jReply[g_szMCA] = HandleMCA(root[g_szMCA], g_rp_setup);
+				jReply[g_szMCA] = HandleMCA(root[g_szMCA], rp_setup);
 		}
 		else {
 			fprintf (stderr, "\nParsing error\n");
@@ -256,7 +268,7 @@ bool HandleMessage (const string &strJson, Json::Value &jReply, TMutexDoubleVecQ
 }
 
 //-----------------------------------------------------------------------------
-void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage)
+void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage, TRedPitayaSetup &rp_setup)
 {
 	try {
 		Json::Value jReply;
@@ -264,11 +276,17 @@ void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage)
 	//char *szRecvBuffer = new char[1024];
 
 			//fprintf (stderr, "Preparing Reply\n");
+		//FILE *file;
+		//int nPackage=0;
+		//char szFile[128];
+		//string strFile;
+
 		string s, strReply = StringifyJson (jReplyMessage);
 		strReply = trimString (strReply);
-		nMessages = 1 + (int) (strReply.length() / g_rp_setup.GetPackageSize());//, nCharsToSend, nTotalToSend;
+		nMessages = 1 + (int) (strReply.length() / rp_setup.GetPackageSize());//, nCharsToSend, nTotalToSend;
 		nTotalToSend = strReply.length();
-		nPackSize = g_rp_setup.GetPackageSize();
+		nPackSize = rp_setup.GetPackageSize();
+		nStart = 0;
 		while (nTotalToSend > 0) {
 			//printf("Total to send: %d\n", nTotalToSend);
 			jReply.clear();
@@ -277,6 +295,15 @@ void SendReply (void *responder, char *szRecvBuffer, Json::Value jReplyMessage)
 			jReply["text"] = s;
 			jReply["flag"] = nTotalToSend < nPackSize;//100;
 			s = StringifyJson (jReply);
+
+			//strFile = "package" + to_string(nPackage) + ".csv";
+			//sprintf (szFile, "package%02d.csv", nPackage);
+			//nPackage++;
+			//file = fopen (szFile, "a+");
+			//file = fopen (strFile.c_str(), "a+");
+			//fprintf (file, "%s\n", s.c_str());
+			//fclose (file);
+
 			int rc = zmq_send (responder, s.c_str(), s.length(), 0);
 			nTotalToSend -= nPackSize;//100;
 			if (nTotalToSend > 0) {
@@ -412,7 +439,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
     int n, nPulses, j;
 	bool fReset = false;
 	TPulseIndexVec vIndices;
-    
+
     try {
         vSignal.clear();
 		strReply = StringifyJson (jRead);
@@ -446,7 +473,7 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 			}
         	if (!jRead["mca"].isNull()) {
 				if (jRead["mca"].asBool())
-            		jAllPulses["mca"] = ReadMca ();
+            		jAllPulses["mca"] = ReadMca (rp_setup);
 						//Json::Value jMca = jRead["mca"];
 					//if (jRead["mca"].asBool()) {
 						//fprintf (stderr, "\nMCA read\n");
@@ -455,8 +482,8 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
         	}
 		}
         jAllPulses["buffer_length"] = to_string (qRaw.GetSize());//SafeQueueSize ());
-        jAllPulses["mca_length"] = GetMcaCounts ();
-        jAllPulses["background"] = g_rp_setup.GetBackground();
+        jAllPulses["mca_length"] = GetMcaCounts (rp_setup);
+        jAllPulses["background"] = rp_setup.GetBackground();
 
     }
     catch (std::exception &exp) {
@@ -467,17 +494,17 @@ Json::Value HandleReadData(Json::Value &jRead, TRedPitayaSetup &rp_setup, TFloat
 }
 
 //-----------------------------------------------------------------------------
-string GetMcaCounts ()
+string GetMcaCounts (TRedPitayaSetup &rp_setup)
 {
 	TFloatVec vSpectrum;
 	TFloatVec::iterator i;
 	long lnSum=0;
 	char sz[100];
 
-	g_rp_setup.GetMcaSpectrum (vSpectrum);
+	rp_setup.GetMcaSpectrum (vSpectrum);
 	for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
 		lnSum += *i;
-	sprintf (sz, "Pulses: %d, spectrum sum: %ld", g_rp_setup.GetMcaPulses(), lnSum);
+	sprintf (sz, "Pulses: %d, spectrum sum: %ld", rp_setup.GetMcaPulses(), lnSum);
 	return (string (sz));
 }
 
@@ -583,11 +610,11 @@ for n := 1 to signal.length
 	else if above >= 3 and in_pulse // end of pulse
 		in_pulse = false
 */
-size_t CountPulsesInSignal (const TDoubleVec &vSignal, TPulseIndexVec &vIndices)
+size_t CountPulsesInSignal (const TDoubleVec &vSignal, const TRedPitayaSetup &rp_setup, TPulseIndexVec &vIndices)
 {
 	TDoubleVec::const_iterator i;
 	bool fInPulse;
-	double dBackground = g_rp_setup.GetBackground();
+	double dBackground = rp_setup.GetBackground();
 	TPulseIndex pi;
 	int n, nBelow, nAbove;
 
@@ -636,11 +663,11 @@ for n := 1 to signal.length
 	else if above >= 3 and in_pulse // end of pulse
 		in_pulse = false
 */
-size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices)
+size_t CountPulsesInSignal (const TFloatVec &vSignal, const TRedPitayaSetup &rp_setup, TPulseIndexVec &vIndices)
 {
 	TFloatVec::const_iterator i;
 	bool fInPulse;
-	double dBackground = g_rp_setup.GetBackground();
+	double dBackground = rp_setup.GetBackground();
 	TPulseIndex pi;
 	int n, nBelow, nAbove;
 
@@ -674,11 +701,11 @@ size_t CountPulsesInSignal (const TFloatVec &vSignal, TPulseIndexVec &vIndices)
 }
 
 //-----------------------------------------------------------------------------
-Json::Value GetPulsesInSignal (const TFloatVec &vSignal)
+Json::Value GetPulsesInSignal (const TFloatVec &vSignal, TRedPitayaSetup &rp_setup)
 {
 	TPulseIndexVec vIndices;
 
-	CountPulsesInSignal (vSignal, vIndices);
+	CountPulsesInSignal (vSignal, rp_setup, vIndices);
 	return (TPulseIndex::ToJson (vIndices));
 }
 
@@ -868,15 +895,15 @@ void SafeStartStop (bool fCommand)
 }
 //-----------------------------------------------------------------------------
 
-bool SafeGetStatus ()
+bool SafeGetStatus (TRedPitayaSetup &rp_setup)
 {
-    return (g_rp_setup.GetSamplingOnOff ());
+    return (rp_setup.GetSamplingOnOff ());
 }
 //-----------------------------------------------------------------------------
 
-void SafeSetMca (bool fOnOff)
+void SafeSetMca (bool fOnOff, TRedPitayaSetup &rp_setup)
 {
-    g_rp_setup.SetSamplingOnOff (fOnOff);
+    rp_setup.SetSamplingOnOff (fOnOff);
 }
 //-----------------------------------------------------------------------------
 
@@ -984,22 +1011,22 @@ Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
         if (str == g_szStatus)
             jResult[g_szStatus] = SafeGetMca();
         else if (str == "true") {
-            SafeSetMca(true);
+            SafeSetMca(true, rp_setup);
             jResult[g_szStatus] = SafeGetMca();
         }
         else if (str == "false") {
-            SafeSetMca(false);
+            SafeSetMca(false, rp_setup);
             jResult[g_szStatus] = SafeGetMca();
         }
         else if (str == g_szReset) {
-            SafeResetMca();
+            SafeResetMca(rp_setup);
             jResult[g_szStatus] = g_szReset;
 			jResult["pulse_count"] = to_string(g_qDebug.size());
         }
         else if (str == g_szReadMca)
-            SafeReadMca (jResult);
+            SafeReadMca (rp_setup, jResult);
         else if (str == g_szSaveMCA)
-            jResult = SaveMCA ();
+            jResult = SaveMCA (rp_setup);
         else
             jResult[g_szMCA] = "Command Unknown";
     }
@@ -1008,37 +1035,37 @@ Json::Value HandleMCA(Json::Value &jMCA, TRedPitayaSetup &rp_setup)
     }
     return (jResult);
 }
-//-----------------------------------------------------------------------------
 
-void SafeGetMcaSpectrum (TFloatVec &vSpectrum)
+//-----------------------------------------------------------------------------
+void SafeGetMcaSpectrum (TRedPitayaSetup &rp_setup, TFloatVec &vSpectrum)
 {
     mutex mtx;
 
     mtx.lock();
     //g_mca_calculator.GetSpectrum (vSpectrum);
-	g_rp_setup.GetMcaSpectrum (vSpectrum);
+	rp_setup.GetMcaSpectrum (vSpectrum);
     mtx.unlock();
 }
-//-----------------------------------------------------------------------------
 
-void SafeReadMca (Json::Value &jResult)
+//-----------------------------------------------------------------------------
+void SafeReadMca (TRedPitayaSetup &rp_setup, Json::Value &jResult)
 {
     TFloatVec::iterator i;
     TFloatVec vSpectrum;
 
-    SafeGetMcaSpectrum (vSpectrum);
+    SafeGetMcaSpectrum (rp_setup, vSpectrum);
     for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
         jResult[g_szMCA].append(*i);
 }
-//-----------------------------------------------------------------------------
 
-void SafeResetMca()
+//-----------------------------------------------------------------------------
+void SafeResetMca(TRedPitayaSetup &rp_setup)
 {
     mutex mtx;
 
     mtx.lock();
     //g_mca_calculator.ResetSpectrum ();
-	g_rp_setup.ResetMcaSpectrum ();
+	rp_setup.ResetMcaSpectrum ();
     mtx.unlock();
 }
 //-----------------------------------------------------------------------------
@@ -1332,7 +1359,7 @@ bool FindPulseStartEnd (TFloatVec::iterator iBufferStart, TFloatVec::iterator iB
 }
 
 //-----------------------------------------------------------------------------
-bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
+bool GetPulseParams (const TRedPitayaSetup &rp_setup, const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 // calculate filtered height
 {
 	TDoubleVec::const_iterator i;
@@ -1343,12 +1370,12 @@ bool GetPulseParams (const TPulseFilter &pulse_filter, TPulseInfoVec &piVec)
 	TPulseInfo pulse_info;
 
 	i = pulse_filter.GetFilteredBegin();
-	for (n=0 ; n < g_rp_setup.GetTrapezSize() ; n++)
+	for (n=0 ; n < rp_setup.GetTrapezSize() ; n++)
 		i++;
 	dAvg = 0;
 	nAvg = 0;
 	//FILE *file = fopen("pre.csv", "a+");
-	while (n < (int) (0.9 * g_rp_setup.GetPreTriggerNs())) {
+	while (n < (int) (0.9 * rp_setup.GetPreTriggerNs())) {
 		//fprintf (file, "%g\n", *i);
 		dAvg += *i;
 		nAvg++;
@@ -1439,17 +1466,17 @@ void IdentifyPulses (const TPulseFilter &pulse_filter, TPulseIndexVec &vIndices)
 }
 
 //-----------------------------------------------------------------------------
-bool GetPulseParams_no_filter (TDoubleVec &vBuffer, TPulseInfoVec &piVec)
+bool GetPulseParams_no_filter (TDoubleVec &vBuffer, TRedPitayaSetup &rp_setup, TPulseInfoVec &piVec)
 {
 	TPulseIndexVec vIndices;
 	TPulseIndexVec::iterator iPulse;
 	TDoubleVec::iterator iStart, iEnd;
 
-	CountPulsesInSignal (vBuffer, vIndices);
+	CountPulsesInSignal (vBuffer, rp_setup, vIndices);
 	for (iPulse=vIndices.begin() ; iPulse != vIndices.end() ; iPulse++) {
 		iStart = vBuffer.begin() + iPulse->GetStart();
 		iEnd = iStart + iPulse->GetSteps();
-		AddPulse (iStart, iEnd, g_rp_setup.GetBackground(), piVec);
+		AddPulse (iStart, iEnd, rp_setup.GetBackground(), piVec);
 	}
 	return (piVec.size() > 0);
 }
@@ -1667,9 +1694,9 @@ void ExportDebugPulse(TFloatVecQueue &qDebug)
     }
 */
 }
-//-----------------------------------------------------------------------------
 
-string SaveMCA ()
+//-----------------------------------------------------------------------------
+string SaveMCA (TRedPitayaSetup &rp_setup)
 {
     string strResult;
     TFloatVec vSpectrum;
@@ -1678,7 +1705,7 @@ string SaveMCA ()
     try {
 
         strResult = "mca.csv";
-        SafeGetMcaSpectrum (vSpectrum);
+        SafeGetMcaSpectrum (rp_setup, vSpectrum);
         FILE *file = fopen (strResult.c_str(), "w+");
         if (file != NULL) {
             for (i=vSpectrum.begin() ; i != vSpectrum.end() ; i++)
@@ -1694,7 +1721,7 @@ string SaveMCA ()
 }
 
 //-----------------------------------------------------------------------------
-Json::Value ReadMca ()
+Json::Value ReadMca (TRedPitayaSetup &rp_setup)
 {
     Json::Value jMCA, jMcaData;
     TFloatVec vSpectrum;
@@ -1702,18 +1729,19 @@ Json::Value ReadMca ()
     //char *sz = new char[32];
 
 	try {
-		g_rp_setup.GetMcaSpectrum (vSpectrum);
+		rp_setup.GetMcaSpectrum (vSpectrum);
     	for (i=vSpectrum.begin() ; i < vSpectrum.end() ; i++) {
         	jMcaData.append (*i);
     	}
 /*
 		jMcaData.append (17);
 */
-	jMCA["mca_count"] = (double) g_rp_setup.GetMcaCount();
-	jMCA["mca_min"] = g_rp_setup.GetMcaMin();
-	jMCA["mca_max"] = g_rp_setup.GetMcaMax();
-	jMCA["mca_min_v"] = g_rp_setup.GetMcaMinVoltage();
-	jMCA["mca_max_v"] = g_rp_setup.GetMcaMaxVoltage();
+		jMCA["mca_count"] = (double) rp_setup.GetMcaCount();
+		jMCA["mca_min"] = rp_setup.GetMcaMin();
+		jMCA["mca_max"] = rp_setup.GetMcaMax();
+		jMCA["mca_min_v"] = rp_setup.GetMcaMinVoltage();
+		jMCA["mca_max_v"] = rp_setup.GetMcaMaxVoltage();
+		jMCA["mca_time"] = rp_setup.GetMcaMeasureTime ();
 		jMCA["mca_data"] = jMcaData;
 		string s;
 		s = StringifyJson (jMCA);
