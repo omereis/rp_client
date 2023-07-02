@@ -56,6 +56,7 @@ public:
 	rp_acq_sampling_rate_t GetHardwareSamplingRate() const;
 	rp_acq_trig_src_t GetHardwareTriggerSource() const;
 #endif
+	double GetSamplingPeriod() const;
     bool LoadFromJson(const string &strFile);
     bool IsFilterOn() const;
 	TDoubleVec GetTrapez() const;

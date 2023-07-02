@@ -128,6 +128,13 @@ Json::Value TRedPitayaSetup::McaAsJson()
     jMCA["mca"] = m_mca_params.AsJson();
     return (jMCA);
 }
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetSamplingPeriod() const
+{
+	return (m_sampling.GetSamplingPeriod ());
+}
+
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::LoadFromJson(const string &strFile)
 {
