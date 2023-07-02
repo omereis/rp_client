@@ -28,13 +28,9 @@ a {
 }
 
 textarea {
-  margin: 2rem;
-  font-size: 1.5rem;
-  width: 36ch;
-  height: 10ch;
-  font-family: "Lato";
-  font-weight: bold;
-  max-width: 90%;
+  font-size: 12px;
+  font-family: "Times New Roman";
+  font-weight: normal;
 }
 
 button.save-file {
