@@ -530,6 +530,20 @@ void AddToCsv(const TDoubleVec &vec, const char szName[])
 	}
 }
 
+
+//-----------------------------------------------------------------------------
+bool str_to_bool (const std::string &sSource)
+{
+	bool f  = false;
+	std::string str = ToLower(sSource);
+
+	if (str == "false")
+		f = false;
+	else if (str == "true")
+		f = true;
+	return (f);
+}
+
 #ifdef	_RED_PITAYA_HW
 //-----------------------------------------------------------------------------
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src)

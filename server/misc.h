@@ -46,6 +46,7 @@ size_t consv(const TFloatVec &vSource, const TDoubleVec &vKernel, TDoubleVec &vR
 bool to_bool(const std::string &str);
 size_t SubVector (const TDoubleVec &vSource, int nLength, TDoubleVec &vSub);
 size_t SubVector (const TFloatVec &vSource, int nLength, TFloatVec &vSub);
+bool str_to_bool (const std::string &sSource);
 #ifdef	_RED_PITAYA_HW
 std::string GetHardwareTriggerName (rp_acq_trig_src_t trigger_src);
 //std::string GetHardwareTriggerName ();
