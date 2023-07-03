@@ -54,6 +54,7 @@ void TRedPitayaSetup::Clear ()
     SetMcaOnOff (false);
     SetPsdOnOff (false);
     SetBackground (0.1);
+	SetFilteredThreshold (-0.02);
     SetPackageSize (g_nDefaultPackageSize);
     SetPreTriggerNs (100);
 	SetMcaTimeLimit (0);
@@ -74,6 +75,7 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
     SetMcaOnOff (other.GetMcaOnOff ());
     SetPsdOnOff (other.GetPsdOnOff ());
     SetBackground (other.GetBackground());
+	SetFilteredThreshold (other.GetFilteredThreshold ());
     SetPackageSize (other.GetPackageSize());
     SetPreTriggerNs (other.GetPreTriggerNs());
 	SetMcaTimeLimit (other.GetMcaTimeLimit ());
@@ -192,6 +194,7 @@ Json::Value TRedPitayaSetup::AsJson()
 	jSetup["pre_trigger_ns"] = PreTriggerAsString (GetPreTriggerNs());// to_string (GetPreTriggerNs());
 	jSetup["trapez"] = m_trapez.AsJson();
 	jSetup["remote_processing"] = m_remote_proc.AsJson();
+	jSetup["filt_th"] = GetFilteredThreshold ();
     return (jSetup);
 }
 
@@ -219,6 +222,7 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 			double d = stod (strBkgnd);
 			SetBackground (d);
 		}
+		jNewSetup["filt_th"] = SetFilteredThreshold (jSetup["filt_th"]);
         if (!jSetup[g_szPackageSize].isNull()) {
 			int nPkgSize=GetPackageSize();
             if (jSetup[g_szPackageSize].isInt())
@@ -788,6 +792,36 @@ void TRedPitayaSetup::SetMcaValid (bool fValid)
 bool TRedPitayaSetup::IsMcaValid () const
 {
 	return (m_fMcaValid);
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::GetFilteredThreshold () const
+{
+	return (m_dFiltThreshold);
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetFilteredThreshold (double dFiltThreshold)
+{
+	m_dFiltThreshold = dFiltThreshold;
+}
+
+//-----------------------------------------------------------------------------
+double TRedPitayaSetup::SetFilteredThreshold (Json::Value &jFiltTh)
+{
+	Json::Value jResultFiltTh;
+
+	try {
+		string s = StringifyJson (jFiltTh);
+		s = jFiltTh.asString();
+		double d = atof (s.c_str());//jFiltTh.asDouble();
+		if (!jFiltTh.isNull())
+			SetFilteredThreshold (d);//jFiltTh.asDouble());
+	}
+	catch (...) {
+		SetFilteredThreshold (GetFilteredThreshold ());
+	}
+	return (GetFilteredThreshold ());
 }
 
 //-----------------------------------------------------------------------------

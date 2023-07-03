@@ -130,6 +130,9 @@ public:
 	double GetMcaMax() const;
 	double GetMcaMinVoltage() const;
 	double GetMcaMaxVoltage() const;
+	double GetFilteredThreshold () const;
+	void SetFilteredThreshold (double dFiltThreshold);
+	double SetFilteredThreshold (Json::Value &jFiltTh);
 protected:
 	void AssignAll (const TRedPitayaSetup &other);
 private:
@@ -151,6 +154,7 @@ private:
 	bool m_fMcaValid;
 
 	double m_dMcaTimeLimit;
+	double m_dFiltThreshold;
 	TRemoteProcessing m_remote_proc;
 };
 //-----------------------------------------------------------------------------
