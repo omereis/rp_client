@@ -46,6 +46,7 @@ function onUpdateRedPitayaSetupClick() {
     msgCmd['pre_trigger_ns'] = uploadPreTrigger();
 	msgCmd['trapez'] = uploadTrapezParams();
 	msgCmd['remote_processing'] = uploadRemoteProcessing();
+	msgCmd['filt_th'] = uploadFilteredThreshold();
     msg['setup'] = msgCmd;//'update';
     sendMesssageThroughFlask(msg, setupHandler);
 }
@@ -159,6 +160,8 @@ function setupHandler (reply) {
             downloadVersion(dictSetup.version);
 		if (dictSetup.hasOwnProperty('remote_processing'))
             downloadRemoteProceesing(dictSetup.remote_processing);
+		if (dictSetup.hasOwnProperty('filt_th'))
+            downloadFilteredThreshold(dictSetup.filt_th);
     }
     catch (err) {
         console.log(err);
@@ -2116,6 +2119,23 @@ function downloadRemoteProceesing(dictRemoteProc) {
     catch (exception) {
         console.log(exception);
     }
+}
+
+//-----------------------------------------------------------------------------
+function downloadFilteredThreshold(filt_th) {
+	var txtbx = document.getElementById ('txtFiltThreshold');
+	if (txtbx != null)
+		txtbx.value = parseFloat(filt_th);
+}
+
+//-----------------------------------------------------------------------------
+function uploadFilteredThreshold() {
+	var th=-0.02;
+	var txtbx = document.getElementById ('txtFiltThreshold');
+
+	if (txtbx != null)
+		th = txtbx.value;
+	return (th);
 }
 
 //-----------------------------------------------------------------------------
