@@ -219,15 +219,26 @@
                 	</tr>
 
                     <tr>
-                        <td colspan="2">
+                        <!-- <td colspan="2"> -->
+                        <td>
                             <input type="checkbox" id="cboxStartSignal" value="Signal" checked="true">Signal
                             <input type="checkbox" id="cboxStartMCA" value="MCA" checked="true">MCA
+							<br>
                             <input type="checkbox" id="cboxStartPSD" value="PSD" checked="false">PSD
                         </td>
                         <td>
                             <input type="button" id="cellStatus" value="status"  onclick="onReadStatusClick()">
                         </td>
+                        <td>
+                            <input type="checkbox" id="cboxPollStatus" onclick="onPollClick()">Poll
+							<label id="lblPollOnOff">Off</label><br>
+                            <!-- <input type="checkbox" id="cboxPollStatus" value="Poll" checked="true" onclick="onPollClick()">Poll
+							<label id="lblPollOnOff">On</label><br> -->
+						    every <input type="text" id="txtUpdateRate" style="width:50px;text-align: center;" value="0.5">
+							Seconds
+                        </td>
                     </tr>
+<!--
                     <tr>
 					    <td>
 						    On Time: <input type="text" id="txtOnTime" style="width:75px;text-align: center;">
@@ -237,6 +248,7 @@
 							Seconds
 					    </td>
                     </tr>
+-->
 <!--
                     <tr>
                         <td colspan="3">
@@ -442,6 +454,7 @@
                     <tr style="background-color:#92c7e9">
                         <td style="width:20%;text-align:left;">
                             <input type="checkbox" value="Trigger" id="cboxTrigger"><label for="cboxTrigger">Trigger</label>
+							<input type="button" value="Export..." onclick="onSignalExportClick()">
                         </td>
                         <td>
                             <b>Signal</b>

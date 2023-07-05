@@ -14,23 +14,32 @@ function onPageLoad () {
 		localStorage.removeItem ("update_handle");
 		var hUpdate = localStorage.getItem ("update_handle");
 		document.getElementById('cboxReadPSD').disabled = true;
-		//var FileSaver = require('file-saver');
+		onReadRedPitayaSetupClick (true);
+		//window.addEventListener ('load', sendReadStatus);
+		//window.addEventListener ('load', onReadStatusClick);
+		setTimeout (sendReadStatus, 750);
+		setTimeout (queryRedPitayaStatus , 1000);
 	}
 	catch (exception) {
 		alert ('Runtime error in uploadTriggerLevel ' + exception);
 	}
-	//onReadRedPitayaSetupClick ();
-	//onReadStatusClick();
 }
 
 //-----------------------------------------------------------------------------
-function onReadRedPitayaSetupClick () {
+function onReadRedPitayaSetupClick (fPageLoad=false) {
     var msg = new Object, msgCommand = new Object;
 	msgCommand['command'] = 'read';
     msg['setup'] = msgCommand;
-	document.body.style.cursor = 'wait';
     sendMesssageThroughFlask(msg, setupHandler);
-	//setTimeout (onReadStatusClick, 100);
+}
+
+//-----------------------------------------------------------------------------
+function queryRedPitayaStatus () {
+	if (uploadCheckBox ("cboxPollStatus")) {
+		var nRate = uploadTextAsFloat ('txtUpdateRate');
+		setTimeout (queryRedPitayaStatus, 1000);
+		sendReadStatus ();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -165,6 +174,7 @@ function setupHandler (reply) {
     }
     catch (err) {
         console.log(err);
+		console.log(reply);
     }
 }
 
@@ -406,6 +416,9 @@ function handleSignalMeasure (reply) {
 
 //-----------------------------------------------------------------------------
 function onReadSignalClick() {
+	var txtReply = document.getElementById ('txtReply');
+	if (txtReply != null)
+		txtReply.value = '';
     var msg = new Object, msgRead=new Object, msgSignal = new Object;
     if (uploadSignalRead()) {
         msgSignal['length'] = uploadSignalLength();
@@ -498,17 +511,20 @@ function uploadMcaOp() {
 }
 
 //-----------------------------------------------------------------------------
-function onReadStatusClick () {
-    //var msgStatus = new Object;
-    //msgStatus['op'] = 'status';
-    //sendSamplingCommand (msgStatus);
+function sendReadStatus () {
     var msgSignal = new Object;
-	msgSignal['status'] = true;
 
-    //msgSignal['signal'] = uploadSignalOnOff ();
-    //msgSignal['mca'] = uploadMcaOnOff ();
-    //msgSignal['mca_time'] = uploadTextReal ('txtMcaTimeLimit');
-    //msgSignal['psd'] = uploadPsdOnOff ();
+	msgSignal['status'] = true;
+    sendSamplingCommand (msgSignal);
+}
+
+
+//-----------------------------------------------------------------------------
+function onReadStatusClick () {
+    var msgSignal = new Object;
+
+	msgSignal['status'] = true;
+	setTimeout (queryRedPitayaStatus, 1000);
     sendSamplingCommand (msgSignal);
 }
 
@@ -525,10 +541,10 @@ function onSamplingOff() {
 //-----------------------------------------------------------------------------
 function sendSamplingUpdate (fSampling, fMca, txtMcaTime, fPsd) {
     var msgSignal = new Object;
-    msgSignal['signal'] = fSampling;//uploadSignalOnOff ();
-    msgSignal['mca'] = fMca;//uploadMcaOnOff ();
-    msgSignal['mca_time'] = txtMcaTime;//uploadTextReal ('txtMcaTimeLimit');
-    msgSignal['psd'] = fPsd;//uploadPsdOnOff ();
+    msgSignal['signal'] = fSampling;
+    msgSignal['mca'] = fMca;
+    msgSignal['mca_time'] = txtMcaTime;
+    msgSignal['psd'] = fPsd;
     sendSamplingCommand (msgSignal);
 }
 
@@ -539,7 +555,7 @@ function onSamplingUpdate () {
     msgSignal['mca'] = uploadMcaOnOff ();
     msgSignal['mca_time'] = uploadTextReal ('txtMcaTimeLimit');
     msgSignal['psd'] = uploadPsdOnOff ();
-    sendSamplingCommand (msgSignal);
+	sendSamplingCommand (msgSignal);
 }
 
 //-----------------------------------------------------------------------------
@@ -589,34 +605,16 @@ function setReadPeriodicCardStatus (fOnOff) {
 }
 
 //-----------------------------------------------------------------------------
-function sendSamplingCommand (cmd) {
+function sendSamplingCommand (cmd, func=null) {
+    var funcSamplingHandler;
+    if (func == null)
+		funcSamplingHandler = readSamplingStatus;
     var msg = new Object;
     var msgSignal = new Object;
     msgSignal['signal'] = cmd;
     msg['sampling'] = cmd;
-	
-/*
-	if (!cmd.signal) {
-		setReadPeriodicCardStatus (false);
-		var hUpdate = localStorage.getItem ("update_handle");
-		if (hUpdate == null) {
-			var nRate = uploadTextAsFloat ('txtUpdateRate');
-
-			var hUpdate = setInterval (periodicStatus, 1000);
-			localStorage.setItem ("update_handle", hUpdate);
-		}
-		//txt.value = timeStart;
-	}
-	else {
-		var hUpdate = localStorage.getItem ("update_handle");
-		if (hUpdate != null)
-			clearInterval (hUpdate);
-		localStorage.removeItem ("update_handle");
-
-	}
-*/
-	//console.log(JSON.stringify(msg));
-    sendMesssageThroughFlask(msg, readSamplingStatus);
+    sendMesssageThroughFlask(msg, funcSamplingHandler);
+    //sendMesssageThroughFlask(msg, readSamplingStatus);
 }
 
 //-----------------------------------------------------------------------------
@@ -1079,14 +1077,33 @@ function toggleButtonStartStop (idBtn) {
 //-----------------------------------------------------------------------------
 function onSamplingStartStop() {
 	var fStartStop = toggleButtonStartStop ('btnSamplingStartStop');
-	setReadPeriodicCardStatus (fStartStop);
+	//setReadPeriodicCardStatus (fStartStop);
+	downloadCheckBox (fStartStop, "cboxPollStatus");
+	setPollOnOff (fStartStop);
+	onReadStatusClick ();
 	sendSamplingUpdate (fStartStop, uploadMcaOnOff(), uploadMcaTimeLimit(), uploadPsdOnOff ());
+}
+
+//-----------------------------------------------------------------------------
+function onPollClick() {
+	var fStartStop = uploadCheckBox ("cboxPollStatus");
+	setPollOnOff (fStartStop);
+	//toggleButtonStartStop ('btnSamplingStartStop');
+}
+
+//-----------------------------------------------------------------------------
+function setPollOnOff (fStartStop) {
+	var id = document.getElementById ("lblPollOnOff");
+	if (id != null)
+		id.innerText = fStartStop ? "On" : "Off";
 }
 
 //-----------------------------------------------------------------------------
 function onMcaStartStop() {
 	var fStartStop = toggleButtonStartStop ('btnMCAStartStop');
-	setReadPeriodicCardStatus (fStartStop);
+	//setReadPeriodicCardStatus (fStartStop);
+	downloadCheckBox (fStartStop, "cboxPollStatus");
+	onReadStatusClick ();
 	sendSamplingUpdate (fStartStop, fStartStop, uploadMcaTimeLimit(), uploadPsdOnOff ());
 }
 
@@ -2208,4 +2225,51 @@ function uploadSamplingRate() {
 	}
 	console.log(rate);
 	return (dt);
+}
+
+//-----------------------------------------------------------------------------
+// source: https://stackoverflow.com/questions/50192080/export-plotly-as-self-contained-html-in-javascript
+function getChartState (idContainer) {
+  const el = document.getElementById(idContainer)
+  return {
+    data: el.data, // current data
+    layout: el.layout // current layout
+  }
+}
+
+//-----------------------------------------------------------------------------
+function getMaxChartDataRows (data) {
+	var nMax=0;
+
+	for (var n=0 ; n < data.length ; n++) {
+		nMax = Math.max(nMax, data[0].x.length);
+		nMax = Math.max(nMax, data[0].y.length);
+	}
+	return (nMax);
+}
+
+//-----------------------------------------------------------------------------
+function chartDataToRows (data) {
+	var rows=[];
+	var line;
+
+	for (row=0 ; row < getMaxChartDataRows (data) ; row++) {
+		line="";
+		for (iSignal=0 ; iSignal < data.length ; iSignal++) {
+			line += data[iSignal].x[row].toString() + "," + data[iSignal].y[row].toString();
+			if (iSignal < data.length - 1)
+				line += ",";
+		}
+		line += "\n";
+		rows.push(line);
+	}
+	return (rows);
+}
+
+//-----------------------------------------------------------------------------
+function onSignalExportClick() {
+	var data = getChartState ('chartSignal');
+	var rows = chartDataToRows (data.data);
+	exportToCsv("signal.csv", rows);
+	//console.log(data);
 }
