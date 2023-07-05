@@ -47,10 +47,10 @@ void ProcessThread (void *pParam1, void *pParam2, void *pParam3)
     TDoubleVec vPulse;
 	TPulseFilter pulse_filter;
     TPulseInfoVec piVec;
-	mutex mtx;
 	TMutexDoubleVecQueue *pqmtxRaw = (TMutexDoubleVecQueue *) pParam1;
 	TMutexPulseFilterQueue *pqProcess = (TMutexPulseFilterQueue *) pParam2;
 	TRedPitayaSetup *pSetup = (TRedPitayaSetup *) pParam3;
+	//static bool fDebug=false;
 
 	while (1) {
     	if (pqmtxRaw->GetSize() > 0) {
@@ -60,6 +60,8 @@ void ProcessThread (void *pParam1, void *pParam2, void *pParam3)
 					FilterPulse (vPulse, pSetup->GetBackground(), pulse_filter, pSetup->IsFilterOn(), pSetup);
 					if (GetPulseParams (*pSetup, pulse_filter, piVec))
 						pulse_filter.SetPulsesInfo (piVec);
+					//if (fDebug)
+						//PrintVector (vPulse, "prc_pulse.txt");
 					pqProcess->AddItem (pulse_filter);
 					if (piVec.size() > 0)
             			pSetup->NewPulse (piVec);
