@@ -447,6 +447,7 @@ Json::Value ReadSignal (TRedPitayaSetup &rp_setup, bool fFiltered, bool fDeriv, 
 		if ((fDeriv) && (jFiltDeriv.size() > 0))
 			jSignalData["filt_deriv"] = jFiltDeriv;
 		if (fDebug) {
+			pulse_filter.GetPulsesIndices (vIndices);
 			if (vIndices.size() > 0) {
 				Json::Value jIndices;
 				TPulseIndexVec::iterator iIndex;
@@ -953,11 +954,16 @@ bool GetPulseParams (const TRedPitayaSetup &rp_setup, const TPulseFilter &pulse_
 	}
 	dAvg /= nAvg;
 	dMax = *i;
+	static bool fDebug=false;
+	if (fDebug)
+		//PrintVector (pulse_filter.GetFilteredBegin(), pulse_filter.GetFilteredEnd(), "filt.txt");
+		PrintVector (pulse_filter.GetFilteredBegin(), pulse_filter.GetFilteredEnd(), "filt.csv");
 	for (i=pulse_filter.GetFilteredBegin(), n=0 ; i != pulse_filter.GetFilteredEnd() ; i++, n++) {
 		if (fInPulse) {
 			dMax = min (*i, dMax);
 			//if (*i > dAvg - 0.02) { // pulse end
-			if (*i > dAvg - rp_setup.GetFilteredThreshold ()) { // pulse end
+			//if (*i > dAvg - rp_setup.GetFilteredThreshold ()) { // pulse end
+			if (*i > rp_setup.GetFilteredThreshold ()) { // pulse end
 				fInPulse = false;
 				pi.SetSteps (n - pi.GetStart());
 				pulse_info.SetMaxVal (dMax);
@@ -969,7 +975,8 @@ bool GetPulseParams (const TRedPitayaSetup &rp_setup, const TPulseFilter &pulse_
 		}
 		else {
 			//if (*i < dAvg - 0.02) { // pulse start
-			if (*i < dAvg - rp_setup.GetFilteredThreshold ()) { // pulse start
+			//if (*i < (dAvg - rp_setup.GetFilteredThreshold ())) { // pulse start
+			if (*i < rp_setup.GetFilteredThreshold ()) { // pulse start
 				dMax = fabs (*i);
 				pi.SetStart (n);
 				fInPulse = true;
