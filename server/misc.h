@@ -38,6 +38,7 @@ std::string BoolToString (bool f);
 std::string PulseDirName (EPulseDir pulse_dir);
 EPulseDir PulseDirFromString (const std::string &strSource);
 void PrintVector (const TDoubleVec &vBuffer, const char szName[]);
+void PrintVector (TDoubleVec::const_iterator iBegin, TDoubleVec::const_iterator iEnd, const char szName[]);
 void PrintVector (const TFloatVec &vBuffer, const char szName[]);
 void AddToCsv(const TDoubleVec &vec, const char szName[]);
 void GetVectorMinMax (const TFloatVec &vPulse, float &fMin, float &fMax);
