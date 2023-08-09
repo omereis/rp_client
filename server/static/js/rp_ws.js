@@ -1037,8 +1037,9 @@ function readSamplingStatus (reply) {
 			downloadBufferLength(ProcessedBuffer , jReply.sampling.process_buffer);
 		if (jReply.sampling.hasOwnProperty('raw_buffer'))
 			downloadBufferLength(RawBuffer, jReply.sampling.raw_buffer);
-		if (jReply.sampling.hasOwnProperty('mca_buffer'))
-			downloadMcaLength(jReply.sampling.mca_buffer, jReply.sampling.mca_time);
+		//if (jReply.sampling.hasOwnProperty('mca_buffer'))
+		if (jReply.sampling.hasOwnProperty('mca'))
+			downloadMcaParams(jReply.sampling.mca);
         var cl, status = jReply.sampling.status.signal;
         if (status == true) {
             cl = 'green';
@@ -1261,8 +1262,12 @@ function mcaSetupHandler (reply) {
 function downloadMcaParams (dictMca) {
 	try {
         donwloadText ('txtMcaChannels', dictMca.channels);
-		downloadTextVoltage ('txtMcaMin', parseFloat(dictMca.min_voltage));
-		downloadTextVoltage ('txtMcaMax', parseFloat(dictMca.max_voltage));
+		downloadTextVoltage ('txtMcaMin', parseFloat(dictMca.mca_min_v));
+		downloadTextVoltage ('txtMcaMax', parseFloat(dictMca.mca_max_v));
+		document.getElementById('txtMcaRuntime').value = formatSecondsAsTime (dictMca.mca_time);
+		downloadRealValue ('txtSignalMin', dictMca.mca_min, 3);
+		downloadRealValue ('txtSignalMax', dictMca.mca_max, 3);
+		downloadRealValue ('txtMcaBuffer', dictMca.mca_count);
 	}
 	catch (exception) {
 		console.log(exception);
