@@ -138,6 +138,7 @@ def OnRedPitayaMessage():
         txtReply = dictReply['text']
         #print ('Flag: {}'.format(dictReply['flag']))
         part = 1
+        print('Current length: ' + str(len(txtReply)))
         while not dictReply['flag']:
             socket.send_string('go')
             #print ('GO send')
@@ -146,6 +147,7 @@ def OnRedPitayaMessage():
             dictReply = json.loads(strMessage)
             #print ('Flag: {}'.format(dictReply['flag']))
             txtReply += dictReply['text']
+            print('Current length: ' + str(len(txtReply)))
             part += 1
         #print('=====================================================')
         #print('Done')
@@ -157,9 +159,10 @@ def OnRedPitayaMessage():
     finally:
         if socket != None:
             socket.close()
-    #print('----------------------------------------------')
+    print('----------------------------------------------')
+    print('Current length: ' + str(len(txtReply)))
     #print(txtReply)
-    #print('----------------------------------------------')
+    print('----------------------------------------------')
     return (txtReply)
 
 #------------------------------------------------------------------------------
