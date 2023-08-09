@@ -24,13 +24,13 @@ using namespace std;
 
 class TRedPitayaSetup {
 public:
-    TRedPitayaSetup ();
+    TRedPitayaSetup (TMcaParams *pMcaParams=NULL);
     TRedPitayaSetup (const TRedPitayaSetup &other);
 
     TRedPitayaSetup operator= (const TRedPitayaSetup &other);
     bool operator== (const TRedPitayaSetup &other) const;
     bool operator!= (const TRedPitayaSetup &other) const;
-    void Clear ();
+    void Clear (TMcaParams *pMcaParams);
 
 	void TriggerNow ();
 	
@@ -41,8 +41,8 @@ public:
 
 	Json::Value HandleBackground (Json::Value &jBkgnd, const TDoubleVec &vSignal);
 	//Json::Value HandleBackground (Json::Value &jBkgnd, const TFloatVec &vSignal);
-	void NewPulse (const TPulseInfoVec &vPulsesInfo);
-	void NewPulse (const TPulseInfo &pi);
+	//void NewPulse (const TPulseInfoVec &vPulsesInfo);
+	//void NewPulse (const TPulseInfo &pi);
 	//void NewPulse (const TFloatVec &vPulse);
 	int GetMcaPulses() const;
 #ifdef	_RED_PITAYA_HW
@@ -86,11 +86,11 @@ public:
     float GetTriggerLevel ();
     void SetSamplingOnOff (bool fSampling);
     bool GetSamplingOnOff () const;
-	void SetMcaOnOff (const string &strOnOff);
-	void SetMcaOnOff (const string &strOnOff, const string &strTime);
-	void SetMcaOnOff (Json::Value &jMcaCmd);
-    void SetMcaOnOff (bool fMca);
-    bool GetMcaOnOff () const;
+	//void SetMcaOnOff (const string &strOnOff);
+	//void SetMcaOnOff (const string &strOnOff, const string &strTime);
+	//void SetMcaOnOff (Json::Value &jMcaCmd);
+    //void SetMcaOnOff (bool fMca);
+    //bool GetMcaOnOff () const;
     void SetPsdOnOff (bool fPsd);
     bool GetPsdOnOff () const;
 
@@ -105,10 +105,10 @@ public:
     void SetPreTriggerNs (const std::string &str);
     void SetPreTriggerNs (Json::Value jPreTrigger);
 
-	void SetMcaTimeLimit (double dMinutes);
-	void SetMcaTimeLimit (const string &strTime);
-	double GetMcaTimeLimit () const;
-	double GetMcaMeasureTime () const;
+	//void SetMcaTimeLimit (double dMinutes);
+	//void SetMcaTimeLimit (const string &strTime);
+	//double GetMcaTimeLimit () const;
+	//double GetMcaMeasureTime () const;
 
 	chrono_clock SetMcaStopTime (chrono_clock clk);
 	chrono_clock GetMcaStopTime() const;
@@ -141,7 +141,7 @@ private:
     TTRapezInfo m_trapez;
     TRedPitayaTrigger m_trigger;
     TRedPitayaSampling m_sampling;
-    TMcaParams m_mca_params;
+    TMcaParams *m_pMcaParams;
     double m_dBackground;
     bool m_fSamplingOnOff;
     bool m_fMcaOnOff;
@@ -151,9 +151,9 @@ private:
 
 	chrono_clock m_crnMcaStart;
 	chrono_clock m_crnMcaStop;
+	//double m_dMcaTimeLimit;
 	bool m_fMcaValid;
 
-	double m_dMcaTimeLimit;
 	double m_dFiltThreshold;
 	TRemoteProcessing m_remote_proc;
 };

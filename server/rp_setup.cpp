@@ -15,9 +15,9 @@ static const int g_nDefaultPackageSize = 1024;
 //-----------------------------------------------------------------------------
 // TRedPitayaSetup
 //-----------------------------------------------------------------------------
-TRedPitayaSetup::TRedPitayaSetup ()
+TRedPitayaSetup::TRedPitayaSetup (TMcaParams *pMcaParams)
 {
-    Clear ();
+    Clear (pMcaParams);
 }
 //-----------------------------------------------------------------------------
 TRedPitayaSetup::TRedPitayaSetup (const TRedPitayaSetup &other)
@@ -41,25 +41,18 @@ bool TRedPitayaSetup::operator!= (const TRedPitayaSetup &other) const
     return (!(*this == other));
 }
 //-----------------------------------------------------------------------------
-void TRedPitayaSetup::Clear ()
+void TRedPitayaSetup::Clear (TMcaParams *pMcaParams)
 {
-/*
-	rp_Init();
-*/
+	m_pMcaParams = pMcaParams;
     m_trigger.Clear();
     m_sampling.Clear ();
-    m_mca_params.Clear();
 	m_trapez.Clear();
     SetSamplingOnOff (false);
-    SetMcaOnOff (false);
     SetPsdOnOff (false);
     SetBackground (0.1);
 	SetFilteredThreshold (-0.02);
     SetPackageSize (g_nDefaultPackageSize);
     SetPreTriggerNs (100);
-	SetMcaTimeLimit (0);
-	//SetMcaStartTime (0);
-	//SetMcaStopTime (0);
 	SetMcaValid (false);
 	m_remote_proc.Clear();
 }
@@ -69,16 +62,16 @@ void TRedPitayaSetup::AssignAll (const TRedPitayaSetup &other)
 {
     SetTrigger (other.GetTrigger());
     SetSampling (other.GetSampling());
-    m_mca_params = other.m_mca_params;
+    //m_mca_params = other.m_mca_params;
 	m_trapez = TTRapezInfo (other.m_trapez);
     SetSamplingOnOff (other.GetSamplingOnOff ());
-    SetMcaOnOff (other.GetMcaOnOff ());
+    //SetMcaOnOff (other.GetMcaOnOff ());
     SetPsdOnOff (other.GetPsdOnOff ());
     SetBackground (other.GetBackground());
 	SetFilteredThreshold (other.GetFilteredThreshold ());
     SetPackageSize (other.GetPackageSize());
     SetPreTriggerNs (other.GetPreTriggerNs());
-	SetMcaTimeLimit (other.GetMcaTimeLimit ());
+	//SetMcaTimeLimit (other.GetMcaTimeLimit ());
 
 	SetMcaValid (other.IsMcaValid ());
 	m_remote_proc = TRemoteProcessing (other.m_remote_proc);
@@ -103,6 +96,7 @@ void TRedPitayaSetup::SetSampling (const TRedPitayaSampling &sampling)
 {
     m_sampling = sampling;
 }
+/*
 //-----------------------------------------------------------------------------
 TMcaParams TRedPitayaSetup::GetMcaParams () const
 {
@@ -113,15 +107,19 @@ void TRedPitayaSetup::SetMcaParams (const TMcaParams &mca_params)
 {
     m_mca_params = mca_params;
 }
+*/
 //-----------------------------------------------------------------------------
 Json::Value TRedPitayaSetup::AppsAsJson()
 {
     Json::Value jAppsMca;
 
-    jAppsMca["mca"] = McaAsJson();
+	if (m_pMcaParams != NULL)
+    	jAppsMca["mca"] = m_pMcaParams->AsJson();
     jAppsMca["psd"] = "no psd yet";
     return (jAppsMca);
 }
+
+/*
 //-----------------------------------------------------------------------------
 Json::Value TRedPitayaSetup::McaAsJson()
 {
@@ -130,6 +128,7 @@ Json::Value TRedPitayaSetup::McaAsJson()
     jMCA["mca"] = m_mca_params.AsJson();
     return (jMCA);
 }
+*/
 
 //-----------------------------------------------------------------------------
 double TRedPitayaSetup::GetSamplingPeriod() const
@@ -144,7 +143,7 @@ bool TRedPitayaSetup::LoadFromJson(const string &strFile)
 	Json::Reader reader;
     string strJson = ReadFileAsString (strFile);
 
-    Clear ();
+    Clear (m_pMcaParams);
     if (reader.parse (strJson, root)) {
         jResult = UpdateFromJson(root);
     }
@@ -188,7 +187,8 @@ Json::Value TRedPitayaSetup::AsJson()
 
     jSetup["sampling"] = m_sampling.AsJson();
     jSetup["trigger"] = m_trigger.AsJson();
-    jSetup["mca"] = m_mca_params.AsJson();
+	if (m_pMcaParams != NULL)
+    	jSetup["mca"] = m_pMcaParams->AsJson();
     jSetup["background"] = DoubleAsString (GetBackground());
     jSetup["package_size"] = to_string (GetPackageSize());
 	jSetup["pre_trigger_ns"] = PreTriggerAsString (GetPreTriggerNs());// to_string (GetPreTriggerNs());
@@ -208,8 +208,9 @@ Json::Value TRedPitayaSetup::UpdateFromJson(Json::Value &jSetup, bool fUpdateHar
 		std::string str = StringifyJson (jSetup);
         jNewSetup["sampling"] = m_sampling.UpdateFromJson(jSetup["sampling"]);
         jNewSetup["trigger"] = m_trigger.UpdateFromJson(jSetup["trigger"]);
-        jNewSetup["mca"] = m_mca_params.LoadFromJson (jSetup["mca"]);
 		jNewSetup["trapez"] = m_trapez.LoadFromJson (jSetup["trapez"]);
+		if (m_pMcaParams != NULL)
+			jNewSetup["mca"] = m_pMcaParams->UpdateFromJson (jSetup["mca"]);
 
 		str = StringifyJson (jSetup);
 		str = StringifyJson (jSetup["remote_processing"]);
@@ -313,6 +314,7 @@ bool TRedPitayaSetup::GetSamplingOnOff () const
     return (f);
 }
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaOnOff (Json::Value &jMcaCmd)
 {
@@ -341,7 +343,9 @@ void TRedPitayaSetup::SetMcaOnOff (const string &strOnOff)
 		fprintf (stderr, "Runtime error on 'SetMcaOnOff:\n%s\n", exp.what());
 	}
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaOnOff (const string &strOnOff, const string &strTime)
 {
@@ -378,6 +382,7 @@ bool TRedPitayaSetup::GetMcaOnOff () const
     mtx.unlock();
     return (f);
 }
+*/
 
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetPsdOnOff (bool fPsd)
@@ -458,17 +463,21 @@ void TRedPitayaSetup::TriggerNow ()
 	m_trigger.TriggerNow ();
 }
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::GetMcaSpectrum (TFloatVec &vSpectrum)
 {
     m_mca_params.GetSpectrum (vSpectrum);
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::ResetMcaSpectrum ()
 {
 	m_mca_params.ResetSpectrum ();
 }
+*/
 
 #include "rp_server.h"
 //-----------------------------------------------------------------------------
@@ -547,11 +556,12 @@ void TRedPitayaSetup::SetPreTriggerNs (Json::Value jPreTrigger)
     }
 }
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::NewPulse (const TPulseInfoVec &vPulsesInfo)
 {
 	if (GetMcaOnOff()) {
-    	m_mca_params.NewPulse (vPulsesInfo);
+    	//m_mca_params.NewPulse (vPulsesInfo);
 		double dMcaMeasureTime, dTimeLimit = GetMcaTimeLimit ();
 		if (dTimeLimit > 0) {
 			dMcaMeasureTime = GetMcaMeasureTime ();
@@ -562,12 +572,15 @@ void TRedPitayaSetup::NewPulse (const TPulseInfoVec &vPulsesInfo)
 		}
 	}
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 int TRedPitayaSetup::GetMcaPulses() const
 {
 	return (m_mca_params.GetMcaPulses());
 }
+*/
 
 /*
 //-----------------------------------------------------------------------------
@@ -630,6 +643,7 @@ double TRedPitayaSetup::GetSignalBackground(const TFloatVec &vSignal)
 	return (GetBackground());
 }
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaTimeLimit (const string &strTime)
 {
@@ -649,13 +663,17 @@ void TRedPitayaSetup::SetMcaTimeLimit (const string &strTime)
         fprintf (stderr, "Runtime error in 'SetMcaTimeLimit':\n%s\n", exp.what());
     }
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaTimeLimit (double dMcaSeconds)
 {
 	m_dMcaTimeLimit = dMcaSeconds;
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 double TRedPitayaSetup::GetMcaTimeLimit () const
 {
@@ -721,6 +739,7 @@ chrono_clock TRedPitayaSetup::SetMcaStartTime ()
 	SetMcaStartTime (std::chrono::system_clock::now());
 	return (GetMcaStartTime());
 }
+*/
 
 //-----------------------------------------------------------------------------
 bool TRedPitayaSetup::IsFilterOn() const
@@ -746,12 +765,15 @@ bool TRedPitayaSetup::IsRemoteProcessingOn() const
 	return (m_remote_proc.GetOnOff ());
 }
 
+/*
 //-----------------------------------------------------------------------------
 size_t TRedPitayaSetup::GetMcaCount() const
 {
     return (m_mca_params.GetCount());
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::ClearMca()
 {
@@ -769,7 +791,9 @@ double TRedPitayaSetup::GetMcaMax() const
 {
 	return (m_mca_params.GetMax());
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 double TRedPitayaSetup::GetMcaMinVoltage() const
 {
@@ -781,6 +805,7 @@ double TRedPitayaSetup::GetMcaMaxVoltage() const
 {
 	return (m_mca_params.GetMaxVoltage());
 }
+*/
 
 //-----------------------------------------------------------------------------
 void TRedPitayaSetup::SetMcaValid (bool fValid)
