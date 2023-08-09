@@ -15,13 +15,10 @@ extern const char *g_szSampling;
 
 void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff, TRedPitayaSetup *pSetup);
 //-----------------------------------------------------------------------------
-void SamplingThread (void *pParam1, void *pParam2)
+void SamplingThread (TMutexDoubleVecQueue *qmtxRaw, TRedPitayaSetup *pSetup)
 {
-	TMutexDoubleVecQueue *qmtxRaw = (TMutexDoubleVecQueue *) pParam1;
-	//TMutexQueue<TDoubleVec> *qmtxRaw = (TMutexQueue<TDoubleVec> *) pParam1;
 	static bool fTimerBusy = false;
     TDoubleVec vPulse;
-	TRedPitayaSetup *pSetup = (TRedPitayaSetup *) pParam2;
 
 	while (1) {
 		if (!fTimerBusy) {
@@ -37,20 +34,20 @@ void SamplingThread (void *pParam1, void *pParam2)
 		}
 		else
 			printf ("Time busy\n");
-		usleep (10);
+		usleep (1);
 	}
 }
 
 //-----------------------------------------------------------------------------
-void ProcessThread (void *pParam1, void *pParam2, void *pParam3)
+//void ProcessThread (TMutexDoubleVecQueue *pqmtxRaw, TMutexPulseFilterQueue *pqProcess, TRedPitayaSetup *pSetup)
+//void ProcessThread (TMutexDoubleVecQueue *pqmtxRaw, TMutexPulseFilterQueue *pqProcess, TMcaParams *pMcaParams, TRedPitayaSetup *pSetup)
+//void ProcessThread (TMutexDoubleVecQueue *pqmtxRaw, TMutexPulseFilterQueue *pqProcess, TMcaInfo *pMcaInfo, TRedPitayaSetup *pSetup)
+void ProcessThread (TMutexDoubleVecQueue *pqmtxRaw, TMutexPulseFilterQueue *pqProcess, TMutexMcaInfo *pMutexMcaInfo, TRedPitayaSetup *pSetup)
 {
     TDoubleVec vPulse;
 	TPulseFilter pulse_filter;
     TPulseInfoVec piVec;
-	TMutexDoubleVecQueue *pqmtxRaw = (TMutexDoubleVecQueue *) pParam1;
-	TMutexPulseFilterQueue *pqProcess = (TMutexPulseFilterQueue *) pParam2;
-	TRedPitayaSetup *pSetup = (TRedPitayaSetup *) pParam3;
-	//static bool fDebug=false;
+	int nCount=0;
 
 	while (1) {
     	if (pqmtxRaw->GetSize() > 0) {
@@ -63,55 +60,30 @@ void ProcessThread (void *pParam1, void *pParam2, void *pParam3)
 					//if (fDebug)
 						//PrintVector (vPulse, "prc_pulse.txt");
 					pqProcess->AddItem (pulse_filter);
-					if (piVec.size() > 0)
-            			pSetup->NewPulse (piVec);
+					if (pMutexMcaInfo->GetMcaOnOff())
+						pMutexMcaInfo->NewPulses (piVec);
+					//if (piVec.size() > 0)
+            			//pSetup->NewPulse (piVec);
 				}
 				catch (std::exception &exp) {
 					fprintf (stderr, "Runtime Error in ProcessThread:\n%s\n", exp.what());
 				}
 			}
 		}
-		usleep(10);
+		if (nCount++ > 5) {
+			nCount = 0;
+			if (pMutexMcaInfo->GetMcaOnOff()) {
+				nCount = 0;
+				double dMeasure = pMutexMcaInfo->GetMcaMeasureTime();
+				double dMcaTime = pMutexMcaInfo->GetMcaTimeLimit();
+				if (dMcaTime <= dMeasure)
+					pMutexMcaInfo->StopMca();
+				//printf ("MCA Time: %g\n", d);
+			}
+		}
+		usleep(1);
 	}
 }
-
-/*
-//-----------------------------------------------------------------------------
-size_t VectorQueueSize(mutex *pMutex)
-{
-    //mutex mtx;
-	size_t n;
-
-	while (pMutex->try_lock())
-		usleep(1);
-	pMutex->lock();
-    //mtx.lock ();
-	n = g_qPulses.size();
-	//mtx.unlock();
-	pMutex->unlock();
-	return (n);
-}
-*/
-
-/*
-//-----------------------------------------------------------------------------
-size_t GetNextQueuePulse (TDoubleVec &vPulse, mutex *pMutex)
-{
-
-	vPulse.clear();
-	while (pMutex->try_lock())
-		usleep(1);
-	pMutex->lock();
-    //mtx.lock ();
-	if (g_qPulses.size () > 0) {
-		vPulse = g_qPulses.back ();
-		g_qPulses.pop();
-	}
-	//mtx.unlock();
-	pMutex->unlock();
-	return (vPulse.size());
-}
-*/
 
 //-----------------------------------------------------------------------------
 void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pulse_filter, bool fFilterOnOff, TRedPitayaSetup *pSetup)
@@ -139,24 +111,8 @@ void FilterPulse (const TDoubleVec &vPulse,double dBackground, TPulseFilter &pul
 	pulse_filter.SetData (vSrc, vFiltered, vTrapez, vDiff);
 }
 
-/*
 //-----------------------------------------------------------------------------
-void VectorQueueClear (mutex *mtxPulsesQueue)
-{
-    //mutex mtx;
-	while (mtxPulsesQueue->try_lock())
-		usleep(1);
-	mtxPulsesQueue->lock();
-    //mtx.lock ();
-	while (g_qPulses.size() > 0)
-		g_qPulses.pop();
-	//mtx.unlock();
-	mtxPulsesQueue->unlock();
-}
-*/
-
-//-----------------------------------------------------------------------------
-Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
+Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun, TMutexMcaInfo *pMutexMca, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess)
 {
     std::string strResult;
     Json::Value jResult, jStatus;
@@ -181,6 +137,7 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 			//fprintf (stderr, "HandleSampling, Sampling is '%s'\n", BoolToString (fOnOff).c_str());
 		}
 		if (!jSampling["mca"].isNull()) {
+			pMutexMca->HandleMcaCommands (jSampling["mca"]);
 			if (!jSampling["mca_time"].isNull()) {
 				string sTime = jSampling["mca_time"].asString();
 				double d = atof (sTime.c_str());
@@ -188,7 +145,8 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 			}
 			string strMca = jSampling["mca_time"].asString();
 			printf ("MCA Time: %s\n", strMca.c_str());
-			rp_setup.SetMcaOnOff (ToLower (jSampling["mca"].asString()), jSampling["mca_time"].asString());
+			pMutexMca->SetMcaOnOff (ToLower (jSampling["mca"].asString()), jSampling["mca_time"].asString());
+			//rp_setup.SetMcaOnOff (ToLower (jSampling["mca"].asString()), jSampling["mca_time"].asString());
 			//rp_setup.SetMcaOnOff (str_to_bool (ToLower (jSampling["mca"].asString())), jSampling["mca_time"].asString());
 		}
 		if (!jSampling["psd"].isNull()) {
@@ -200,16 +158,14 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
 				fRun = false;
 		}
 		jStatus["signal"] = rp_setup.GetSamplingOnOff ();
-		jStatus["mca"] = rp_setup.GetMcaOnOff ();
+		jStatus["mca"] = pMutexMca->GetMcaOnOff ();
 		jStatus["psd"] = rp_setup.GetPsdOnOff ();
 		jResult["status"] = jStatus;
-		//jResult["buffer"] = to_string(SafeQueueSize());//g_vRawSignal.size());
 		jResult["raw_buffer"] = to_string(qRaw.GetSize());//SafeQueueSize(mtxPulsesQueue));//VectorQueueSize());
 		jResult["process_buffer"] = to_string(qProcess.GetSize());//SafeQueueSize(mtxPulsesQueue));//VectorQueueSize());
-		jResult["mca_buffer"] = to_string(rp_setup.GetMcaCount());//g_vRawSignal.size());
-		jResult["mca_time"] = rp_setup.GetMcaMeasureTime ();
-		//if (nCount % 10 == 0)
-			//fprintf (stderr, "HandleSampling, Sampling: %s, MCA: %s, Queue size: %d\r", BoolToString(rp_setup.GetSamplingOnOff ()).c_str(), BoolToString  (rp_setup.GetMcaOnOff()).c_str(), SafeQueueSize());
+		jResult["mca"] = pMutexMca->ReadMca();//GetMcaMeasureTime ();
+		string strMca = StringifyJson (jResult["mca"]);
+		strMca += "";
 		nCount++;
     }
     catch (std::exception &exp) {
@@ -218,25 +174,6 @@ Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bo
     }
     return (jResult);
 }
-
-/*
-//-----------------------------------------------------------------------------
-void SafeQueueClear (mutex *mtxPulsesQueue)
-{
-    //mutex mtx;
-
-	while (mtxPulsesQueue->try_lock())
-		usleep(1);
-    //mtx.lock ();mutex 
-	mtxPulsesQueue->lock();
-	while (!g_qFilteredPulses.empty())
-    //while (!g_qPulses.empty())
-		//g_qPulses.pop();
-		g_qFilteredPulses.pop_back ();
-	mtxPulsesQueue->unlock();
-    //mtx.unlock ();
-}
-*/
 
 //-----------------------------------------------------------------------------
 bool GetNextPulse (TDoubleVec &vPulse, TRedPitayaSetup &rp_setup)
@@ -256,23 +193,3 @@ bool GetNextPulse (TDoubleVec &vPulse, TRedPitayaSetup &rp_setup)
 #endif
     return (fPulse);
 }
-/*
-//-----------------------------------------------------------------------------
-size_t SafeQueueSize (mutex *mtxPulsesQueue)
-{
-    size_t s;
-    //mutex mtx;
-
-    //mtx.lock ();
-	while (mtxPulsesQueue->try_lock())
-		usleep(1);
-	//WaitForMutex (g_mtxPulsesQueue, 1);
-	mtxPulsesQueue->lock();
-	s = g_qFilteredPulses.size();
-    //s = g_qPulses.size();
-	//s = g_vPulsesInfo.size();
-    //mtx.unlock ();
-	mtxPulsesQueue->unlock();
-    return (s);
-}
-*/

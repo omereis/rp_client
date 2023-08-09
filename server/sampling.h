@@ -12,6 +12,7 @@
 #include "rp_setup.h"
 #include "MutexQueue.h"
 #include "PulseFilterInfo.h"
+#include "mca_info.h"
 
 //-----------------------------------------------------------------------------
 #ifndef	TMutexDoubleVecQueue
@@ -24,15 +25,10 @@ typedef TMutexQueue<TPulseFilter> TMutexPulseFilterQueue;
 
 using namespace std;
 
-void SamplingThread (void *pParam1, void *pParam2);
-void ProcessThread (void *pParam1, void *pParam2, void *pParam3);
-//void ProcessThread (TMutexQueue<TDoubleVecQueue> *qmtxRaw, TMutexQueue<TDoubleVecQueue> *qmtxProcess);
-//size_t VectorQueueSize(mutex *pMutex);
-//size_t GetNextQueuePulse (TDoubleVec &vPulse, mutex *pMutex);
-//void VectorQueueClear(mutex *mtxPulsesQueue);
-//Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun, mutex *mtxPulsesQueue);
-Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
-//void SafeQueueClear (mutex *mtxPulsesQueue);
+void SamplingThread (TMutexDoubleVecQueue *qmtxRaw, TRedPitayaSetup *pSetup);
+void ProcessThread (TMutexDoubleVecQueue *pqmtxRaw, TMutexPulseFilterQueue *pqProcess, TMutexMcaInfo *pMutexMcaInfo, TRedPitayaSetup *pSetup);
+//void ProcessThread (TMutexDoubleVecQueue *pqmtxRaw, TMutexPulseFilterQueue *pqProcess, TMcaParams *pMcaParams, TRedPitayaSetup *pSetup);
+Json::Value HandleSampling(Json::Value &jSampling, TRedPitayaSetup &rp_setup, bool &fRun, TMutexMcaInfo *pMutexMca, TMutexDoubleVecQueue &qRaw, TMutexPulseFilterQueue &qProcess);
 size_t SafeQueueSize (mutex *mtxPulsesQueue);
 bool GetNextPulse (TDoubleVec &vPulse, TRedPitayaSetup &rp_setup);
 
