@@ -5,9 +5,9 @@
 #include <math.h>
 #include "mca_params.h"
 //-----------------------------------------------------------------------------
-TMcaParams::TMcaParams ()
+TMcaParams::TMcaParams (mutex *mtx)
 {
-    Clear ();
+    Clear (mtx);
 }
 //-----------------------------------------------------------------------------
 TMcaParams::TMcaParams (const TMcaParams &other)
@@ -36,16 +36,24 @@ bool TMcaParams::operator!= (const TMcaParams &other) const
 {
     return (!(*this == other));
 }
+
 //-----------------------------------------------------------------------------
-void TMcaParams::Clear ()
+void TMcaParams::Clear (mutex *mtx)
+{
+	m_pMutex = mtx;
+	ClearParams ();
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::ClearParams ()
 {
 	SetChannels (1024);
 	SetMinVoltage (0.0);
 	SetMaxVoltage (5.0);
-	m_vPulses.clear();
-    SetMax (0);
-    SetMin (0);
-	SetCount (0);
+	//m_vPulses.clear();
+    //SetMax (0);
+    //SetMin (0);
+	//SetCount (0);
 }
 //-----------------------------------------------------------------------------
 void TMcaParams::AssignAll (const TMcaParams &other)
@@ -53,10 +61,10 @@ void TMcaParams::AssignAll (const TMcaParams &other)
     SetChannels (other.GetChannels ());
     SetMinVoltage (other.GetMinVoltage ());
     SetMaxVoltage (other.GetMaxVoltage ());
-	m_vPulses = other.m_vPulses;
-    SetMax (other.GetMax());
-    SetMin (other.GetMin());
-	SetCount (other.GetCount());
+	//m_vPulses = other.m_vPulses;
+    //SetMax (other.GetMax());
+    //SetMin (other.GetMin());
+	//SetCount (other.GetCount());
 }
 //-----------------------------------------------------------------------------
 uint TMcaParams::GetChannels () const
@@ -69,10 +77,10 @@ void TMcaParams::SetChannels (uint uiChannels)
 	TFloatVec::iterator i;
 
     m_uiChannels = uiChannels;
-	m_vSpectrum.resize (uiChannels, 0);
-	m_vPulses.clear();
-	for (i=m_vSpectrum.begin() ; i != m_vSpectrum.end() ; i++)
-		*i = 0;
+	//m_vSpectrum.resize (uiChannels, 0);
+	//m_vPulses.clear();
+	//for (i=m_vSpectrum.begin() ; i != m_vSpectrum.end() ; i++)
+		//*i = 0;
 }
 //-----------------------------------------------------------------------------
 double TMcaParams::GetMinVoltage () const
@@ -98,6 +106,7 @@ void TMcaParams::SetMaxVoltage (double dMaxVoltage)
     m_dMaxVoltage = dMaxVoltage;
 }
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::ResetSpectrum ()
 {
@@ -105,9 +114,12 @@ void TMcaParams::ResetSpectrum ()
 	SetCount (0);
 	m_vPulses.clear();
 }
+*/
+
 
 //-----------------------------------------------------------------------------
-Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
+//Json::Value TMcaParams::LoadFromJson (Json::Value jMCA)
+Json::Value TMcaParams::UpdateFromJson (Json::Value jMCA)
 {
     Json::Value jNew;
 
@@ -145,6 +157,7 @@ Json::Value TMcaParams::AsJson () const
     return (jMCA);
 }
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::SetSpectrum (const TFloatVec &vSpectrum)
 {
@@ -155,13 +168,16 @@ void TMcaParams::SetSpectrum (const TFloatVec &vSpectrum)
 	for ( ; iSrc != vSpectrum.end() ; iSrc++, iDest++)
 		*iDest = *iSrc;
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 size_t TMcaParams::GetSpectrum (TFloatVec &vSpectrum)
 {
 	vSpectrum = m_vSpectrum;
 	return (vSpectrum.size());
 }
+*/
 
 //-----------------------------------------------------------------------------
 int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
@@ -178,6 +194,7 @@ int TMcaParams::HeightIndex (float fSignalMin, float fSignalMax)
     return (idx);
 }
 
+/*
 //-----------------------------------------------------------------------------
 int TMcaParams::GetMcaPulses() const
 {
@@ -189,14 +206,18 @@ int TMcaParams::GetMcaPulses() const
     mtx.unlock();
     return (nCount);
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::SetSpectrum (uint uiChannels)
 {
 	SetChannels (uiChannels);
 	m_vSpectrum.resize(uiChannels, 0);
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 {
@@ -204,9 +225,6 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
 	TFloatVec::const_iterator i;
 	int idx;
 
-/*
-	m_vPulses.push_back (pulse_info);
-*/
     if (m_vSpectrum.size() == 0)
         SetSpectrum (GetChannels());
 	double dIndex;
@@ -226,23 +244,11 @@ void TMcaParams::NewPulse (const TPulseInfo &pulse_info)
         SetMin(pulse_info.GetMaxVal ());
         SetMax(pulse_info.GetMaxVal ());
     }
-/*
-    else{
-        if (pulse_info.GetMaxVal () < GetMin())
-            SetMin(pulse_info.GetMaxVal ());
-        if (pulse_info.GetMaxVal () > GetMax())
-            SetMax(pulse_info.GetMaxVal ());
-    }
-*/
     IncreaseCount ();
-/*
-	static int nCount;
-	FILE *file = fopen ("mca_res.csv", "a+");
-	fprintf (file, "%g,%g, %g, %d,%d\n", GetMinVoltage(), GetMaxVoltage(), pulse_info.GetMaxVal(), idx, GetChannels());
-	fclose (file);
-*/
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::NewPulse (const TPulseInfoVec &vPulsesInfo)
 {
@@ -251,7 +257,9 @@ void TMcaParams::NewPulse (const TPulseInfoVec &vPulsesInfo)
 	for (i=vPulsesInfo.begin() ; i != vPulsesInfo.end() ; i++)
 		NewPulse (*i);
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 size_t TMcaParams::GetCount() const
 {
@@ -263,8 +271,10 @@ void TMcaParams::SetCount (size_t n)
 {
 	m_nCount = n;
 }
+*/
 
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::ClearMca ()
 {
@@ -274,7 +284,9 @@ void TMcaParams::ClearMca ()
 	for (i=m_vSpectrum.begin() ; i != m_vSpectrum.end() ; i++)
 		*i = 0;
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::SetMax (double dMax)
 {
@@ -298,11 +310,71 @@ double TMcaParams::GetMin() const
 {
     return (m_dMin);
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 void TMcaParams::IncreaseCount ()
 {
     m_nCount++;
 }
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetMcaOnOff (Json::Value &jMcaCmd)
+{
+	if (!jMcaCmd.isNull()) {
+		string strMcaTime, str = StringifyJson (jMcaCmd);
+		if (jMcaCmd["mca_time"].isNull() == false) {
+			string s = StringifyJson (jMcaCmd["mca_time"]);
+			strMcaTime = jMcaCmd["mca_time"].asString();
+		}
+		SetMcaTimeLimit (strMcaTime);
+		if (jMcaCmd["mca"].isString())
+			SetMcaOnOff (jMcaCmd["mca"].asString());
+		else if (jMcaCmd["mca"].isBool())
+			SetMcaOnOff (jMcaCmd["mca"].asBool());
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetMcaOnOff (const string &strOnOff)
+{
+	try {
+		bool f = to_bool (strOnOff);
+		SetMcaOnOff (f);
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error on 'SetMcaOnOff:\n%s\n", exp.what());
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TMcaParams::SetMcaOnOff (const string &strOnOff, const string &strTime)
+{
+	try {
+		SetMcaOnOff (strOnOff);
+		SetMcaTimeLimit (strTime);
+	}
+	catch (std::exception &exp) {
+		fprintf (stderr, "Runtime error on 'SetMcaOnOff:\n%s\n", exp.what());
+	}
+}
+
+//-----------------------------------------------------------------------------
+void TRedPitayaSetup::SetMcaOnOff (bool fMca)
+{
+    mutex mtx;
+
+    mtx.lock();
+	if ((fMca == true) && (m_fMcaOnOff == false)) // starting
+		SetMcaStartTime ();
+	else if ((fMca == false) && (m_fMcaOnOff == true)) // ending
+		SetMcaStopTime();
+    m_fMcaOnOff = fMca;
+    mtx.unlock();
+}
+*/
+
+
 
 
